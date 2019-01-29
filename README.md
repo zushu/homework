@@ -17,5 +17,5 @@ Digital Image Processing Homeworks
 
 ## the3_part1.m
 
-- morphological operations (erosion, dilation, closing, opening, smoothing, gradient, bottomhat, tophat)
+- object counting with morphological operations (erosion, dilation, closing, opening, smoothing, gradient, bottomhat, tophat)
 - 5 color images, different combinations of operations have been applied to count the number of flying hot air balloons in each image.
