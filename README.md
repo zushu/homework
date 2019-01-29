@@ -8,6 +8,13 @@ Digital Image Processing Homeworks
 - `B<i>_ref.png` : image to be used for histogram matching with `B<i>.png`
 - TODO: remove repetitive codes
 
+## the2_part2.m
+
+- periodic noise removal in the frequency domain
+- `B1.png`, `B2.png`: greyscale, bandreject filters were used
+- `B3.png`: greyscale, filtered with a notch filter
+- TODO: improve first two filters
+
 ## the3_part1.m
 
 - morphological operations (erosion, dilation, closing, opening, smoothing, gradient, bottomhat, tophat)
