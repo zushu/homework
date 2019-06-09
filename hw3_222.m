@@ -1,4 +1,3 @@
-% Zumrud Shukurlu 2174761
 % written in MATLAB R2018a
 
 % 1 - alpha = 0.99
