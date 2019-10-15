@@ -2,6 +2,7 @@
 #define _DEFS_H_
 
 #include <cmath> 
+#include <stdexcept>
 
 class Scene;
 
@@ -75,53 +76,62 @@ typedef struct Vector3f
 		return *this;
 	}
 
-	float length()
+	float length() const
 	{
 		float result = sqrt(x * x + y * y + z * z);
 		return result;
 	}
 
-	Vector3f normalize()
+	Vector3f normalize() const
 	{
 		float len = this->length();
 		Vector3f result(x/len, y/len, z/len);
 		return result;
 	}
 
-	Vector3f operator+(Vector3f right)
+	bool operator==(const Vector3f right) const
+	{
+		if (x == right.x &&
+			y == right.y &&
+			z == right.z)
+			return true;
+		return false;
+	}
+
+	Vector3f operator+(const Vector3f right) const
 	{
 		Vector3f result(x + right.x, y + right.y, z + right.z);
 		return result;
 	}
 
-	Vector3f operator-(Vector3f right)
+	Vector3f operator-(const Vector3f right) const
 	{
 		Vector3f result(x - right.x, y - right.y, z - right.z);
 		return result;
 	}
 
 	// dot product
-	float operator*(Vector3f right)
+	float operator*(const Vector3f right) const
 	{
 		float result = x * right.x + y * right.y + z * right.z;
 		return result;
 	}
 
 	// scalar multiplication
-	Vector3f operator*(float k)
+	Vector3f operator*(float k) const
 	{
 		Vector3f result(k*x, k*y, k*z);
 		return result;
 	}
 
 	// scalar division
-	Vector3f operator/(float k)
+	Vector3f operator/(float k) const
 	{
 		Vector3f result(x/k, y/k, z/k);
 		return result;
 	}
 
-	Vector3f cross_product(Vector3f right)
+	Vector3f cross_product(const Vector3f right) const
 	{
 		Vector3f result(y * right.z - z * right.y, 
 						z * right.x - x * right.z, 
@@ -129,9 +139,15 @@ typedef struct Vector3f
 		return result;
 	}
 
-	Vector3f pointwise_multiplication(Vector3f right)
+	Vector3f pointwise_multiplication(const Vector3f right) const
 	{
 		Vector3f result(x * right.x, y * right.y, z * right.z);
+		return result;
+	}
+
+	Vector3f pointwise_division(const Vector3f right) const
+	{
+		Vector3f result(x / right.x, y / right.y, z / right.z);
 		return result;
 	}
 
