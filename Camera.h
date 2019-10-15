@@ -39,9 +39,11 @@ private:
     //
 	// You can add member functions and variables here
     //
-    Vector3f pos;         // Camera position
-    Vector3f gaze;        // Camera gaze direction
-    Vector3f up;          // Camera up direction
+    Vector3f pos;         // Camera position : e
+    Vector3f gaze;        // Camera gaze direction : -w
+    Vector3f up;          // Camera up direction : v
+    Vector3f u;           // u
+    Vector3f w;
 };
 
 #endif

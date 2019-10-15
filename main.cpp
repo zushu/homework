@@ -29,7 +29,13 @@ int main(int argc, char *argv[])
     Vector3f pt = ray1.getPoint(2);
     std::cout << "point with  with t=2: "<< pt.x << " " << pt.y << " " << pt.z << std::endl; 
 
-    float t1 = ray1.gett(Vector3f(2, 6, 5));
-    std::cout << "t: " << t1 << std::endl;
+    //float t1 = ray1.gett(Vector3f(2, 6, 5));
+    //std::cout << "t: " << t1 << std::endl;
+
+    ImagePlane implane2 = {-1, 1, -1, 1, 1, 1024, 768};
+    Camera cam2(1, "cam2", Vector3f(0, 0, 0), Vector3f(0, 0, -1), Vector3f(0, 1, 0), implane2);
+
+    Ray ray2 = cam2.getPrimaryRay(1024, 768);
+    std::cout << "ray1 direction" << ray2.direction.x << " " << ray2.direction.y << " " << ray2.direction.z << std::endl;
 	return 0;
 }
