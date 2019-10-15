@@ -28,6 +28,8 @@ Camera::Camera(int id,                      // Id of the camera
 /* Takes coordinate of an image pixel as row and col, and
  * returns the ray going through that pixel. 
  */
+
+// col : j, row : i
 Ray Camera::getPrimaryRay(int col, int row) const
 {
 	/***********************************************
