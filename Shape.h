@@ -35,6 +35,7 @@ private:
 	// Write any other stuff here
 	int cIndex;
 	float R;
+	Vector3f center;
 };
 
 // Class for triangle
@@ -48,6 +49,7 @@ public:
 private:
 	// Write any other stuff here
 	int p1Index, p2Index, p3Index;
+	Vector3f vertex1, vertex2, vertex3;
 };
 
 // Class for mesh

@@ -24,6 +24,7 @@ Sphere::Sphere(int id, int matIndex, int cIndex, float R)
      *                                             *
      ***********************************************
 	 */
+    this->center = pScene->vertices[id - 1];
 
 
 }
@@ -39,6 +40,26 @@ ReturnVal Sphere::intersect(const Ray & ray) const
      *                                             *
      ***********************************************
 	 */
+
+    ReturnVal result;
+
+    float t0, t1;
+    Vector3f o_minus_c = ray.origin - center;
+    float a = ray.direction * ray.direction;
+    float b = (ray.direction * o_minus_c) * 2;
+    float c = o_minus_c * o_minus_c - R*R;
+    float discriminant = b * b - 4 * a * c;
+    float sqrt_disc = sqrt(discriminant);
+    if (discriminant < 0)
+        result.intersects = false;
+    else
+        t0 = (-b - sqrt_disc) / (2.0 * a);
+        t1 = (-b + sqrt_disc) / (2.0 * a);
+        
+        if (t0 > t1) std
+
+
+
 }
 
 Triangle::Triangle(void)
@@ -54,6 +75,10 @@ Triangle::Triangle(int id, int matIndex, int p1Index, int p2Index, int p3Index)
      *                                             *
      ***********************************************
 	 */
+
+    this->vertex1 = pScene->vertices[p1Index - 1];
+    this->vertex2 = pScene->vertices[p2Index - 1];
+    this->vertex3 = pScene->vertices[p3Index - 1];
 }
 
 /* Triangle-ray intersection routine. You will implement this. 

@@ -18,8 +18,13 @@ typedef struct ReturnVal
      *                                             *
      ***********************************************
 	 */
+	bool intersects;
+	Vector3f intersection_point;
+	Vector3f normal;
+	float t;
+	int material_id;
 
-	
+
 } ReturnVal;
 
 /* 3 dimensional vector holding floating point numbers.
