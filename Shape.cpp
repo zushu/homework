@@ -16,7 +16,7 @@ Sphere::Sphere(void)
 
 /* Constructor for sphere. You will implement this. */
 Sphere::Sphere(int id, int matIndex, int cIndex, float R)
-    : Shape(id, matIndex)
+    : Shape(id, matIndex), cIndex(cIndex), R(R)
 {
 	/***********************************************
      *                                             *
@@ -24,6 +24,8 @@ Sphere::Sphere(int id, int matIndex, int cIndex, float R)
      *                                             *
      ***********************************************
 	 */
+
+
 }
 
 /* Sphere-ray intersection routine. You will implement this. 
@@ -44,7 +46,7 @@ Triangle::Triangle(void)
 
 /* Constructor for triangle. You will implement this. */
 Triangle::Triangle(int id, int matIndex, int p1Index, int p2Index, int p3Index)
-    : Shape(id, matIndex)
+    : Shape(id, matIndex), p1Index(p1Index), p2Index(p2Index), p3Index(p3Index)
 {
 	/***********************************************
      *                                             *
@@ -72,7 +74,7 @@ Mesh::Mesh()
 
 /* Constructor for mesh. You will implement this. */
 Mesh::Mesh(int id, int matIndex, const vector<Triangle>& faces)
-    : Shape(id, matIndex)
+    : Shape(id, matIndex), faces(faces)
 {
 	/***********************************************
      *                                             *

@@ -18,6 +18,8 @@ typedef struct ReturnVal
      *                                             *
      ***********************************************
 	 */
+
+	
 } ReturnVal;
 
 /* 3 dimensional vector holding floating point numbers.

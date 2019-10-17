@@ -32,13 +32,6 @@ Camera::Camera(int id,                      // Id of the camera
 // col : j, row : i
 Ray Camera::getPrimaryRay(int col, int row) const
 {
-	/***********************************************
-     *                                             *
-	 * TODO: Implement this function               *
-     *                                             *
-     ***********************************************
-	 */
-
      Ray result;
      result.origin = pos;
      float s_u = (row + 0.5) * (imgPlane.right - imgPlane.left) / imgPlane.nx;

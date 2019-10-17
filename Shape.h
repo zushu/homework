@@ -33,6 +33,8 @@ public:
 
 private:
 	// Write any other stuff here
+	int cIndex;
+	float R;
 };
 
 // Class for triangle
@@ -45,6 +47,7 @@ public:
 
 private:
 	// Write any other stuff here
+	int p1Index, p2Index, p3Index;
 };
 
 // Class for mesh
@@ -57,6 +60,7 @@ public:
 
 private:
 	// Write any other stuff here
+	vector<Triangle> faces;
 };
 
 #endif

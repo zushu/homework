@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     ImagePlane implane2 = {-1, 1, -1, 1, 1, 1024, 768};
     Camera cam2(2, "cam2", Vector3f(0, 0, 0), Vector3f(0, 0, -1), Vector3f(0, 1, 0), implane2);
 
-    Ray ray2 = cam2.getPrimaryRay(768, 1024);
+    Ray ray2 = cam2.getPrimaryRay(192, 256);
     std::cout << "ray1 direction" << ray2.direction.x << " " << ray2.direction.y << " " << ray2.direction.z << std::endl;
 	return 0;
 }
