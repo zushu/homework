@@ -45,13 +45,20 @@ int main(int argc, char *argv[])
     std::cout << "ray1 direction" << ray2.direction.x << " " << ray2.direction.y << " " << ray2.direction.z << std::endl;
     */
 
-    //Sphere sphere;
-    ReturnVal res = (pScene->objects[0])->intersect(Ray(Vector3f(0, 0, 0), Vector3f(-0.575, 0.7, -1.7)));
+    Sphere sphere(1, 1, 8, 0.3);
+    ReturnVal res = sphere.intersect(Ray(Vector3f(0, 0, 0), Vector3f(-0.875, 1, -2)));
 
     //std::cout << "nese t: " << (pScene->objects[0])->intersect(Ray(Vector3f(0, 0, 0), Vector3f(-10, -10, 10))).t  << std::endl;
     std::cout << " t: " << res.t <<  std::endl;
     if (res.intersects == true)
         std::cout << " t: " << res.t << " " << res.intersection_point.x << " " << res.intersection_point.y << " " << res.intersection_point.z << std::endl; 
+
+
+    Triangle tri(1, 1, 5, 6, 7);
+    ReturnVal res2 = tri.intersect(Ray(Vector3f(0, 0, 0), Vector3f(0.875, 0.875, -2)));
+    std::cout << " tri t: " << res2.t <<  std::endl;
+    if (res2.intersects == true)
+        std::cout << " t: " << res2.t << " " << res2.intersection_point.x << " " << res2.intersection_point.y << " " << res2.intersection_point.z << std::endl;
 
 	return 0;
 }

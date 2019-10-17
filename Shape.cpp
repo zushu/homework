@@ -39,7 +39,7 @@ ReturnVal Sphere::intersect(const Ray & ray) const
 
     ReturnVal result;
 
-    Vector3f center = pScene->vertices[id - 1];
+    Vector3f center = pScene->vertices[cIndex - 1];
 
     std::cout << "center coords: " << " x: "<< center.x << " y: " << center.y << " z: " << center.z  << std::endl;
 
