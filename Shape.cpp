@@ -18,15 +18,7 @@ Sphere::Sphere(void)
 Sphere::Sphere(int id, int matIndex, int cIndex, float R)
     : Shape(id, matIndex), cIndex(cIndex), R(R)
 {
-	/***********************************************
-     *                                             *
-	 * TODO: Implement this function               *
-     *                                             *
-     ***********************************************
-	 */
     this->center = pScene->vertices[id - 1];
-
-
 }
 
 /* Sphere-ray intersection routine. You will implement this. 
@@ -56,7 +48,7 @@ ReturnVal Sphere::intersect(const Ray & ray) const
         t0 = (-b - sqrt_disc) / (2.0 * a);
         t1 = (-b + sqrt_disc) / (2.0 * a);
         
-        if (t0 > t1) std
+        //if (t0 > t1)
 
 
 
@@ -69,13 +61,6 @@ Triangle::Triangle(void)
 Triangle::Triangle(int id, int matIndex, int p1Index, int p2Index, int p3Index)
     : Shape(id, matIndex), p1Index(p1Index), p2Index(p2Index), p3Index(p3Index)
 {
-	/***********************************************
-     *                                             *
-	 * TODO: Implement this function               *
-     *                                             *
-     ***********************************************
-	 */
-
     this->vertex1 = pScene->vertices[p1Index - 1];
     this->vertex2 = pScene->vertices[p2Index - 1];
     this->vertex3 = pScene->vertices[p3Index - 1];
