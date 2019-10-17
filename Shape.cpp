@@ -1,6 +1,7 @@
 #include "Shape.h"
 #include "Scene.h"
 #include <cstdio>
+#include <algorithm>
 
 Shape::Shape(void)
 {
@@ -43,14 +44,38 @@ ReturnVal Sphere::intersect(const Ray & ray) const
     float discriminant = b * b - 4 * a * c;
     float sqrt_disc = sqrt(discriminant);
     if (discriminant < 0)
+    {
         result.intersects = false;
+        return result;
+    }
+
     else
+    {
         t0 = (-b - sqrt_disc) / (2.0 * a);
         t1 = (-b + sqrt_disc) / (2.0 * a);
         
-        //if (t0 > t1)
+        if (t0 > t1) 
+        {
+            std::swap(t0, t1);
+        }
 
+        if (t0 < 0)
+        {
+            t0 = t1;
+            if (t0 < 0)
+            {
+                result.intersects = false;
+                return result;
+            }
+        }
 
+        result.intersects = true;
+        result.t = t0;
+        result.intersection_point = ray.origin + ray.direction * result.t;
+        result.material_id = matIndex;
+        result.unit_normal = (result.intersection_point - center) / R;
+        return result;
+    }
 
 }
 
