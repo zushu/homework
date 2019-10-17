@@ -1,18 +1,24 @@
 #include "defs.h"
 #include "Scene.h"
 #include "Camera.h"
+#include "Shape.h"
 
 Scene *pScene; // definition of the global scene variable (declared in defs.h)
 
 int main(int argc, char *argv[])
 {
-	//const char *xmlPath = argv[1];
+	const char *xmlPath = argv[1];
 
-    //pScene = new Scene(xmlPath);
+    pScene = new Scene(xmlPath);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::cout << " x: "<< pScene->vertices[i].x << " y: " << pScene->vertices[i].y << " z: " << pScene->vertices[i].z  << std::endl;
+    }
 
     //pScene->renderScene();
 
-    Vector3f v1(0.1, 0.2, 9.3);
+    /*Vector3f v1(0.1, 0.2, 9.3);
     Vector3f v2(10, 20, 40);
     Vector3f v3(v1 + v2);
 
@@ -37,5 +43,15 @@ int main(int argc, char *argv[])
 
     Ray ray2 = cam2.getPrimaryRay(192, 256);
     std::cout << "ray1 direction" << ray2.direction.x << " " << ray2.direction.y << " " << ray2.direction.z << std::endl;
+    */
+
+    //Sphere sphere;
+    ReturnVal res = (pScene->objects[0])->intersect(Ray(Vector3f(0, 0, 0), Vector3f(-0.575, 0.7, -1.7)));
+
+    //std::cout << "nese t: " << (pScene->objects[0])->intersect(Ray(Vector3f(0, 0, 0), Vector3f(-10, -10, 10))).t  << std::endl;
+    std::cout << " t: " << res.t <<  std::endl;
+    if (res.intersects == true)
+        std::cout << " t: " << res.t << " " << res.intersection_point.x << " " << res.intersection_point.y << " " << res.intersection_point.z << std::endl; 
+
 	return 0;
 }

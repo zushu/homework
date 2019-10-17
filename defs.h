@@ -153,9 +153,9 @@ typedef struct ReturnVal
 	 */
 	bool intersects;
 	Vector3f intersection_point;
-	Vector3f unit_normal;
+	Vector3f normal;
 	float t;
-	int material_id;
+	int material_index;
 
 
 } ReturnVal;
