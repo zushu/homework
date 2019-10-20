@@ -83,6 +83,8 @@ ReturnVal Sphere::intersect(const Ray & ray) const
         result.intersection_point = ray.origin + (ray.direction * result.t);
         result.material_index = matIndex;
         result.normal = (result.intersection_point - center) / R;
+        result.shape_type = 1; // 1 for sphere, 2 for triangle
+        result.shape_id = id;
         return result;
     }
 
@@ -178,6 +180,8 @@ ReturnVal Triangle::intersect(const Ray & ray) const
         result.intersection_point = ray.origin + ray.direction * result.t;
         result.normal = normal;
         result.material_index = matIndex;
+        result.shape_type = 2;
+        result.shape_id = id;
     }
     return result;
 }
@@ -208,4 +212,24 @@ ReturnVal Mesh::intersect(const Ray & ray) const
      *                                             *
      ***********************************************
 	 */
+
+    // TODO: USE BARYCENTRIC COORDINATES IN TRIANGLE INTERSECTION
+    /*float tNear = std::numeric_limits<float>::infinity();
+    int closest_tri_id;
+    ReturnVal result;
+    int num_tris = faces.size();
+    int j = 0;
+
+    for (int i = 0; i < num_tris; i++)
+    {
+        Triangle tri = faces[i];
+        const ReturnVal tri_res = tri.intersect(ray);
+        if (tri_res.intersects && tri_res.t < tNear)
+        {
+            tNear = tri_res.t;
+            closest_tri_id = tri.id;
+
+        }
+    }*/
+
 }

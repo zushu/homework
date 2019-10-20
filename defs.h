@@ -156,7 +156,8 @@ typedef struct ReturnVal
 	Vector3f normal;
 	float t;
 	int material_index;
-
+	int shape_type; // 1 - sphere, 2 - triangle
+	int shape_id;
 
 } ReturnVal;
 
