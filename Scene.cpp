@@ -49,10 +49,13 @@ void Scene::renderScene(void)
 				{
 					Color temp = calculate_pixel_color(ray, tmin, final_obj, final_res);
 					image.setPixelValue(j, i, temp);
+
 				}
 				else
 				{
-					Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
+					//Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
+					Color black = {0, 0, 0};
+					//std::cout << (int) black.blu << " "<< (int) black.grn << " " << (int) black.red << std::endl;
 					image.setPixelValue(j, i, black);
 				}
 				
