@@ -4,7 +4,6 @@
 #include "Ray.h"
 #include "defs.h"
 #include <cstring>
-#include "vector.h"
 
 // Structure for holding variables related to the image plane
 typedef struct ImagePlane

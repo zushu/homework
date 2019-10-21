@@ -19,6 +19,36 @@ void Scene::renderScene(void)
      *                                             *
      ***********************************************
 	 */
+
+	for (Camera* cam : cameras)
+	{
+		int rows = cam->imgPlane.ny, cols = cam->imgPlane.nx;
+		Image image(cols, rows);
+
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < cols; j++)
+			{
+				Ray ray = cam->getPrimaryRay(j, i);
+				float tmin = INFINITY;
+				Shape* final_obj = nullptr;
+				for (Shape* object : objects)
+				{
+					ReturnVal object_res = object->intersect(ray);
+					if (object_res.intersects && object_res.t < tmin)
+					{
+						tmin = object_res.t;
+						final_obj = object;
+					}
+				}
+
+				//if (final_obj != nullptr)
+				//{
+
+				//}
+			}
+		}
+	}
 }
 
 // Parses XML file. 

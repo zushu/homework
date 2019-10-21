@@ -158,6 +158,8 @@ typedef struct ReturnVal
 	int material_index;
 	int shape_type; // 1 - sphere, 2 - triangle
 	int shape_id;
+	//const Shape* obj;
+	float beta, gamma;
 
 } ReturnVal;
 

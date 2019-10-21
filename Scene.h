@@ -10,6 +10,7 @@
 
 #include "Ray.h"
 #include "defs.h"
+#include "Image.h"
 
 // Forward declarations to avoid cyclic references
 class Camera;
