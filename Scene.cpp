@@ -42,12 +42,21 @@ void Scene::renderScene(void)
 					}
 				}
 
-				//if (final_obj != nullptr)
-				//{
-
-				//}
+				if (final_obj != nullptr)
+				{
+					Color temp = {128, 128, 128};
+					image.setPixelValue(j, i, temp);
+				}
+				else
+				{
+					Color black = {0, 0, 0};
+					image.setPixelValue(j, i, black);
+				}
+				
 			}
 		}
+
+		image.saveImage(cam->imageName);
 	}
 }
 

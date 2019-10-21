@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
         std::cout << " x: "<< pScene->vertices[i].x << " y: " << pScene->vertices[i].y << " z: " << pScene->vertices[i].z  << std::endl;
     }
 
-    //pScene->renderScene();
+    pScene->renderScene();
 
     /*Vector3f v1(0.1, 0.2, 9.3);
     Vector3f v2(10, 20, 40);
