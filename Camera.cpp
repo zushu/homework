@@ -34,8 +34,8 @@ Ray Camera::getPrimaryRay(int col, int row) const
 {
      Ray result;
      result.origin = pos;
-     float s_u = (row + 0.5) * (imgPlane.right - imgPlane.left) / imgPlane.nx;
-     float s_v = (col + 0.5) * (imgPlane.top - imgPlane.bottom) / imgPlane.ny;
+     float s_u = (col + 0.5) * (imgPlane.right - imgPlane.left) / imgPlane.nx;
+     float s_v = (row + 0.5) * (imgPlane.top - imgPlane.bottom) / imgPlane.ny;
      Vector3f m = pos + gaze * imgPlane.distance;
      Vector3f q = m + u * imgPlane.left + up * imgPlane.top;
      Vector3f s = q + u * s_u - up * s_v;
