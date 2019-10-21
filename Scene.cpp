@@ -32,9 +32,10 @@ void Scene::renderScene(void)
 				Ray ray = cam->getPrimaryRay(j, i);
 				float tmin = INFINITY;
 				Shape* final_obj = nullptr;
+				ReturnVal object_res;
 				for (Shape* object : objects)
 				{
-					ReturnVal object_res = object->intersect(ray);
+					object_res = object->intersect(ray);
 					if (object_res.intersects && object_res.t < tmin)
 					{
 						tmin = object_res.t;
@@ -44,12 +45,12 @@ void Scene::renderScene(void)
 
 				if (final_obj != nullptr)
 				{
-					Color temp = {128, 128, 128};
+					Color temp = calculate_pixel_color(ray, tmin, final_obj, object_res);
 					image.setPixelValue(j, i, temp);
 				}
 				else
 				{
-					Color black = {0, 0, 0};
+					Color black = {(unsigned char) std::round(backgroundColor.x), (unsigned char) std::round(backgroundColor.y), (unsigned char) std::round(backgroundColor.z)};
 					image.setPixelValue(j, i, black);
 				}
 				
@@ -59,6 +60,43 @@ void Scene::renderScene(void)
 		image.saveImage(cam->imageName);
 	}
 }
+
+
+Color Scene::calculate_pixel_color(Ray ray, float t, Shape* object, ReturnVal retval)
+{
+	//Color color = {backgroundColor.x, backgroundColor.y, backgroundColor.z};
+	Vector3f color(0, 0, 0);
+	Material mat = *(materials[object->matIndex - 1]);
+
+	// ambient shading
+	color = color + ambientLight.pointwise_multiplication(mat.ambientRef);
+
+	for (PointLight* plight : lights)
+	{
+		// vector from intersection point on object to the point light
+		Vector3f light_dir = (plight->position - retval.intersection_point).normalize();
+
+		// diffuse shading
+		float costheta_temp = retval.normal * light_dir;
+		float costheta = (costheta_temp > 0) ? costheta_temp : 0;
+
+		Vector3f plight_contribution = plight->computeLightContribution(retval.intersection_point);
+		color = color + mat.diffuseRef.pointwise_multiplication(plight_contribution) * costheta;
+
+		// specular shading
+		// bisector of the angle between light_dir and -ray.direction
+		Vector3f half_vector = (light_dir - ray.direction).normalize();
+		float cosalpha_temp = retval.normal * half_vector;
+		float cosalpha = (cosalpha_temp > 0) ? cosalpha_temp : 0;
+		color = color + mat.specularRef.pointwise_multiplication(plight_contribution) * pow(cosalpha, mat.phongExp);
+	}
+
+	
+	Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
+	return result;
+
+}
+
 
 // Parses XML file. 
 Scene::Scene(const char *xmlPath)

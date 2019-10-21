@@ -42,6 +42,7 @@ public:
 
 private:
     // Write any other stuff here
+	Color calculate_pixel_color(Ray ray, float t, Shape* object, ReturnVal retval);
 };
 
 #endif

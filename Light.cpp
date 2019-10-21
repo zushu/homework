@@ -16,4 +16,8 @@ Vector3f PointLight::computeLightContribution(const Vector3f& p)
      *                                             *
      ***********************************************
 	 */
+    float distance = (position - p).length();
+    float distance_2 = distance*distance;
+    Vector3f contribution = intensity / distance_2;
+    return contribution;
 }

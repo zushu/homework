@@ -41,8 +41,6 @@ ReturnVal Sphere::intersect(const Ray & ray) const
 
     Vector3f center = pScene->vertices[cIndex - 1];
 
-    std::cout << "center coords: " << " x: "<< center.x << " y: " << center.y << " z: " << center.z  << std::endl;
-
     float t0, t1;
     Vector3f e_minus_c = ray.origin - center;
     float a = ray.direction * ray.direction;

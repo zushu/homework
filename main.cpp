@@ -11,10 +11,10 @@ int main(int argc, char *argv[])
 
     pScene = new Scene(xmlPath);
 
-    for (int i = 0; i < 3; i++)
+    /*for (int i = 0; i < 3; i++)
     {
         std::cout << " x: "<< pScene->vertices[i].x << " y: " << pScene->vertices[i].y << " z: " << pScene->vertices[i].z  << std::endl;
-    }
+    }*/
 
     pScene->renderScene();
 
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
     Ray ray2 = cam2.getPrimaryRay(192, 256);
     std::cout << "ray1 direction" << ray2.direction.x << " " << ray2.direction.y << " " << ray2.direction.z << std::endl;
-    */
+    
 
     Sphere sphere(1, 1, 8, 0.3);
     ReturnVal res = sphere.intersect(Ray(Vector3f(0, 0, 0), Vector3f(-0.875, 1, -2)));
@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     std::cout << " tri t: " << res2.t <<  std::endl;
     if (res2.intersects == true)
         std::cout << " t: " << res2.t << " " << res2.intersection_point.x << " " << res2.intersection_point.y << " " << res2.intersection_point.z << std::endl;
+        */
 
 	return 0;
 }
