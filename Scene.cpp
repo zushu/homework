@@ -32,6 +32,7 @@ void Scene::renderScene(void)
 				Ray ray = cam->getPrimaryRay(j, i);
 				float tmin = INFINITY;
 				Shape* final_obj = nullptr;
+				ReturnVal final_res;
 				ReturnVal object_res;
 				for (Shape* object : objects)
 				{
@@ -40,17 +41,18 @@ void Scene::renderScene(void)
 					{
 						tmin = object_res.t;
 						final_obj = object;
+						final_res = object_res;
 					}
 				}
 
 				if (final_obj != nullptr)
 				{
-					Color temp = calculate_pixel_color(ray, tmin, final_obj, object_res);
+					Color temp = calculate_pixel_color(ray, tmin, final_obj, final_res);
 					image.setPixelValue(j, i, temp);
 				}
 				else
 				{
-					Color black = {(unsigned char) std::round(backgroundColor.x), (unsigned char) std::round(backgroundColor.y), (unsigned char) std::round(backgroundColor.z)};
+					Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
 					image.setPixelValue(j, i, black);
 				}
 				

@@ -36,7 +36,7 @@ ReturnVal Sphere::intersect(const Ray & ray) const
 	 */
 
     float infty = std::numeric_limits<float>::infinity();
-
+    float eps = pScene->intTestEps;
     ReturnVal result;
 
     Vector3f center = pScene->vertices[cIndex - 1];
@@ -47,7 +47,7 @@ ReturnVal Sphere::intersect(const Ray & ray) const
     float b = (ray.direction * e_minus_c) * 2;
     float c = e_minus_c * e_minus_c - R*R;
     float discriminant = b * b - 4 * a * c;
-    if (discriminant < -0.000001)
+    if (discriminant < -eps)
     {
         result.intersects = false;
         result.t = infty;
@@ -65,10 +65,10 @@ ReturnVal Sphere::intersect(const Ray & ray) const
             std::swap(t0, t1);
         }
 
-        if (t0 < 0)
+        if (t0 < -eps)
         {
             t0 = t1;
-            if (t0 < 0)
+            if (t0 < -eps)
             {
                 result.intersects = false;
                 result.t = infty;
@@ -117,7 +117,7 @@ ReturnVal Triangle::intersect(const Ray & ray) const
 	 */
 
     float infty = std::numeric_limits<float>::infinity();
-    float eps = 0.000001;
+    float eps = pScene->intTestEps;
 
     Vector3f vertex1 = pScene->vertices[p1Index - 1];
     Vector3f vertex2 = pScene->vertices[p2Index - 1];
@@ -128,7 +128,7 @@ ReturnVal Triangle::intersect(const Ray & ray) const
     result.t = infty;
 
     float normal_dot_ray_dir = normal * ray.direction;
-    if (normal_dot_ray_dir > 0 || fabs(normal * ray.direction) < eps)
+    if (normal_dot_ray_dir > .0 || fabs(normal * ray.direction) < eps)
     {
         result.intersects = false;
         return result;
@@ -157,7 +157,7 @@ ReturnVal Triangle::intersect(const Ray & ray) const
 
     float beta = (j * ei_minus_hf + k * gf_minus_di + l * dh_minus_eg) / detA;
 
-    if (beta < (-1) * eps)
+    if (beta < -eps)
     {
         result.intersects = false;
         return result;
@@ -165,7 +165,7 @@ ReturnVal Triangle::intersect(const Ray & ray) const
 
     float gamma = (i * ak_minus_jb + h * jc_minus_al + g * bl_minus_kc) / detA;
 
-    if (gamma < (-1) * eps || (gamma + beta) > (1.0 + eps))
+    if (gamma < -eps || (gamma + beta) > (1.0 + eps))
     {
         result.intersects = false;
         return result;
@@ -173,13 +173,12 @@ ReturnVal Triangle::intersect(const Ray & ray) const
 
     float t = (-1) * (f * ak_minus_jb + e * jc_minus_al + d * bl_minus_kc) / detA;
 
-    if (t < 0) 
+    if (t < -eps) 
     {
         result.intersects = false;
         return result;
     }
-
-    if (t > (-1) * eps)
+    else
     {
         result.intersects = true;
         result.t = t;
