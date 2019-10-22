@@ -2,7 +2,6 @@
 #include "Scene.h"
 #include <cstdio>
 #include <algorithm>
-#include <limits>
 
 Shape::Shape(void)
 {

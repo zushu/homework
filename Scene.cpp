@@ -30,35 +30,8 @@ void Scene::renderScene(void)
 			for (int j = 0; j < cols; j++)
 			{
 				Ray ray = cam->getPrimaryRay(j, i);
-				float tmin = INFINITY;
-				Shape* final_obj = nullptr;
-				ReturnVal final_res;
-				ReturnVal object_res;
-				for (Shape* object : objects)
-				{
-					object_res = object->intersect(ray);
-					if (object_res.intersects && object_res.t < tmin)
-					{
-						tmin = object_res.t;
-						final_obj = object;
-						final_res = object_res;
-					}
-				}
-
-				if (final_obj != nullptr)
-				{
-					Color temp = calculate_pixel_color(ray, tmin, final_obj, final_res);
-					image.setPixelValue(j, i, temp);
-
-				}
-				else
-				{
-					//Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
-					Color black = {0, 0, 0};
-					//std::cout << (int) black.blu << " "<< (int) black.grn << " " << (int) black.red << std::endl;
-					image.setPixelValue(j, i, black);
-				}
-				
+				Color temp = calculate_pixel_color(ray);
+				image.setPixelValue(j, i, temp);				
 			}
 		}
 
@@ -67,10 +40,90 @@ void Scene::renderScene(void)
 }
 
 
-Color Scene::calculate_pixel_color(Ray ray, float t, Shape* object, ReturnVal retval)
+Color Scene::calculate_pixel_color(Ray ray)
 {
 	//Color color = {backgroundColor.x, backgroundColor.y, backgroundColor.z};
-	Vector3f color(0, 0, 0);
+	float tmin = std::numeric_limits<float>::infinity();
+	Shape* final_obj = nullptr;
+	ReturnVal final_res;
+	ReturnVal object_res;
+	for (Shape* object : objects)
+	{
+		object_res = object->intersect(ray);
+		if (object_res.intersects && object_res.t < tmin)
+		{
+			tmin = object_res.t;
+			final_obj = object;
+			final_res = object_res;
+		}
+	}
+
+	if (final_obj != nullptr)
+	{
+		//Color temp = calculate_pixel_color(ray, tmin, final_obj, final_res);
+		//image.setPixelValue(j, i, temp);
+
+		Vector3f color(0, 0, 0);
+		Material mat = *(materials[final_obj->matIndex - 1]);
+
+		// ambient shading
+		color = color + ambientLight.pointwise_multiplication(mat.ambientRef);
+
+		for (PointLight* plight : lights)
+		{
+			// vector from intersection point on object to the point light
+			Vector3f light_dir = (plight->position - final_res.intersection_point).normalize();
+
+			int shadow_flag = 0;
+			for (Shape* obj_i : objects)
+			{
+				Ray light_ray(final_res.intersection_point + (light_dir * shadowRayEps), light_dir);
+				ReturnVal shadow_res = obj_i->intersect(light_ray);
+				if (shadow_res.intersects && shadow_res.t < final_res.t)
+				{
+					shadow_flag = 1;
+					break;
+				}
+			}
+
+			if (shadow_flag == 1)
+			{
+				//shadow_flag = 0;
+				continue;
+			}
+
+			// diffuse shading
+			float costheta_temp = final_res.normal * light_dir;
+			float costheta = (costheta_temp > 0) ? costheta_temp : 0;
+
+			Vector3f plight_contribution = plight->computeLightContribution(final_res.intersection_point);
+			color = color + mat.diffuseRef.pointwise_multiplication(plight_contribution) * costheta;
+
+			// specular shading
+			// bisector of the angle between light_dir and -ray.direction
+			Vector3f half_vector = (light_dir - ray.direction).normalize();
+			float cosalpha_temp = final_res.normal * half_vector;
+			float cosalpha = (cosalpha_temp > 0) ? cosalpha_temp : 0;
+			color = color + mat.specularRef.pointwise_multiplication(plight_contribution) * pow(cosalpha, mat.phongExp);
+		}
+
+		
+		Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
+		return result;
+
+
+
+	}
+	else
+	{
+		Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
+
+		return black;
+		//Color black = {0, 0, 0};
+		//std::cout << (int) black.blu << " "<< (int) black.grn << " " << (int) black.red << std::endl;
+		//image.setPixelValue(j, i, black);
+	}
+	/*Vector3f color(0, 0, 0);
 	Material mat = *(materials[object->matIndex - 1]);
 
 	// ambient shading
@@ -80,6 +133,24 @@ Color Scene::calculate_pixel_color(Ray ray, float t, Shape* object, ReturnVal re
 	{
 		// vector from intersection point on object to the point light
 		Vector3f light_dir = (plight->position - retval.intersection_point).normalize();
+
+		int shadow_flag = 0;
+		for (Shape* obj_i : objects)
+		{
+			Ray light_ray(retval.intersection_point + (light_dir * intTestEps), light_dir);
+			ReturnVal shadow_res = obj_i->intersect(light_ray);
+			if (shadow_res.intersects)
+			{
+				shadow_flag = 1;
+				break;
+			}
+		}
+
+		if (shadow_flag == 1)
+		{
+			shadow_flag = 0;
+			continue;
+		}
 
 		// diffuse shading
 		float costheta_temp = retval.normal * light_dir;
@@ -98,7 +169,7 @@ Color Scene::calculate_pixel_color(Ray ray, float t, Shape* object, ReturnVal re
 
 	
 	Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
-	return result;
+	return result;*/
 
 }
 

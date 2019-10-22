@@ -3,6 +3,7 @@
 
 #include <cmath> 
 #include <stdexcept>
+#include <limits>
 
 class Scene;
 
