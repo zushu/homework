@@ -138,6 +138,11 @@ typedef struct Vector3f
 		return result;
 	}
 
+	bool is_zero()
+	{
+		return (x == 0 && y == 0 && z == 0);
+	}
+
 } Vector3f;
 
 /* Structure to hold return value from ray intersection routine. 

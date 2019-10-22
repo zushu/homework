@@ -42,7 +42,7 @@ public:
 
 private:
     // Write any other stuff here
-	Color calculate_pixel_color(Ray ray);
+	Vector3f calculate_pixel_color(Ray ray, int recDepth);
 };
 
 #endif

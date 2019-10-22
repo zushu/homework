@@ -30,8 +30,9 @@ void Scene::renderScene(void)
 			for (int j = 0; j < cols; j++)
 			{
 				Ray ray = cam->getPrimaryRay(j, i);
-				Color temp = calculate_pixel_color(ray);
-				image.setPixelValue(j, i, temp);				
+				Vector3f color = calculate_pixel_color(ray, maxRecursionDepth);
+				Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
+				image.setPixelValue(j, i, result);				
 			}
 		}
 
@@ -40,7 +41,7 @@ void Scene::renderScene(void)
 }
 
 
-Color Scene::calculate_pixel_color(Ray ray)
+Vector3f Scene::calculate_pixel_color(Ray ray, int recDepth)
 {
 	//Color color = {backgroundColor.x, backgroundColor.y, backgroundColor.z};
 	float tmin = std::numeric_limits<float>::infinity();
@@ -109,20 +110,36 @@ Color Scene::calculate_pixel_color(Ray ray)
 			float cosalpha_temp = final_res.normal * half_vector;
 			float cosalpha = (cosalpha_temp > 0) ? cosalpha_temp : 0;
 			color = color + mat.specularRef.pointwise_multiplication(plight_contribution) * pow(cosalpha, mat.phongExp);
+
+			// mirror reflection
+			//int maxdepth = maxRecursionDepth;
+
+			if (recDepth > 0 && ! mat.mirrorRef.is_zero())
+			{
+				Vector3f r = (ray.direction - (final_res.normal * ((ray.direction * final_res.normal) * 2))).normalize();
+				Ray reflection_ray(final_res.intersection_point + r * shadowRayEps, r);
+
+				color = color + calculate_pixel_color(reflection_ray, recDepth - 1).pointwise_multiplication(mat.mirrorRef);
+				}
+
+
 		}
 
 		
-		Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
-		return result;
+		//Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
+		//return result;
+		return color;
 
 
 
 	}
 	else
 	{
-		Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
+		//Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
 
-		return black;
+		//return black;
+
+		return backgroundColor;
 		//Color black = {0, 0, 0};
 		//std::cout << (int) black.blu << " "<< (int) black.grn << " " << (int) black.red << std::endl;
 		//image.setPixelValue(j, i, black);
