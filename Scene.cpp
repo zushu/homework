@@ -72,14 +72,15 @@ Color Scene::calculate_pixel_color(Ray ray)
 		for (PointLight* plight : lights)
 		{
 			// vector from intersection point on object to the point light
-			Vector3f light_dir = (plight->position - final_res.intersection_point).normalize();
+			Vector3f light_dir = plight->position - final_res.intersection_point;
+			Vector3f light_dir_normalized = light_dir.normalize();
 
 			int shadow_flag = 0;
 			for (Shape* obj_i : objects)
 			{
-				Ray light_ray(final_res.intersection_point + (light_dir * shadowRayEps), light_dir);
+				Ray light_ray(final_res.intersection_point + (light_dir_normalized * shadowRayEps), light_dir_normalized);
 				ReturnVal shadow_res = obj_i->intersect(light_ray);
-				if (shadow_res.intersects && shadow_res.t < final_res.t)
+				if (shadow_res.intersects && shadow_res.t < light_dir.length() - shadowRayEps)
 				{
 					shadow_flag = 1;
 					break;
@@ -93,15 +94,15 @@ Color Scene::calculate_pixel_color(Ray ray)
 			}
 
 			// diffuse shading
-			float costheta_temp = final_res.normal * light_dir;
+			float costheta_temp = final_res.normal * light_dir_normalized;
 			float costheta = (costheta_temp > 0) ? costheta_temp : 0;
 
 			Vector3f plight_contribution = plight->computeLightContribution(final_res.intersection_point);
 			color = color + mat.diffuseRef.pointwise_multiplication(plight_contribution) * costheta;
 
 			// specular shading
-			// bisector of the angle between light_dir and -ray.direction
-			Vector3f half_vector = (light_dir - ray.direction).normalize();
+			// bisector of the angle between light_dir_normalized and -ray.direction
+			Vector3f half_vector = (light_dir_normalized - ray.direction).normalize();
 			float cosalpha_temp = final_res.normal * half_vector;
 			float cosalpha = (cosalpha_temp > 0) ? cosalpha_temp : 0;
 			color = color + mat.specularRef.pointwise_multiplication(plight_contribution) * pow(cosalpha, mat.phongExp);
