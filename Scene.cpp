@@ -13,13 +13,6 @@ using namespace tinyxml2;
  */
 void Scene::renderScene(void)
 {
-	/***********************************************
-     *                                             *
-	 * TODO: Implement this function               *
-     *                                             *
-     ***********************************************
-	 */
-
 	for (Camera* cam : cameras)
 	{
 		int rows = cam->imgPlane.ny, cols = cam->imgPlane.nx;
@@ -40,10 +33,9 @@ void Scene::renderScene(void)
 	}
 }
 
-
+// tracer function
 Vector3f Scene::calculate_pixel_color(Ray ray, int recDepth)
 {
-	//Color color = {backgroundColor.x, backgroundColor.y, backgroundColor.z};
 	float tmin = std::numeric_limits<float>::infinity();
 	Shape* final_obj = nullptr;
 	ReturnVal final_res;
@@ -61,9 +53,6 @@ Vector3f Scene::calculate_pixel_color(Ray ray, int recDepth)
 
 	if (final_obj != nullptr)
 	{
-		//Color temp = calculate_pixel_color(ray, tmin, final_obj, final_res);
-		//image.setPixelValue(j, i, temp);
-
 		Vector3f color(0, 0, 0);
 		Material mat = *(materials[final_obj->matIndex - 1]);
 
@@ -82,9 +71,6 @@ Vector3f Scene::calculate_pixel_color(Ray ray, int recDepth)
 				Ray light_ray(final_res.intersection_point + (light_dir_normalized * shadowRayEps), light_dir_normalized);
 				ReturnVal shadow_res = obj_i->intersect(light_ray);
 				if (shadow_res.intersects && shadow_res.t < light_dir.length() - shadowRayEps)
-				//if (shadow_res.intersects && shadow_res.t < light_dir.length())
-				//std::cout << "shadow res t: " << shadow_res.t << " final res t: " << final_res.t << std::endl;
-				//if (shadow_res.intersects && shadow_res.t < final_res.t)
 				{
 					shadow_flag = 1;
 					break;
@@ -112,22 +98,16 @@ Vector3f Scene::calculate_pixel_color(Ray ray, int recDepth)
 			color = color + mat.specularRef.pointwise_multiplication(plight_contribution) * pow(cosalpha, mat.phongExp);
 
 			// mirror reflection
-			//int maxdepth = maxRecursionDepth;
-
 			if (recDepth > 0 && ! mat.mirrorRef.is_zero())
 			{
 				Vector3f r = (ray.direction - (final_res.normal * ((ray.direction * final_res.normal) * 2))).normalize();
 				Ray reflection_ray(final_res.intersection_point + r * shadowRayEps, r);
 
 				color = color + calculate_pixel_color(reflection_ray, recDepth - 1).pointwise_multiplication(mat.mirrorRef);
-				}
+			}
 
 
 		}
-
-		
-		//Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
-		//return result;
 		return color;
 
 
@@ -135,63 +115,8 @@ Vector3f Scene::calculate_pixel_color(Ray ray, int recDepth)
 	}
 	else
 	{
-		//Color black = {(unsigned char) backgroundColor.x, (unsigned char) backgroundColor.y, (unsigned char) backgroundColor.z};
-
-		//return black;
-
 		return backgroundColor;
-		//Color black = {0, 0, 0};
-		//std::cout << (int) black.blu << " "<< (int) black.grn << " " << (int) black.red << std::endl;
-		//image.setPixelValue(j, i, black);
 	}
-	/*Vector3f color(0, 0, 0);
-	Material mat = *(materials[object->matIndex - 1]);
-
-	// ambient shading
-	color = color + ambientLight.pointwise_multiplication(mat.ambientRef);
-
-	for (PointLight* plight : lights)
-	{
-		// vector from intersection point on object to the point light
-		Vector3f light_dir = (plight->position - retval.intersection_point).normalize();
-
-		int shadow_flag = 0;
-		for (Shape* obj_i : objects)
-		{
-			Ray light_ray(retval.intersection_point + (light_dir * intTestEps), light_dir);
-			ReturnVal shadow_res = obj_i->intersect(light_ray);
-			if (shadow_res.intersects)
-			{
-				shadow_flag = 1;
-				break;
-			}
-		}
-
-		if (shadow_flag == 1)
-		{
-			shadow_flag = 0;
-			continue;
-		}
-
-		// diffuse shading
-		float costheta_temp = retval.normal * light_dir;
-		float costheta = (costheta_temp > 0) ? costheta_temp : 0;
-
-		Vector3f plight_contribution = plight->computeLightContribution(retval.intersection_point);
-		color = color + mat.diffuseRef.pointwise_multiplication(plight_contribution) * costheta;
-
-		// specular shading
-		// bisector of the angle between light_dir and -ray.direction
-		Vector3f half_vector = (light_dir - ray.direction).normalize();
-		float cosalpha_temp = retval.normal * half_vector;
-		float cosalpha = (cosalpha_temp > 0) ? cosalpha_temp : 0;
-		color = color + mat.specularRef.pointwise_multiplication(plight_contribution) * pow(cosalpha, mat.phongExp);
-	}
-
-	
-	Color result = {(unsigned char) std::round(std::min(color.x, 255.0f)), (unsigned char) std::round(std::min(color.y, 255.0f)), (unsigned char) std::round(std::min(color.z, 255.0f))};
-	return result;*/
-
 }
 
 
