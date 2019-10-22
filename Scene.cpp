@@ -81,6 +81,9 @@ Color Scene::calculate_pixel_color(Ray ray)
 				Ray light_ray(final_res.intersection_point + (light_dir_normalized * shadowRayEps), light_dir_normalized);
 				ReturnVal shadow_res = obj_i->intersect(light_ray);
 				if (shadow_res.intersects && shadow_res.t < light_dir.length() - shadowRayEps)
+				//if (shadow_res.intersects && shadow_res.t < light_dir.length())
+				//std::cout << "shadow res t: " << shadow_res.t << " final res t: " << final_res.t << std::endl;
+				//if (shadow_res.intersects && shadow_res.t < final_res.t)
 				{
 					shadow_flag = 1;
 					break;

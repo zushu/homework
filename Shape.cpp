@@ -172,7 +172,7 @@ ReturnVal Triangle::intersect(const Ray & ray) const
 
     float t = (-1) * (f * ak_minus_jb + e * jc_minus_al + d * bl_minus_kc) / detA;
 
-    if (t < -eps) 
+    if (t <= -eps) 
     {
         result.intersects = false;
         return result;
@@ -181,7 +181,7 @@ ReturnVal Triangle::intersect(const Ray & ray) const
     {
         result.intersects = true;
         result.t = t;
-        result.intersection_point = ray.origin + ray.direction * result.t;
+        result.intersection_point = ray.origin + (ray.direction * result.t);
         result.normal = normal;
         result.material_index = matIndex;
         result.shape_type = 2;
@@ -223,6 +223,7 @@ ReturnVal Mesh::intersect(const Ray & ray) const
     float tNear = std::numeric_limits<float>::infinity();
     int closest_tri_id;
     ReturnVal result;
+    result.intersects = false;
     int num_tris = faces.size();
 
     for (int i = 0; i < num_tris; i++)
@@ -232,7 +233,7 @@ ReturnVal Mesh::intersect(const Ray & ray) const
         if (tri_res.intersects && tri_res.t < tNear)
         {
             tNear = tri_res.t;
-            result = tri_res; // test it
+            result = tri_res;
         }
     }
 
