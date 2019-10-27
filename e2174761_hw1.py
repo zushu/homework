@@ -39,8 +39,15 @@ def a_star(state, goal, M, heuristics="manhattan"):
         x = min(frontier, key = lambda node : node.f)
         if x.state == goal: return x
         
+def manhattan(index1, index2):
+    ind1_i, ind1_j = index1;
+    ind2_i, ind2_j = index2;
+    return abs(ind1_i - ind2_i) + abs(ind1_j - ind2_j)
 
 def expand(node):
+    state = node.state
+    children = []
+    i, j = find_index(state, '_')
     return
 
 # find index in 2d list
