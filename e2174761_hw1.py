@@ -33,28 +33,40 @@ class Node():
         self.children = []
 
 
-def a_star():
+def a_star(init_state=board_init, goal=board_final):
     explored = []
-    root = Node(board_init, False, 0, 0, 0)
+    root = Node(init_state, False, 0, 0, 0)
     root.h = h(root.state)
     root.f = root.h + root.g
     frontier = [root]
     
-    if frontier == []: return False
+    if frontier == []: 
+        print("FAILURE")
+        return False
+
+    print("SUCCESS")
     
     while frontier != []:
         x = min(frontier, key = lambda node : node.f)
-        if x.state == goal: return x
+        print_node(x)
+        #print_board(x.state)
+        if x.state == goal: 
+            print_board(x.state)
+            return x
+
         add_x_to_explored = True
         for y in explored:
             if y.state == x.state and y.f <= x.f:
                 add_x_to_explored = False
                 break
+
         if add_x_to_explored == True:
+            print_board(x.state)
             explored.append(x)
             x_children = expand(x)
-            explored.extend(x_children)
-        
+            frontier.remove(x)
+            frontier.extend(x_children)
+
 # manhattan distance between two points
 def manhattan(index1, index2):
     ind1_i, ind1_j = index1;
@@ -137,7 +149,23 @@ def find_index(lst, to_be_found):
         return result[0]
 
     return []
+
+def print_board(board):
+    for i in range(k):
+        print(" ".join(board[i]))
+    print()
+
+def print_node(node):
+    print_board(node.state)
+    if (node.parent == False):
+        print("no parent")
+    else:
+        print_board(node.parent.state)
+    print(node.f)
+    print(node.g)
+    print(node.h)
     
 lst1 = [Node(1, False, 2, 2, 0), Node(2, False, 3, 2, 1), Node(3, False, 5, 2, 3)]
 print(min(lst1, key=lambda x: x.f).f)
     
+a_star()
