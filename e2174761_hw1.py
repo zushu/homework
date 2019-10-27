@@ -1,5 +1,9 @@
 import copy
 
+# TODO: transform into OO design
+
+# global variables
+# TODO: remove strings
 method = input("algorithm to be used: ")
 M = int(input("maximum total estimated cost: "))
 k = int(input("board dimension: "))
@@ -39,13 +43,31 @@ def a_star(state, goal, M):
         x = min(frontier, key = lambda node : node.f)
         if x.state == goal: return x
         
+# manhattan distance between two points
 def manhattan(index1, index2):
     ind1_i, ind1_j = index1;
     ind2_i, ind2_j = index2;
     return abs(ind1_i - ind2_i) + abs(ind1_j - ind2_j)
 
+# g function
+# manhattan distance between two board configurations
+def total_manhattan(board_before, board_after):
+    total_distance = 0
+    for i in range(k):
+        for j in range(k):
+            if board_before[i][j] == '_':
+                continue
+            index_after = find_index(board_after, board_before[i][j]) 
+            total_distance = total_distance + manhattan((i, j), index_after)
+
+    return total_distance
+            
+# heuristic function
+def h(current_state):
+    return total_manhattan(current_state, board_final)
+
 # k: board dimension
-def expand(node, k):
+def expand(node):
     state = node.state
     children = []
     i, j = find_index(state, '_')
@@ -56,6 +78,9 @@ def expand(node, k):
         new_state[i][j], new_state[i+1][j] = new_state[i+1][j], new_state[i][j]
         # TODO: calculate f, g, h
         child_node = Node(new_state, node, 0, 0, 0)
+        child_node.g = node.g + 1
+        child_node.h = h(child_node.state)
+        child_node.f = child_node.g + child_node.h
         children.append(child_node)
         
     # down - move the tile above blank down
@@ -63,6 +88,9 @@ def expand(node, k):
         new_state = copy.deepcopy(state)
         new_state[i-1][j], new_state[i][j] = new_state[i][j], new_state[i-1][j]
         child_node = Node(new_state, node, 0, 0, 0)
+        child_node.g = node.g + 1
+        child_node.h = h(child_node.state)
+        child_node.f = child_node.g + child_node.h
         children.append(child_node)
 
     # left - move the tile to the right of blank to the left
@@ -70,6 +98,9 @@ def expand(node, k):
         new_state = copy.deepcopy(state)
         new_state[i][j], new_state[i][j+1] = new_state[i][j+1], new_state[i][j]
         child_node = Node(new_state, node, 0, 0, 0)
+        child_node.g = node.g + 1
+        child_node.h = h(child_node.state)
+        child_node.f = child_node.g + child_node.h
         children.append(child_node)
 
     # right - move the tile to the left of blank to the right
@@ -77,13 +108,19 @@ def expand(node, k):
         new_state = copy.deepcopy(state)
         new_state[i][j-1], new_state[i][j] = new_state[i][j], new_state[i][j-1]
         child_node = Node(new_state, node, 0, 0, 0)
+        child_node.g = node.g + 1
+        child_node.h = h(child_node.state)
+        child_node.f = child_node.g + child_node.h
         children.append(child_node)
 
     return children
 
 # find index in 2d list
 def find_index(lst, to_be_found):
-    result = [(i, item.index(to_be_found)) for i, item in enumerate(lst) if to_be_found in item]
+    result = [(i, item.index(to_be_found)) 
+                for i, item in enumerate(lst) 
+                    if to_be_found in item]
+
     if result != []:
         return result[0]
 
