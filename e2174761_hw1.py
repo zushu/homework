@@ -33,15 +33,27 @@ class Node():
         self.children = []
 
 
-def a_star(state, goal, M):
+def a_star():
     explored = []
-    frontier = [Node(state, False, 0)]
+    root = Node(board_init, False, 0, 0, 0)
+    root.h = h(root.state)
+    root.f = root.h + root.g
+    frontier = [root]
     
     if frontier == []: return False
     
     while frontier != []:
         x = min(frontier, key = lambda node : node.f)
         if x.state == goal: return x
+        add_x_to_explored = True
+        for y in explored:
+            if y.state == x.state and y.f <= x.f:
+                add_x_to_explored = False
+                break
+        if add_x_to_explored == True:
+            explored.append(x)
+            x_children = expand(x)
+            explored.extend(x_children)
         
 # manhattan distance between two points
 def manhattan(index1, index2):
@@ -76,7 +88,7 @@ def expand(node):
     if i != k-1 :
         new_state = copy.deepcopy(state)
         new_state[i][j], new_state[i+1][j] = new_state[i+1][j], new_state[i][j]
-        # TODO: calculate f, g, h
+        # TODO: write a create child function
         child_node = Node(new_state, node, 0, 0, 0)
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
