@@ -29,7 +29,7 @@ class Node():
         self.children = []
 
 
-def a_star(state, goal, M, heuristics="manhattan"):
+def a_star(state, goal, M):
     explored = []
     frontier = [Node(state, False, 0)]
     
@@ -44,11 +44,42 @@ def manhattan(index1, index2):
     ind2_i, ind2_j = index2;
     return abs(ind1_i - ind2_i) + abs(ind1_j - ind2_j)
 
-def expand(node):
+# k: board dimension
+def expand(node, k):
     state = node.state
     children = []
     i, j = find_index(state, '_')
-    return
+    # up, down, left, right
+    # up - move the tile below blank up
+    if i != k-1 :
+        new_state = copy.deepcopy(state)
+        new_state[i][j], new_state[i+1][j] = new_state[i+1][j], new_state[i][j]
+        # TODO: calculate f, g, h
+        child_node = Node(new_state, node, 0, 0, 0)
+        children.append(child_node)
+        
+    # down - move the tile above blank down
+    if i != 0:
+        new_state = copy.deepcopy(state)
+        new_state[i-1][j], new_state[i][j] = new_state[i][j], new_state[i-1][j]
+        child_node = Node(new_state, node, 0, 0, 0)
+        children.append(child_node)
+
+    # left - move the tile to the right of blank to the left
+    if j != k-1:
+        new_state = copy.deepcopy(state)
+        new_state[i][j], new_state[i][j+1] = new_state[i][j+1], new_state[i][j]
+        child_node = Node(new_state, node, 0, 0, 0)
+        children.append(child_node)
+
+    # right - move the tile to the left of blank to the right
+    if j != 0:
+        new_state = copy.deepcopy(state)
+        new_state[i][j-1], new_state[i][j] = new_state[i][j], new_state[i][j-1]
+        child_node = Node(new_state, node, 0, 0, 0)
+        children.append(child_node)
+
+    return children
 
 # find index in 2d list
 def find_index(lst, to_be_found):
