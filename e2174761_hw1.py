@@ -23,19 +23,20 @@ print(board_final)
 
 # TODO: add depth
 class Node():
-    def __init__(self, state, parent, f, g, h):
+    def __init__(self, state, parent, f, g, h, tag):
         self.state = state
         self.parent = parent
         # costs
         self.f = f
         self.g = g
         self.h = h
+        self.tag = tag
         self.children = []
 
 
 def a_star(init_state=board_init, goal=board_final):
     explored = []
-    root = Node(init_state, False, 0, 0, 0)
+    root = Node(init_state, False, 0, 0, 0, "up")
     root.h = h(root.state)
     root.f = root.h + root.g
     frontier = [root]
@@ -48,7 +49,21 @@ def a_star(init_state=board_init, goal=board_final):
     
     while frontier != []:
         x = min(frontier, key = lambda node : node.f)
-        print_node(x)
+        min_indices = [i for i, elem in enumerate(frontier)
+                if elem.f == x.f]
+        min_nodes = []
+        for index_of_min in min_indices:
+            min_nodes.append(frontier[index_of_min])
+
+        sort_order = ["up", "down", "left", "right"]
+        min_nodes = sorted(min_nodes, key = lambda node : sort_order.index(node.tag))
+
+        for temp in min_nodes:
+            print_node(temp)
+
+        x = min_nodes[0]
+                
+        #print_node(x)
         #print_board(x.state)
         if x.state == goal: 
             print_board(x.state)
@@ -66,11 +81,12 @@ def a_star(init_state=board_init, goal=board_final):
             x_children = expand(x)
             frontier.remove(x)
             frontier.extend(x_children)
+            #frontier.reverse()
 
 # manhattan distance between two points
 def manhattan(index1, index2):
-    ind1_i, ind1_j = index1;
-    ind2_i, ind2_j = index2;
+    ind1_i, ind1_j = index1
+    ind2_i, ind2_j = index2
     return abs(ind1_i - ind2_i) + abs(ind1_j - ind2_j)
 
 # g function
@@ -101,7 +117,7 @@ def expand(node):
         new_state = copy.deepcopy(state)
         new_state[i][j], new_state[i+1][j] = new_state[i+1][j], new_state[i][j]
         # TODO: write a create child function
-        child_node = Node(new_state, node, 0, 0, 0)
+        child_node = Node(new_state, node, 0, 0, 0, "up")
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -111,7 +127,7 @@ def expand(node):
     if i != 0:
         new_state = copy.deepcopy(state)
         new_state[i-1][j], new_state[i][j] = new_state[i][j], new_state[i-1][j]
-        child_node = Node(new_state, node, 0, 0, 0)
+        child_node = Node(new_state, node, 0, 0, 0, "down")
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -121,7 +137,7 @@ def expand(node):
     if j != k-1:
         new_state = copy.deepcopy(state)
         new_state[i][j], new_state[i][j+1] = new_state[i][j+1], new_state[i][j]
-        child_node = Node(new_state, node, 0, 0, 0)
+        child_node = Node(new_state, node, 0, 0, 0, "left")
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -131,7 +147,7 @@ def expand(node):
     if j != 0:
         new_state = copy.deepcopy(state)
         new_state[i][j-1], new_state[i][j] = new_state[i][j], new_state[i][j-1]
-        child_node = Node(new_state, node, 0, 0, 0)
+        child_node = Node(new_state, node, 0, 0, 0, "right")
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -156,7 +172,7 @@ def print_board(board):
     print()
 
 def print_node(node):
-    print_board(node.state)
+    #print_board(node.state)
     if (node.parent == False):
         print("no parent")
     else:
@@ -164,8 +180,13 @@ def print_node(node):
     print(node.f)
     print(node.g)
     print(node.h)
+    print(node.tag)
     
-lst1 = [Node(1, False, 2, 2, 0), Node(2, False, 3, 2, 1), Node(3, False, 5, 2, 3)]
-print(min(lst1, key=lambda x: x.f).f)
+#lst1 = [Node(1, False, 2, 2, 0, "left"), Node(2, False, 3, 2, 1, "up"), Node(3, False, 5, 2, 3, "down")]
+#print(min(lst1, key=lambda x: x.f).f)
+
+#sort_order = ["up", "down", "left", "right"]
+#for nodei in sorted(lst1, key = lambda node : sort_order.index(node.tag)):
+#    print_node(nodei)
     
 a_star()
