@@ -19,20 +19,20 @@ for i in range(k):
 
 # TODO: add depth
 class Node():
-    def __init__(self, state, parent, f, g, h, tag):
+    def __init__(self, state, parent, f, g, h):
         self.state = state
         self.parent = parent
         # costs
         self.f = f
         self.g = g
         self.h = h
-        self.tag = tag
-        self.children = []
+        #self.tag = tag
+        #self.children = []
 
 
 def a_star(init_state=board_init, goal=board_final):
     explored = []
-    root = Node(init_state, False, 0, 0, 0, "up")
+    root = Node(init_state, False, 0, 0, 0)
     root.h = h(root.state)
     root.f = root.h + root.g
     frontier = [root]
@@ -59,9 +59,9 @@ def a_star(init_state=board_init, goal=board_final):
 
         x = min_nodes[0]
         """       
-        
+
         if x.state == goal: 
-            print("SUCCESS\n")
+            print("SUCCESS")
             path = get_path(x)
             for item in path:
                 print_board(item)
@@ -114,7 +114,7 @@ def a_star(init_state=board_init, goal=board_final):
     return False
 
 def ida_star(init_state=board_init, goal=board_final, f_max=M):
-    root = Node(init_state, False, 0, 0, 0, "up")
+    root = Node(init_state, False, 0, 0, 0)
     root.h = h(root.state)
     root.f = root.h + root.g
     bound = root.h
@@ -122,18 +122,21 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
     #print(bound)
     while True:
         if bound > f_max: 
+            print("bound")
             print("FAILURE")
             return "NOT FOUND"
         t = limited_f_search(path, 0, goal, bound)
         if t == "FOUND" : 
-            print("SUCCESS\n")
+            print("SUCCESS")
             for item in path:
                 print_board(item.state)
             return (path, bound)
         if t == float("inf") : 
+            print("inf")
             print("FAILURE")
             return "NOT FOUND"
         if t > f_max:
+            print("t > f_max")
             print("FAILURE")
             return "NOT FOUND"
         bound = t
@@ -147,16 +150,16 @@ def limited_f_search(path, g, goal, bound):
     if node.state == goal: return "FOUND"
 
     minimum = float('inf')
-    add_child_to_path = True
     children = expand(node)
 
     for child in children:
-        for y in path:
-            if child.state == y.state:
-                add_child_to_path = False
+        add_child_to_path = True
+        #for y in path:
+        #    if child.state == y.state:# and child.f == y.f:
+        #        add_child_to_path = False
 
-        #if child in path:
-        #    add_child_to_path = False
+        if child in path:
+            add_child_to_path = False
 
         if add_child_to_path:
             #print_board(child.state)
@@ -214,7 +217,7 @@ def expand(node):
         new_state = copy.deepcopy(state)
         new_state[i][j], new_state[i+1][j] = new_state[i+1][j], new_state[i][j]
         # TODO: write a create child function
-        child_node = Node(new_state, node, 0, 0, 0, "up")
+        child_node = Node(new_state, node, 0, 0, 0)
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -224,7 +227,7 @@ def expand(node):
     if i != 0:
         new_state = copy.deepcopy(state)
         new_state[i-1][j], new_state[i][j] = new_state[i][j], new_state[i-1][j]
-        child_node = Node(new_state, node, 0, 0, 0, "down")
+        child_node = Node(new_state, node, 0, 0, 0)
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -234,7 +237,7 @@ def expand(node):
     if j != k-1:
         new_state = copy.deepcopy(state)
         new_state[i][j], new_state[i][j+1] = new_state[i][j+1], new_state[i][j]
-        child_node = Node(new_state, node, 0, 0, 0, "left")
+        child_node = Node(new_state, node, 0, 0, 0)
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -244,7 +247,7 @@ def expand(node):
     if j != 0:
         new_state = copy.deepcopy(state)
         new_state[i][j-1], new_state[i][j] = new_state[i][j], new_state[i][j-1]
-        child_node = Node(new_state, node, 0, 0, 0, "right")
+        child_node = Node(new_state, node, 0, 0, 0)
         child_node.g = node.g + 1
         child_node.h = h(child_node.state)
         child_node.f = child_node.g + child_node.h
@@ -264,9 +267,10 @@ def find_index(lst, to_be_found):
     return []
 
 def print_board(board):
+    print()
     for i in range(k):
         print(" ".join(board[i]))
-    print()
+    #print()
 
 def print_node(node):
     #print_board(node.state)
@@ -277,7 +281,7 @@ def print_node(node):
     print(node.f)
     print(node.g)
     print(node.h)
-    print(node.tag)
+    #print(node.tag)
 
 if method == "A*":    
     a_star()
