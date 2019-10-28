@@ -3,9 +3,12 @@ import copy
 # TODO: transform into OO design
 
 # global variables
-# TODO: remove strings
+
+# algorithm
 method = input()
+# max f cost
 M = int(input())
+# board dimension
 k = int(input())
 
 board_init = [[0 for x in range(k)] for y in range(k)]
@@ -17,7 +20,6 @@ for i in range(k):
 for i in range(k):
     board_final[i] = list(map(str, input().split()))
 
-# TODO: add depth
 class Node():
     def __init__(self, state, parent, f, g, h):
         self.state = state
@@ -26,8 +28,6 @@ class Node():
         self.f = f
         self.g = g
         self.h = h
-        #self.tag = tag
-        #self.children = []
 
 
 def a_star(init_state=board_init, goal=board_final):
@@ -36,29 +36,9 @@ def a_star(init_state=board_init, goal=board_final):
     root.h = h(root.state)
     root.f = root.h + root.g
     frontier = [root]
-    """
-    if frontier == []: 
-        print("FAILURE")
-        return False
-    """
     
     while frontier != []:
-        x = min(frontier, key = lambda node : node.f)
-        """
-        min_indices = [i for i, elem in enumerate(frontier)
-                if elem.f == x.f]
-        min_nodes = []
-        for index_of_min in min_indices:
-            min_nodes.append(frontier[index_of_min])
-
-        sort_order = ["up", "down", "left", "right"]
-        min_nodes = sorted(min_nodes, key = lambda node : sort_order.index(node.tag))
-
-        #for temp in min_nodes:
-        #    print_node(temp)
-
-        x = min_nodes[0]
-        """       
+        x = min(frontier, key = lambda node : node.f)    
 
         if x.state == goal: 
             print("SUCCESS")
@@ -93,24 +73,8 @@ def a_star(init_state=board_init, goal=board_final):
             if add_x_child_to_frontier and x_child.f < M:
                 frontier.append(x_child)
 
-
-        """
-        add_x_to_explored = True
-        for y in explored:
-            if y.state == x.state and y.f <= x.f:
-                add_x_to_explored = False
-                break
-
-        if add_x_to_explored == True:
-            #print_board(x.state)
-            explored.append(x)
-            x_children = expand(x)
-            frontier.extend(x_children)
-            #frontier.reverse()
-        """
-
     # if frontier is empty and no goal state is found
-    print("FAILURE")
+    print("FAILURE", end='')
     return False
 
 def ida_star(init_state=board_init, goal=board_final, f_max=M):
@@ -122,19 +86,22 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
 
     while True:
         if bound > f_max: 
-            print("FAILURE")
+            print("FAILURE", end='')
             return "NOT FOUND"
+
         t = limited_f_search(path, 0, goal, bound)
         if t == "FOUND" : 
             print("SUCCESS")
             for item in path:
                 print_board(item.state)
             return (path, bound)
+
         if t == float("inf") : 
-            print("FAILURE")
+            print("FAILURE", end='')
             return "NOT FOUND"
+
         if t > f_max:
-            print("FAILURE")
+            print("FAILURE", end='')
             return "NOT FOUND"
         bound = t
 
@@ -199,15 +166,16 @@ def total_manhattan(board_before, board_after):
     return total_distance
             
 # heuristic function
-def h(current_state):
-    return total_manhattan(current_state, board_final)
+def h(current_state, goal=board_final):
+    return total_manhattan(current_state, goal)
 
 # k: board dimension
 def expand(node):
     state = node.state
     children = []
     i, j = find_index(state, '_')
-    # up, down, left, right
+
+    # priority is given to nodes in the order of: up, down, left, right
     # up - move the tile below blank up
     if i != k-1 :
         new_state = copy.deepcopy(state)
