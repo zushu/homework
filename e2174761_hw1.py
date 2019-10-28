@@ -17,9 +17,9 @@ for i in range(k):
 for i in range(k):
     board_final[i] = list(map(str, input().split()))
 
-print(board_init)
-print()
-print(board_final)
+#print(board_init)
+#print()
+#print(board_final)
 
 # TODO: add depth
 class Node():
@@ -45,7 +45,7 @@ def a_star(init_state=board_init, goal=board_final):
         print("FAILURE")
         return False
 
-    print("SUCCESS")
+    #print("SUCCESS")
     
     while frontier != []:
         x = min(frontier, key = lambda node : node.f)
@@ -58,16 +58,21 @@ def a_star(init_state=board_init, goal=board_final):
         sort_order = ["up", "down", "left", "right"]
         min_nodes = sorted(min_nodes, key = lambda node : sort_order.index(node.tag))
 
-        for temp in min_nodes:
-            print_node(temp)
+        #for temp in min_nodes:
+        #    print_node(temp)
 
         x = min_nodes[0]
                 
         #print_node(x)
         #print_board(x.state)
         if x.state == goal: 
-            print_board(x.state)
+            print("SUCCESS")
+            path = get_path(x)
+            for item in path:
+                print_board(item)
             return x
+
+            #return x
 
         add_x_to_explored = True
         for y in explored:
@@ -76,12 +81,20 @@ def a_star(init_state=board_init, goal=board_final):
                 break
 
         if add_x_to_explored == True:
-            print_board(x.state)
+            #print_board(x.state)
             explored.append(x)
             x_children = expand(x)
             frontier.remove(x)
             frontier.extend(x_children)
             #frontier.reverse()
+
+def get_path(node):
+    path = [node.state]
+    while node.parent:
+        node = node.parent
+        path.append(node.state)
+    path.reverse()
+    return path
 
 # manhattan distance between two points
 def manhattan(index1, index2):
