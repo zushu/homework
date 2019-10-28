@@ -4,9 +4,9 @@ import copy
 
 # global variables
 # TODO: remove strings
-method = input("algorithm to be used: ")
-M = int(input("maximum total estimated cost: "))
-k = int(input("board dimension: "))
+method = input()
+M = int(input())
+k = int(input())
 
 board_init = [[0 for x in range(k)] for y in range(k)]
 board_final = [[0 for x in range(k)] for y in range(k)]
@@ -59,10 +59,10 @@ def a_star(init_state=board_init, goal=board_final):
 
         x = min_nodes[0]
         """       
-        print_node(x)
-        print_board(x.state)
+        #print_node(x)
+        #print_board(x.state)
         if x.state == goal: 
-            print("SUCCESS")
+            print("SUCCESS\n")
             path = get_path(x)
             for item in path:
                 print_board(item)
@@ -74,14 +74,24 @@ def a_star(init_state=board_init, goal=board_final):
         x_children = expand(x)
         for x_child in x_children:
             for y in frontier:
-                if y.state == x_child.state and x_child.g < y.g:
+                if y.state == x_child.state and x_child.f < y.f:
                     frontier.remove(y)
 
             for y in explored:
-                if y.state == x_child.state and x_child.g < y.g:
+                if y.state == x_child.state and x_child.f < y.f:
                     explored.remove(y)
 
-            if x_child not in frontier and x_child not in explored:
+            #if x_child not in frontier and x_child not in explored:
+            add_x_child_to_frontier = True
+            for y in frontier:
+                if y.state == x_child.state:
+                    add_x_child_to_frontier = False
+
+            for y in explored:
+                if y.state == x_child.state:
+                    add_x_child_to_frontier = False
+
+            if add_x_child_to_frontier and x_child.f < M:
                 frontier.append(x_child)
 
 
@@ -104,8 +114,12 @@ def a_star(init_state=board_init, goal=board_final):
     print("FAILURE")
     return False
 
-def id_astar(init_state=board_init, goal=board_final, f_max=M):
+def ida_star(init_state=board_init, goal=board_final, f_max=M):
     return 
+
+def limited_f_search(init_state, goal, f_max):
+
+    return
 
 def get_path(node):
     path = [node.state]
@@ -213,5 +227,10 @@ def print_node(node):
     print(node.g)
     print(node.h)
     print(node.tag)
-    
-a_star()
+
+if method == "A*":    
+    a_star()
+elif method == "IDA*":
+    ida_star()
+else:
+    print("Method is not defined.")
