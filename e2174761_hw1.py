@@ -119,10 +119,9 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
     root.f = root.h + root.g
     bound = root.h
     path = [root]
-    #print(bound)
+
     while True:
         if bound > f_max: 
-            print("bound")
             print("FAILURE")
             return "NOT FOUND"
         t = limited_f_search(path, 0, goal, bound)
@@ -132,11 +131,9 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
                 print_board(item.state)
             return (path, bound)
         if t == float("inf") : 
-            print("inf")
             print("FAILURE")
             return "NOT FOUND"
         if t > f_max:
-            print("t > f_max")
             print("FAILURE")
             return "NOT FOUND"
         bound = t
@@ -150,21 +147,20 @@ def limited_f_search(path, g, goal, bound):
     if node.state == goal: return "FOUND"
 
     minimum = float('inf')
-    children = expand(node)
 
+    children = expand(node)
     for child in children:
         add_child_to_path = True
-        #for y in path:
-        #    if child.state == y.state:# and child.f == y.f:
-        #        add_child_to_path = False
+        for y in path:
+            if child.state == y.state:
+                add_child_to_path = False
 
-        if child in path:
-            add_child_to_path = False
+        #if child in path:
+        #    add_child_to_path = False
 
         if add_child_to_path:
-            #print_board(child.state)
             path.append(child)
-            # 1 = total_manhattan(child.state, node.state)
+            # 1 is total_manhattan(child.state, node.state)
             t = limited_f_search(path, g+1, goal, bound)
             if t == "FOUND" : return "FOUND"
             if t < minimum : minimum = t
@@ -272,6 +268,7 @@ def print_board(board):
         print(" ".join(board[i]))
     #print()
 
+"""
 def print_node(node):
     #print_board(node.state)
     if (node.parent == False):
@@ -282,6 +279,7 @@ def print_node(node):
     print(node.g)
     print(node.h)
     #print(node.tag)
+"""
 
 if method == "A*":    
     a_star()
