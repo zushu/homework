@@ -17,10 +17,6 @@ for i in range(k):
 for i in range(k):
     board_final[i] = list(map(str, input().split()))
 
-#print(board_init)
-#print()
-#print(board_final)
-
 # TODO: add depth
 class Node():
     def __init__(self, state, parent, f, g, h, tag):
@@ -40,15 +36,15 @@ def a_star(init_state=board_init, goal=board_final):
     root.h = h(root.state)
     root.f = root.h + root.g
     frontier = [root]
-    
+    """
     if frontier == []: 
         print("FAILURE")
         return False
-
-    #print("SUCCESS")
+    """
     
     while frontier != []:
         x = min(frontier, key = lambda node : node.f)
+        """
         min_indices = [i for i, elem in enumerate(frontier)
                 if elem.f == x.f]
         min_nodes = []
@@ -62,9 +58,9 @@ def a_star(init_state=board_init, goal=board_final):
         #    print_node(temp)
 
         x = min_nodes[0]
-                
-        #print_node(x)
-        #print_board(x.state)
+        """       
+        print_node(x)
+        print_board(x.state)
         if x.state == goal: 
             print("SUCCESS")
             path = get_path(x)
@@ -72,8 +68,24 @@ def a_star(init_state=board_init, goal=board_final):
                 print_board(item)
             return x
 
-            #return x
+        frontier.remove(x)
+        explored.append(x)
 
+        x_children = expand(x)
+        for x_child in x_children:
+            for y in frontier:
+                if y.state == x_child.state and x_child.g < y.g:
+                    frontier.remove(y)
+
+            for y in explored:
+                if y.state == x_child.state and x_child.g < y.g:
+                    explored.remove(y)
+
+            if x_child not in frontier and x_child not in explored:
+                frontier.append(x_child)
+
+
+        """
         add_x_to_explored = True
         for y in explored:
             if y.state == x.state and y.f <= x.f:
@@ -84,9 +96,16 @@ def a_star(init_state=board_init, goal=board_final):
             #print_board(x.state)
             explored.append(x)
             x_children = expand(x)
-            frontier.remove(x)
             frontier.extend(x_children)
             #frontier.reverse()
+        """
+
+    # if frontier is empty and no goal state is found
+    print("FAILURE")
+    return False
+
+def id_astar(init_state=board_init, goal=board_final, f_max=M):
+    return 
 
 def get_path(node):
     path = [node.state]
@@ -194,12 +213,5 @@ def print_node(node):
     print(node.g)
     print(node.h)
     print(node.tag)
-    
-#lst1 = [Node(1, False, 2, 2, 0, "left"), Node(2, False, 3, 2, 1, "up"), Node(3, False, 5, 2, 3, "down")]
-#print(min(lst1, key=lambda x: x.f).f)
-
-#sort_order = ["up", "down", "left", "right"]
-#for nodei in sorted(lst1, key = lambda node : sort_order.index(node.tag)):
-#    print_node(nodei)
     
 a_star()
