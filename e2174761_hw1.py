@@ -74,7 +74,7 @@ def a_star(init_state=board_init, goal=board_final):
                 frontier.append(x_child)
 
     # if frontier is empty and no goal state is found
-    print("FAILURE", end='')
+    print("FAILURE")
     return False
 
 def ida_star(init_state=board_init, goal=board_final, f_max=M):
@@ -86,7 +86,7 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
 
     while True:
         if bound > f_max: 
-            print("FAILURE", end='')
+            print("FAILURE")
             return "NOT FOUND"
 
         t = limited_f_search(path, 0, goal, bound)
@@ -97,11 +97,11 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
             return (path, bound)
 
         if t == float("inf") : 
-            print("FAILURE", end='')
+            print("FAILURE")
             return "NOT FOUND"
 
         if t > f_max:
-            print("FAILURE", end='')
+            print("FAILURE")
             return "NOT FOUND"
         bound = t
 
