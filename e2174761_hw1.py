@@ -59,8 +59,7 @@ def a_star(init_state=board_init, goal=board_final):
 
         x = min_nodes[0]
         """       
-        #print_node(x)
-        #print_board(x.state)
+        
         if x.state == goal: 
             print("SUCCESS\n")
             path = get_path(x)
@@ -123,7 +122,6 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
     #print(bound)
     while True:
         if bound > f_max: 
-            print("bound:", bound)
             print("FAILURE")
             return "NOT FOUND"
         t = limited_f_search(path, 0, goal, bound)
@@ -133,15 +131,17 @@ def ida_star(init_state=board_init, goal=board_final, f_max=M):
                 print_board(item.state)
             return (path, bound)
         if t == float("inf") : 
-            print("inf")
+            print("FAILURE")
+            return "NOT FOUND"
+        if t > f_max:
             print("FAILURE")
             return "NOT FOUND"
         bound = t
 
-def limited_f_search(path, g, goal, f_max):
+def limited_f_search(path, g, goal, bound):
     node = path[-1]
     f = g + h(current_state=node.state)
-    if f > f_max:
+    if f > bound:
         return f
 
     if node.state == goal: return "FOUND"
@@ -151,16 +151,18 @@ def limited_f_search(path, g, goal, f_max):
     children = expand(node)
 
     for child in children:
-        #for y in path:
-        #    if child.state == y.state:
-        #        add_child_to_path = False
-        
-        if child in path:
-            add_child_to_path = False
+        for y in path:
+            if child.state == y.state:
+                add_child_to_path = False
+
+        #if child in path:
+        #    add_child_to_path = False
 
         if add_child_to_path:
+            #print_board(child.state)
             path.append(child)
-            t = limited_f_search(path, g+total_manhattan(node.state, child.state), goal ,f_max)
+            # 1 = total_manhattan(child.state, node.state)
+            t = limited_f_search(path, g+1, goal, bound)
             if t == "FOUND" : return "FOUND"
             if t < minimum : minimum = t
             path.pop()
