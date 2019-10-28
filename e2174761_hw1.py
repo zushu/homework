@@ -115,11 +115,60 @@ def a_star(init_state=board_init, goal=board_final):
     return False
 
 def ida_star(init_state=board_init, goal=board_final, f_max=M):
-    return 
+    root = Node(init_state, False, 0, 0, 0, "up")
+    root.h = h(root.state)
+    root.f = root.h + root.g
+    bound = root.h
+    path = [root]
+    #print(bound)
+    while True:
+        if bound > f_max: 
+            print("bound:", bound)
+            print("FAILURE")
+            return "NOT FOUND"
+        t = limited_f_search(path, 0, goal, bound)
+        if t == "FOUND" : 
+            print("SUCCESS\n")
+            for item in path:
+                print_board(item.state)
+            return (path, bound)
+        if t == float("inf") : 
+            print("inf")
+            print("FAILURE")
+            return "NOT FOUND"
+        bound = t
 
-def limited_f_search(init_state, goal, f_max):
+def limited_f_search(path, g, goal, f_max):
+    node = path[-1]
+    f = g + h(current_state=node.state)
+    if f > f_max:
+        return f
 
-    return
+    if node.state == goal: return "FOUND"
+
+    minimum = float('inf')
+    add_child_to_path = True
+    children = expand(node)
+
+    for child in children:
+        #for y in path:
+        #    if child.state == y.state:
+        #        add_child_to_path = False
+        
+        if child in path:
+            add_child_to_path = False
+
+        if add_child_to_path:
+            path.append(child)
+            t = limited_f_search(path, g+total_manhattan(node.state, child.state), goal ,f_max)
+            if t == "FOUND" : return "FOUND"
+            if t < minimum : minimum = t
+            path.pop()
+    
+    return minimum
+            
+
+
 
 def get_path(node):
     path = [node.state]
