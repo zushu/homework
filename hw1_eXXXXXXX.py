@@ -76,7 +76,19 @@ def simulate(o_init, a_init, inputs, d):
             # h_a_j
             if info[3] == 0:
                 if parent_all[t-1] == arm_i:
-                    parent_all[t] = -1
+                    for arm_j in range(n_r):
+                        info_j = inputs[:, t, arm_j].T
+                        M2_all[:, :, t, arm_j] = np.matmul(a_init[:, :, arm_j], T_3(info_j[0], info_j[1], info_j[2]))
+                        M12_all[:, :, t, arm_j] = np.matmul(a_init[:, :, arm_j], T_1(info_j[0]))
+                        distance_from_object = np.linalg.norm(M2_all[:, 3, t-1, arm_j]-o_all[:, 3, t-1])
+                        c_sph = distance_from_object < d
+                        if info_j[3] == 1:
+                            if c_sph:
+                                parent_all[t] = arm_j
+                                T_o_to_M2 = np.matmul(np.linalg.inv(M2_all[:, :, t-1, arm_j]), o_all[:, :, t-1])    
+                                o_all[:, :, t] = np.matmul(M2_all[:, :, t, arm_j], T_o_to_M2)
+                        else:
+                            parent_all[t] = -1
 
             elif info[3] == 1:
                 if c_sph:
