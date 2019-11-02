@@ -98,17 +98,12 @@ def simulate(o_init, a_init, inputs, d):
             elif info[3] == 1:
                 if c_sph:
                     #if np.where(parent_all != -1)[0].size == 0 or np.where(parent_all != -1)[0] == [arm_i]:
-                    if parent_all[t-1] == -1 or parent_all[t-1] == arm_i:
+                    if parent_all[t-1] == -1 or parent_all[t-1] == arm_i or parent_all[t] == -1:
                         parent_all[t] = arm_i
                         # move the object
-                        # transformation from M2 to o
-                        #T_o_to_M2 = np.matmul(np.linalg.inv(M2_all[:, :, t-1, arm_i]), o_all[:, :, t-1]) 
-                        T_o_to_M2 = np.matmul(np.linalg.inv(o_all[:, :, t-1]), M2_all[:, :, t-1, arm_i])          
+                        # transformation from o to M2
+                        T_o_to_M2 = np.matmul(np.linalg.inv(M2_all[:, :, t-1, arm_i]), o_all[:, :, t-1])        
                         o_all[:, :, t] = np.matmul(M2_all[:, :, t, arm_i], T_o_to_M2)
-                        
-                        #T_M2_to_o = np.matmul(np.linalg.inv(o_all[:, :, t-1]), M2_all[:, :, t-1, arm_i])
-                        #o_all[:, :, t] = np.matmul(M2_all[:, :, t, arm_i], T_M2_to_o)
-                        #o_all[:, :, t] = M2_all[:, :, t, arm_i]
                     #else:
                     #    continue
 
