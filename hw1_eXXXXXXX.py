@@ -50,24 +50,15 @@ def simulate(o_init, a_init, inputs, d):
 
 
     # initializing transformations separately for t = 0 case
+    # TODO: Check it again, might be unnecessary
     t = 0
     o_all[:, :, t] = o_init
-    #o_all.fill(o_init)
-    #for t in range(m):
-    #    o_all[:, :, t] = o_init
-    #parent_all.fill(-1)
     parent_all[0] = -1
-
     for arm_i in range(n_r):
-
-        #o_all[:, :, t] = o_init
-
         # info: vector [l1, l2, theta, h]
         info = inputs[:, t, arm_i]
-
         M2_all[:, :, t, arm_i] = np.matmul(a_init[:, :, arm_i], T_3(info[0], info[1], info[2]))
         M12_all[:, :, t, arm_i] = np.matmul(a_init[:, :, arm_i], T_1(info[0]))
-
         distance_from_object = np.linalg.norm(M2_all[:, 3, t, arm_i]-o_all[:, 3, t])
         c_sph = distance_from_object < d       
 
@@ -77,67 +68,36 @@ def simulate(o_init, a_init, inputs, d):
         for arm_i in range(n_r):
             # info: vector [l1, l2, theta, h]
             info = inputs[:, t, arm_i].T
-
             M2_all[:, :, t, arm_i] = np.matmul(a_init[:, :, arm_i], T_3(info[0], info[1], info[2]))
             M12_all[:, :, t, arm_i] = np.matmul(a_init[:, :, arm_i], T_1(info[0]))
-
             distance_from_object = np.linalg.norm(M2_all[:, 3, t-1, arm_i]-o_all[:, 3, t-1])
-            #print(distance_from_object)
             c_sph = distance_from_object < d
 
             # h_a_j
             if info[3] == 0:
-                #if parent_all[t] == arm_i:
                 if parent_all[t-1] == arm_i:
                     parent_all[t] = -1
-                   
-                    #continue
-                #else:
-                    #parent_all[t] = -1
 
             elif info[3] == 1:
                 if c_sph:
-                    #if np.where(parent_all != -1)[0].size == 0 or np.where(parent_all != -1)[0] == [arm_i]:
                     if parent_all[t-1] == -1 or parent_all[t-1] == arm_i or parent_all[t] == -1:
                         parent_all[t] = arm_i
                         # move the object
                         # transformation from o to M2
                         T_o_to_M2 = np.matmul(np.linalg.inv(M2_all[:, :, t-1, arm_i]), o_all[:, :, t-1])        
                         o_all[:, :, t] = np.matmul(M2_all[:, :, t, arm_i], T_o_to_M2)
-                    #else:
-                    #    continue
-
-                #else:
-                #    if parent_all[t-1] == arm_i:
-                #        parent_all[t] = -1
-
-
-
-
-
-
-
-
-    
+   
     return (o_all, M12_all, M2_all, parent_all)
 
 
-
+# directly taken from the written part solution, no calculation steps performed
 def T_1(l1):
     """
     Returns:
     tfm_mat (np.ndarray): T_1 in the assignment, Theory-a part.
     """
     tfm_mat = np.eye(4)
-    tfm_mat[0, 3] = l1
-    """
-    tfm_mat = np.ndarray([[1, 0, 0, l1], 
-                          [0, 1, 0, 0 ],
-                          [0, 0, 1, 0 ],
-                          [0, 0, 0, 1 ]],
-                           dtype='float')
-                           """
-    
+    tfm_mat[0, 3] = l1   
     return tfm_mat
 
 def T_2(l2,theta):
@@ -151,16 +111,7 @@ def T_2(l2,theta):
     tfm_mat = np.eye(4)
     tfm_mat[0:3, 0:3] = R.from_euler('x', theta2).as_dcm()
     tfm_mat[1, 3] = l2 * np.cos(theta)
-    tfm_mat[2, 3] = l2 * np.sin(theta)
-    """
-    tfm_mat = np.ndarray([[1, 0, 0, 0],
-                          [0, np.sin(theta), np.cos(theta), l2 * np.cos(theta) ], 
-                          [0, - np.cos(theta), np.sin(theta), l2 * np.sin(theta)], 
-                          [0, 0, 0, 1]], 
-                          dtype='float')
-                          """
-    
-    
+    tfm_mat[2, 3] = l2 * np.sin(theta)  
     return tfm_mat
 
 def T_3(l1,l2,theta):
@@ -170,15 +121,7 @@ def T_3(l1,l2,theta):
     theta is in radians.
     """
 
-    """
-    tfm_mat = np.ndarray([[1, 0, 0, l1], 
-                          [0, np.sin(theta), np.cos(theta), l2 * np.cos(theta)], 
-                          [0, - np.cos(theta), np.sin(theta), l2 * np.sin(theta)], 
-                          [0, 0, 0, 1]],
-                          dtype='float')
-    """
-    tfm_mat = np.matmul(T_1(l1), T_2(l2, theta))
-    
+    tfm_mat = np.matmul(T_1(l1), T_2(l2, theta))   
     return tfm_mat
 
 
