@@ -25,8 +25,8 @@ def simulate_moving_to_a_point(q_init, goal, K_pv, K_pth, t_eval, d, options):
     """
     
     def diffeqn(t,q):
-        vel_star = K_pv * np.linalg.norm(q[0:2] - goal) # np.sqrt((goal[0] - q[0])**2 + (goal[1] - q[1])**2)
-        theta_star = K_pth * np.arctan2((q[1] - goal[1]), (q[0] - goal[0])) #np.arctan2((goal[1] - q[1]), (goal[0] - q[0]))
+        vel_star = K_pv * np.linalg.norm(q[0:2] - goal)
+        theta_star = K_pth * np.arctan2((q[1] - goal[1]), (q[0] - goal[0]))
         dq = [vel_star * np.cos(theta_star), vel_star * np.sin(theta_star), theta_star]
         return dq
     
@@ -39,8 +39,6 @@ def simulate_moving_to_a_point(q_init, goal, K_pv, K_pth, t_eval, d, options):
     bunch = solve_ivp(diffeqn, t_eval[[0,-1]], q_init, t_eval=t_eval, events=[term_event],**options)
     t = bunch.t
     q = bunch.y[0:3,:]
-
-    #print(t)
     
     return (t,q,bunch)
     
@@ -72,9 +70,6 @@ def simulate_moving_with_a_trajectory(q_init, goal_pts, K_pv, K_pth, t_eval, d, 
     t = np.ndarray(shape=(0,), dtype='float')
     q = np.ndarray(shape=(3, 0), dtype='float')
     inds = np.ndarray(shape = (0,), dtype='int')
-    #t = []
-    #q = []
-    #inds = []
     bunches = []
     t_eval_copy = t_eval
 
