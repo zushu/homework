@@ -23,11 +23,10 @@ def simulate_moving_to_a_point(q_init, goal, K_pv, K_pth, t_eval, d, options):
         bunch(scipy.integrate._ivp.ivp.OdeResult): bunch object returned by the solver.
     
     """
-
     
     def diffeqn(t,q):
-        vel_star = K_pv * np.sqrt((goal[0] - q[0])**2 + (goal[1] - q[1])**2)
-        theta_star = K_pth * np.arctan2((goal[1] - q[1]), (goal[0] - q[0]))
+        vel_star = K_pv * np.linalg.norm(q[0:2] - goal) # np.sqrt((goal[0] - q[0])**2 + (goal[1] - q[1])**2)
+        theta_star = K_pth * np.arctan2((q[1] - goal[1]), (q[0] - goal[0])) #np.arctan2((goal[1] - q[1]), (goal[0] - q[0]))
         dq = [vel_star * np.cos(theta_star), vel_star * np.sin(theta_star), theta_star]
         return dq
     
@@ -70,9 +69,12 @@ def simulate_moving_with_a_trajectory(q_init, goal_pts, K_pv, K_pth, t_eval, d, 
     
     """    
 
-    t = np.ndarray(shape=(t_eval.shape[0], 1), dtype='float')
-    q = np.ndarray(shape=(3, goal_pts.shape[0]), dtype='float')
-    inds = np.ndarray(shape = (goal_pts.shape[0], 1), dtype='int')
+    t = np.ndarray(shape=(0,), dtype='float')
+    q = np.ndarray(shape=(3, 0), dtype='float')
+    inds = np.ndarray(shape = (0,), dtype='int')
+    #t = []
+    #q = []
+    #inds = []
     bunches = []
     t_eval_copy = t_eval
 
@@ -82,20 +84,20 @@ def simulate_moving_with_a_trajectory(q_init, goal_pts, K_pv, K_pth, t_eval, d, 
             (t_0, q_0, bunch_0) = simulate_moving_to_a_point(q_init, goal_pts[i, :], K_pv, K_pth, t_eval, d, options)
             #t_eval_copy = np.setdiff1d(t_eval_copy,t_0)
             t_eval_copy = np.delete(t_eval_copy, np.where(t_eval_copy == t_0))
-            np.append(inds, 0)
-            np.append(t, t_0)
-            np.append(q, q_0)
-            #q[:, 0] = q_0
+            inds = np.append(inds, 0)
+            t = np.append(t, t_0)
+            q = np.append(q, q_0, axis=1)
             bunches.append(bunch_0)
-            continue
 
-        (t_i, q_i, bunch_i) = simulate_moving_to_a_point(q[:, i - 1], goal_pts[i, :], K_pv, K_pth, t_eval_copy, d, options)
-        #t_eval_copy = np.setdiff1d(t_eval_copy,t_i)
-        t_eval_copy = np.delete(t_eval_copy, np.where(t_eval_copy == t_i))
-        np.append(t, t_i)
-        np.append(q, q_i)
-        np.append(inds, i)
-        bunches.append(bunch_i)
+        else:
+            (t_i, q_i, bunch_i) = simulate_moving_to_a_point(bunches[i - 1].y[0:3, -1], goal_pts[i, :], K_pv, K_pth, t_eval_copy, d, options)
+            #t_eval_copy = np.setdiff1d(t_eval_copy,t_i)
+            t_eval_copy = np.delete(t_eval_copy, np.where(t_eval_copy == t_i))
+            t = np.append(t, t_i)
+            q = np.append(q, q_i, axis=1)
+            inds = np.append(inds, i)
+            bunches.append(bunch_i)
         
-    return (t,q,inds,bunches)
+    return (t, q, inds, bunches)
+    
     
