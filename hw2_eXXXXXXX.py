@@ -26,8 +26,11 @@ def simulate_moving_to_a_point(q_init, goal, K_pv, K_pth, t_eval, d, options):
     
     def diffeqn(t,q):
         vel_star = K_pv * np.linalg.norm(q[0:2] - goal)
-        theta_star = K_pth * np.arctan2((q[1] - goal[1]), (q[0] - goal[0]))
-        dq = [vel_star * np.cos(theta_star), vel_star * np.sin(theta_star), theta_star]
+        theta_star1 = np.arctan2((goal[1] - q[1]), (goal[0] - q[0]))
+        theta_star = K_pth * theta_star1
+        gamma = np.radians(angdiff(np.degrees(q[2]), np.degrees(theta_star1)))
+        theta_dot = K_pth * vel_star * np.tan(gamma)
+        dq = [vel_star * np.cos(theta_star1), vel_star * np.sin(theta_star1), theta_dot]
         return dq
     
     def term_event(t,q):
@@ -94,5 +97,14 @@ def simulate_moving_with_a_trajectory(q_init, goal_pts, K_pv, K_pth, t_eval, d, 
             bunches.append(bunch_i)
         
     return (t, q, inds, bunches)
+
+
+def angdiff(theta2, theta1):
+        angle = (theta2 - theta1) % 360.0
+        # Python modulus has same sign as divisor, which is positive here,
+        # so no need to consider negative case
+        if angle >= 180.0:
+            angle -= 360.0
+        return angle
     
     
