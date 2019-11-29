@@ -45,10 +45,14 @@ public:
 	void writeImageToPPMFile(Camera* camera);
 	void convertPPMToPNG(string ppmFileName, int osType);
 
+	// helpers
 	Matrix4 translation_matrix(Translation* tr);
 	Matrix4 rotation_matrix(Rotation* rot);
-	//Matrix4 rotation_matrix(Rotation rot);
 	Matrix4 scaling_matrix(Scaling* sc);
+	Matrix4 transformation_matrix_of_model(Model* model);
+	Triangle transform_triangle(Triangle triangle, Matrix4 tf_matrix);
+
+
 
 };
 

@@ -44,8 +44,11 @@ int main(int argc, char *argv[])
         Matrix4 tr_m = scene->translation_matrix(&tr);
         Rotation rot(1, 60.0, 1.0, 2.0, 1.0);
         Matrix4 rot_m = scene->rotation_matrix(&rot);
-        std::cout << "tr: " << tr_m << std::endl;
-        std::cout << "final rot: " << rot_m << std::endl;
+        std::cout << "tr: \n" << tr_m << std::endl;
+        std::cout << "final rot: \n" << rot_m << std::endl;
+
+        Matrix4 model_tf_matrix = scene->transformation_matrix_of_model(scene->models[0]);
+        std::cout << "model_tf_matrix: \n" << model_tf_matrix << std::endl;
 
         return 0;
     }

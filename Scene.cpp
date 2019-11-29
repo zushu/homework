@@ -39,24 +39,17 @@ Matrix4 Scene::translation_matrix(Translation* tr)
 
 Matrix4 Scene::rotation_matrix(Rotation* rot)
 {
-	//Matrix4 final_matrix();
-
-	std::cout << "rot class values: " << *rot << std::endl;
-	// -1 is dummy value for color_id field
+	// -1 is a dummy value for color_id field
 	Vec3 u(rot->ux, rot->uy, rot->uz, -1);
-	std::cout << "u before normalization: " << u << std::endl;
-	//Vec3 u(rot.ux, rot.uy, rot.uz, -1);
 	u = normalizeVec3(u);
 
-	std::cout << "u: " << u << std::endl;
 	// create an orthonormal basis 
 	Vec3 v(0, - (u.z), u.y, -1);
 	Vec3 w(crossProductVec3(u, v));
 	v = normalizeVec3(v);
 	w = normalizeVec3(w);
-	std::cout << "v: " << v << std::endl;
-	std::cout << "w: " << w << std::endl;
 
+	// M : transforms uvw to xyz
 	double M_val[4][4] = {{u.x, u.y, u.z, 0}, 
 						  {v.x, v.y, v.z, 0}, 
 						  {w.x, w.y, w.z, 0}, 
@@ -69,6 +62,8 @@ Matrix4 Scene::rotation_matrix(Rotation* rot)
 	// TODO: write matrix transpose function
 	// TODO: write matrix inverse function
 
+	// M_inv transforms xyz to uvw
+
 	double M_inv_val[4][4] = {{u.x, v.x, w.x, 0}, 
 							  {u.y, v.y, w.y, 0}, 
 							  {u.z, v.z, w.z, 0}, 
@@ -78,9 +73,10 @@ Matrix4 Scene::rotation_matrix(Rotation* rot)
 
 	std::cout << "M_inv: " << M_inv << std::endl;
 
+	// R_x is rotation around x (around u after uvw to xyz transformation)
+
 	Matrix4 R_x_matrix = getIdentityMatrix();
 	double radian = (rot->angle * M_PI) / 180.0;
-	//double radian = (rot.angle * M_PI) / 180.0;
 	R_x_matrix.val[1][1] = cos(radian);
 	R_x_matrix.val[1][2] = -sin(radian);
 	R_x_matrix.val[2][1] = sin(radian);
@@ -88,13 +84,14 @@ Matrix4 Scene::rotation_matrix(Rotation* rot)
 
 	std::cout << "R_x: " << R_x_matrix << std::endl;
 
+	// M_inv * R_x * M
 	Matrix4 final_matrix(multiplyMatrixWithMatrix(multiplyMatrixWithMatrix(M_inv, R_x_matrix), M));
 
 	return final_matrix;
 
 }
 
-Matrix4 scaling_matrix(Scaling* sc)
+Matrix4 Scene::scaling_matrix(Scaling* sc)
 {
 	Matrix4 sc_matrix = getIdentityMatrix();
 	sc_matrix.val[0][0] = sc->sx;
@@ -104,7 +101,45 @@ Matrix4 scaling_matrix(Scaling* sc)
 	return sc_matrix;
 }
 
+Matrix4 Scene::transformation_matrix_of_model(Model* model)
+{
+	Matrix4 final_matrix(getIdentityMatrix());
 
+	for (int i = 0; i < model->numberOfTransformations; i++)
+	{
+		if (model->transformationTypes[i] == 't')
+		{
+			Matrix4 tr_m = Scene::translation_matrix(translations[model->transformationIds[i] - 1]);
+			final_matrix = multiplyMatrixWithMatrix(tr_m, final_matrix);
+		}
+		else if (model->transformationTypes[i] == 's')
+		{
+			Matrix4 sc_m = Scene::scaling_matrix(scalings[model->transformationIds[i] - 1]);
+			final_matrix = multiplyMatrixWithMatrix(sc_m, final_matrix);
+		}
+		else if (model->transformationTypes[i] == 'r')
+		{
+			Matrix4 rot_m = Scene::rotation_matrix(rotations[model->transformationIds[i] - 1]);
+			final_matrix = multiplyMatrixWithMatrix(rot_m, final_matrix);
+		}
+	}
+
+	return final_matrix;
+}
+
+Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix)
+{
+	Vec3* v1_vec3 = vertices[triangle.getFirstVertexId() - 1];
+	Vec3* v2_vec3 = vertices[triangle.getSecondVertexId() - 1];
+	Vec3* v3_vec3 = vertices[triangle.getThirdVertexId() - 1];
+	Vec4 v1(v1_vec3->x, v1_vec3->y, v1_vec3->z, 1, -1);
+	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, -1);
+	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, -1); 
+
+	v1 = multiplyMatrixWithVec4(tf_matrix, v1);
+	v2 = multiplyMatrixWithVec4(tf_matrix, v2);
+	v3 = multiplyMatrixWithVec4(tf_matrix, v3);
+}
 
 /*
 	Parses XML file
