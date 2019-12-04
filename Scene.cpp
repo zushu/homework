@@ -44,7 +44,15 @@ Matrix4 Scene::rotation_matrix(Rotation* rot)
 	u = normalizeVec3(u);
 
 	// create an orthonormal basis 
-	Vec3 v(0, - (u.z), u.y, -1);
+	// first find absolutely minimum component and make it 0
+	int absX = ABS(u.x);
+	int absY = ABS(u.y);
+	int absZ = ABS(u.z);
+	Vec3 v;										//colorId=-1 by default
+	if( absX <= absY && absX <= absZ ) 			{v.y=-(u.z); v.z=u.y;}
+	else if ( absY <= absX && absY <= absZ ) 	{v.x=-(u.z); v.z=u.x;}
+	else 										{v.x=-(u.y); v.y=u.x;}
+	//Vec3 v(0, - (u.z), u.y, -1);
 	Vec3 w(crossProductVec3(u, v));
 	v = normalizeVec3(v);
 	w = normalizeVec3(w);
@@ -127,6 +135,7 @@ Matrix4 Scene::transformation_matrix_of_model(Model* model)
 	return final_matrix;
 }
 
+// Triangle return etmesi gerekmiyor mu? Ya da void yapmamız gerekmiyor mu?
 Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix)
 {
 	Vec3* v1_vec3 = vertices[triangle.getFirstVertexId() - 1];
@@ -139,6 +148,20 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix)
 	v1 = multiplyMatrixWithVec4(tf_matrix, v1);
 	v2 = multiplyMatrixWithVec4(tf_matrix, v2);
 	v3 = multiplyMatrixWithVec4(tf_matrix, v3);
+}
+
+void Scene::scale_triangle(Triangle triangle, Matrix4 sc_matrix)
+{
+	Vec3* v1_vec3 = vertices[triangle.getFirstVertexId() - 1];
+	Vec3* v2_vec3 = vertices[triangle.getSecondVertexId() - 1];
+	Vec3* v3_vec3 = vertices[triangle.getThirdVertexId() - 1];
+	Vec4 v1(v1_vec3->x, v1_vec3->y, v1_vec3->z, 1, -1);
+	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, -1);
+	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, -1); 
+
+	v1 = multiplyMatrixWithVec4(sc_matrix, v1);
+	v2 = multiplyMatrixWithVec4(sc_matrix, v2);
+	v3 = multiplyMatrixWithVec4(sc_matrix, v3);
 }
 
 /*

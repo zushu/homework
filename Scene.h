@@ -51,6 +51,7 @@ public:
 	Matrix4 scaling_matrix(Scaling* sc);
 	Matrix4 transformation_matrix_of_model(Model* model);
 	Triangle transform_triangle(Triangle triangle, Matrix4 tf_matrix);
+	void scale_triangle(Triangle triangle, Matrix4 tf_matrix);
 
 
 
