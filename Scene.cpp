@@ -150,19 +150,49 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix)
 	v3 = multiplyMatrixWithVec4(tf_matrix, v3);
 }
 
-void Scene::scale_triangle(Triangle triangle, Matrix4 sc_matrix)
-{
-	Vec3* v1_vec3 = vertices[triangle.getFirstVertexId() - 1];
-	Vec3* v2_vec3 = vertices[triangle.getSecondVertexId() - 1];
-	Vec3* v3_vec3 = vertices[triangle.getThirdVertexId() - 1];
-	Vec4 v1(v1_vec3->x, v1_vec3->y, v1_vec3->z, 1, -1);
-	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, -1);
-	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, -1); 
+Matrix4 Scene::camera_transformation(Camera* camera){
+	Matrix4 tr_matrix = getIdentityMatrix();
+	tr_matrix.val[0][3] = -camera->pos.x;
+	tr_matrix.val[1][3] = -camera->pos.y;
+	tr_matrix.val[2][3] = -camera->pos.z;
 
-	v1 = multiplyMatrixWithVec4(sc_matrix, v1);
-	v2 = multiplyMatrixWithVec4(sc_matrix, v2);
-	v3 = multiplyMatrixWithVec4(sc_matrix, v3);
+	double rotateUVW[4][4] = {{camera->u.x, camera->u.y, camera->u.z, 0}, 
+							  {camera->v.x, camera->v.y, camera->v.z, 0}, 
+							  {camera->w.x, camera->w.y, camera->w.z, 0}, 
+							  {0, 0, 0, 1}};
+	Matrix4 rotate_uvw(rotateUVW);
+
+	Matrix4 M_cam= multiplyMatrixWithMatrix(rotate_uvw,tr_matrix);
+
+	return M_cam;	
 }
+
+// projection_type==0 means orthographic transformation, ==1 means perspective projection
+Matrix4 Scene::projection_transformation(Camera* camera,int projection_type){
+	double l = camera->left;
+	double r = camera->right;
+	double t = camera->top;
+	double b = camera->bottom;
+	double f = camera->far;
+	double n = camera->near;
+	if (projection_type == 0){
+		double M_orthographic[4][4] = {{2/(r-l), 0, 0, -(r+l)/(r-l)}, 
+							  	{0, 2/(t-b), 0, -(t+b)/(t-b)}, 
+							  	{0, 0, -2/(f-n), -(f+n)/(f-n)}, 
+							  	{0, 0, 0, 1}};
+		Matrix4 M_orth(M_orthographic);
+		return M_orth;
+	}
+	else if (projection_type == 1){
+		double M_perspective[4][4] = {	{(2*n)/(r-l), 0, (r+l)/(r-l), 0}, 
+							  			{0, (2*n)/(t-b), (t+b)/(t-b), 0}, 
+							  			{0, 0, -(f+n)/(f-n), (-2*f*n)/(f-n)}, 
+							  			{0, 0, -1, }};
+		Matrix4 M_orth(M_perspective);
+		return M_orth;
+	}
+}
+
 
 /*
 	Parses XML file

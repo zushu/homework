@@ -51,8 +51,8 @@ public:
 	Matrix4 scaling_matrix(Scaling* sc);
 	Matrix4 transformation_matrix_of_model(Model* model);
 	Triangle transform_triangle(Triangle triangle, Matrix4 tf_matrix);
-	void scale_triangle(Triangle triangle, Matrix4 tf_matrix);
-
+	Matrix4 camera_transformation(Camera* camera);
+	Matrix4 projection_transformation(Camera* camera,int projection_type);
 
 
 };
