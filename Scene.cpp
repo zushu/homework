@@ -26,6 +26,11 @@ using namespace std;
 void Scene::forwardRenderingPipeline(Camera *camera)
 {
 	// TODO: Implement this function.
+
+	//first copy all vertices to another vector and then manipulate, because there are several cameras thus different transformations
+
+	//do not forget "perspective divide" before viewport transformation
+	//[Xvp,Yvp,Zvp] = M_vp,(perspective divide),-CLIPPING-CULLING-*M_projection*M_cam*M_model*[X,Y,Z,1]
 }
 
 Matrix4 Scene::translation_matrix(Translation* tr)
@@ -176,23 +181,41 @@ Matrix4 Scene::projection_transformation(Camera* camera,int projection_type){
 	double f = camera->far;
 	double n = camera->near;
 	if (projection_type == 0){
-		double M_orthographic[4][4] = {{2/(r-l), 0, 0, -(r+l)/(r-l)}, 
-							  	{0, 2/(t-b), 0, -(t+b)/(t-b)}, 
-							  	{0, 0, -2/(f-n), -(f+n)/(f-n)}, 
-							  	{0, 0, 0, 1}};
+		double M_orthographic[4][4] = {	{2/(r-l), 	0, 			0, 			-(r+l)/(r-l)}, 
+							  			{0, 		2/(t-b), 	0, 			-(t+b)/(t-b)}, 
+							  			{0, 		0, 			-2/(f-n), 	-(f+n)/(f-n)}, 
+							  			{0, 		0, 			0, 			1}};
 		Matrix4 M_orth(M_orthographic);
 		return M_orth;
 	}
 	else if (projection_type == 1){
-		double M_perspective[4][4] = {	{(2*n)/(r-l), 0, (r+l)/(r-l), 0}, 
-							  			{0, (2*n)/(t-b), (t+b)/(t-b), 0}, 
-							  			{0, 0, -(f+n)/(f-n), (-2*f*n)/(f-n)}, 
-							  			{0, 0, -1, }};
-		Matrix4 M_orth(M_perspective);
-		return M_orth;
+		double M_perspective[4][4] = {	{(2*n)/(r-l), 	0, 				(r+l)/(r-l), 	0}, 
+							  			{0, 			(2*n)/(t-b), 	(t+b)/(t-b), 	0}, 
+							  			{0, 			0, 				-(f+n)/(f-n), 	(-2*f*n)/(f-n)}, 
+							  			{0, 			0, 				-1, 			0}};
+		Matrix4 M_pers(M_perspective);
+		return M_pers;
 	}
 }
 
+Matrix4 Scene::viewport_transformation(int nx, int ny){
+	double M_viewport[4][4] = {	{nx/2.0, 0, 	0, 		(nx-1)/2.0}, 
+								{0, 	ny/2.0, 0, 		(ny-1)/2.0}, 
+							  	{0, 	0, 		0.5, 	0.5}, 
+							  	{0, 	0, 		0, 		0}};
+	Matrix4 M_vp(M_viewport);
+	return M_vp;
+}
+
+vector< Vec3* > Scene::copy_vertices(vector< Vec3* > vertices){
+	vector< Vec3* > vertices_copy;
+	for (size_t i = 0; i < vertices.size(); i++)
+	{
+		Vec3* new_vec = new Vec3(*vertices[i]);
+		vertices_copy.push_back(new_vec);
+	}
+	return vertices_copy;
+}
 
 /*
 	Parses XML file

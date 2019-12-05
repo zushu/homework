@@ -53,6 +53,8 @@ public:
 	Triangle transform_triangle(Triangle triangle, Matrix4 tf_matrix);
 	Matrix4 camera_transformation(Camera* camera);
 	Matrix4 projection_transformation(Camera* camera,int projection_type);
+	Matrix4 viewport_transformation(int nx, int ny);
+	vector< Vec3* > copy_vertices(vector< Vec3* > vertices);
 
 
 };
