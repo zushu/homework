@@ -202,3 +202,10 @@ Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v)
 
     return Vec4(values[0], values[1], values[2], values[3], v.colorId);
 }
+
+Vec3 Vec4_to_Vec3(Vec4 v)
+{
+    // -1 is a dummy value for the colorId field
+    Vec3 result(v.x, v.y, v.z, -1);
+    return result;
+}

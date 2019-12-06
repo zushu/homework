@@ -31,6 +31,8 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 
 	//do not forget "perspective divide" before viewport transformation
 	//[Xvp,Yvp,Zvp] = M_vp,(perspective divide),-CLIPPING-CULLING-*M_projection*M_cam*M_model*[X,Y,Z,1]
+
+
 }
 
 Matrix4 Scene::translation_matrix(Translation* tr)
@@ -70,7 +72,7 @@ Matrix4 Scene::rotation_matrix(Rotation* rot)
 
 	Matrix4 M(M_val);
 
-	std::cout << "M: " << M << std::endl;
+	//std::cout << "M: " << M << std::endl;
 
 	// TODO: write matrix transpose function
 	// TODO: write matrix inverse function
@@ -84,7 +86,7 @@ Matrix4 Scene::rotation_matrix(Rotation* rot)
 
 	Matrix4 M_inv(M_inv_val);
 
-	std::cout << "M_inv: " << M_inv << std::endl;
+	//std::cout << "M_inv: " << M_inv << std::endl;
 
 	// R_x is rotation around x (around u after uvw to xyz transformation)
 
@@ -95,7 +97,7 @@ Matrix4 Scene::rotation_matrix(Rotation* rot)
 	R_x_matrix.val[2][1] = sin(radian);
 	R_x_matrix.val[2][2] = cos(radian);
 
-	std::cout << "R_x: " << R_x_matrix << std::endl;
+	//std::cout << "R_x: " << R_x_matrix << std::endl;
 
 	// M_inv * R_x * M
 	Matrix4 final_matrix(multiplyMatrixWithMatrix(multiplyMatrixWithMatrix(M_inv, R_x_matrix), M));
@@ -141,18 +143,51 @@ Matrix4 Scene::transformation_matrix_of_model(Model* model)
 }
 
 // Triangle return etmesi gerekmiyor mu? Ya da void yapmamız gerekmiyor mu?
-Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix)
+Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<Vec3*>&  vertices_copy)
 {
-	Vec3* v1_vec3 = vertices[triangle.getFirstVertexId() - 1];
-	Vec3* v2_vec3 = vertices[triangle.getSecondVertexId() - 1];
-	Vec3* v3_vec3 = vertices[triangle.getThirdVertexId() - 1];
-	Vec4 v1(v1_vec3->x, v1_vec3->y, v1_vec3->z, 1, -1);
-	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, -1);
-	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, -1); 
+	Vec3* v1_vec3 = vertices_copy[triangle.getFirstVertexId() - 1];
+	Vec3* v2_vec3 = vertices_copy[triangle.getSecondVertexId() - 1];
+	Vec3* v3_vec3 = vertices_copy[triangle.getThirdVertexId() - 1];
+	Vec4 v1(v1_vec3->x, v1_vec3->y, v1_vec3->z, 1, v1_vec3->colorId);
+	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, v2_vec3->colorId);
+	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, v3_vec3->colorId); 
 
 	v1 = multiplyMatrixWithVec4(tf_matrix, v1);
 	v2 = multiplyMatrixWithVec4(tf_matrix, v2);
 	v3 = multiplyMatrixWithVec4(tf_matrix, v3);
+
+	Vec3* v1_vec3_transformed = new Vec3(); 
+	Vec3* v2_vec3_transformed = new Vec3(); 
+	Vec3* v3_vec3_transformed = new Vec3(); 
+
+	*(v1_vec3_transformed) = Vec4_to_Vec3(v1);
+	*(v2_vec3_transformed) = Vec4_to_Vec3(v2);
+	*(v3_vec3_transformed) = Vec4_to_Vec3(v3);
+
+	vertices_copy.push_back(v1_vec3_transformed);
+	vertices_copy.push_back(v2_vec3_transformed);
+	vertices_copy.push_back(v3_vec3_transformed);
+
+	int len_vertices = vertices_copy.size(); 
+	Triangle result(len_vertices - 2, len_vertices - 1, len_vertices);
+
+	return result;	
+}
+
+// TODO: decide, should i change models in place or add new models to the scene->models vector?
+Model* Scene::transform_model(Model* model, vector<Vec3*>&  vertices_copy)
+{
+	//Model* result = new Model();
+	vector<Triangle> new_triangles;
+	Matrix4 tf_matrix = transformation_matrix_of_model(model);
+	for (Triangle triangle : model->triangles)
+	{
+		new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy));
+	}
+
+	Model* result = new Model(model->modelId, model->type, model->numberOfTransformations, model->transformationIds, model->transformationTypes, model->numberOfTriangles, new_triangles);
+
+	return result;
 }
 
 Matrix4 Scene::camera_transformation(Camera* camera){
