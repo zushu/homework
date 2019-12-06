@@ -32,7 +32,17 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	//do not forget "perspective divide" before viewport transformation
 	//[Xvp,Yvp,Zvp] = M_vp,(perspective divide),-CLIPPING-CULLING-*M_projection*M_cam*M_model*[X,Y,Z,1]
 
+	vector<Vec3*> vertices_copy = copy_vertices(vertices);
+	vector<Model*> transformed_models(models.size());
 
+	// ------- STOPPED HERE --------
+	/*
+	for (Model* model_ptr : models)
+	{
+		Model* model_transformed;
+		// modelling transformation
+	}
+	*/
 }
 
 Matrix4 Scene::translation_matrix(Translation* tr)
@@ -142,7 +152,8 @@ Matrix4 Scene::transformation_matrix_of_model(Model* model)
 	return final_matrix;
 }
 
-// Triangle return etmesi gerekmiyor mu? Ya da void yapmamız gerekmiyor mu?
+// Triangle return etmesi gerekmiyor mu? Ya da void yapmamız gerekmiyor mu? -- fixed
+
 Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<Vec3*>&  vertices_copy)
 {
 	Vec3* v1_vec3 = vertices_copy[triangle.getFirstVertexId() - 1];
