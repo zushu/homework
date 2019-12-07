@@ -351,45 +351,126 @@ void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
 
 // line rasterization - midpoint algorithm from the slides
 // v0, v1 - end points of the line in viewport coordinates
+// assuming v0 v1 are pixel coordinates (integer)
 // c0, c1 - color of vertices v0 and v1
 // TODO: FIX THE FUNCTION, NOT COMPLETE, NOT PROPERLY DEFINED YET, IT SHOULD NOT RETURN VOID (?)
-void Scene::line_drawing(Vec3 v0, Vec3 v1)
+void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 {
-	Vec3 v0_rounded(round(v0.x), round(v0.y), round(v0.z), v0.colorId);
-	Vec3 v1_rounded(round(v1.x), round(v1.y), round(v1.z), v1.colorId);
+	
+	//Vec3 v0_rounded(round(v0.x), round(v0.y), round(v0.z), v0.colorId);
+	//Vec3 v1_rounded(round(v1.x), round(v1.y), round(v1.z), v1.colorId);
 
-	if (v1_rounded.x < v0_rounded.x)
-		std::swap(v0_rounded, v1_rounded);
+	if (v1.x < v0.x)
+		std::swap(v0, v1);
 
-	float y = v0_rounded.y;
-	float d = (v0_rounded.y - v1_rounded.y) + 0.5*(v1_rounded.x - v0_rounded.x);
-	Color c = *(colorsOfVertices[v0_rounded.colorId - 1]);
+	Color c = *(colorsOfVertices[v0.colorId - 1]);
 	// -1 is a dummy value
-	Color c0 = *(colorsOfVertices[v0_rounded.colorId - 1]);
-	Color c1 = *(colorsOfVertices[v1_rounded.colorId - 1]);
+	Color c0 = *(colorsOfVertices[v0.colorId - 1]);
+	Color c1 = *(colorsOfVertices[v1.colorId - 1]);
 	Vec3 c_vec3(c.r, c.g, c.b, -1);
 	Vec3 c0_vec3(c0.r, c0.g, c0.b, -1);
 	Vec3 c1_vec3(c1.r, c1.g, c1.b, -1);
-	Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1_rounded.x - v0_rounded.x));
 
-	// LEFT HERE
-		// INCOMPLETE
-		/*
-	for (int x = v0_rounded.x; x < v1_rounded.x; x++)
+	// m: line slope
+	float m = (v1.y - v0.y)/(v1.x - v0.x);
+
+	if (m > 0 && m <= 1)
 	{
-	
-		// draw(x, y, round(c))
+
+		float y = v0.y;
+		float d = (v0.y - v1.y) + 0.5*(v1.x - v0.x);
+		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
+			
+		for (int x = v0.x; x < v1.x; x++)
+		{			
+			// draw(x, y, round(c))
+			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
+
+			if (d < 0) // choose north-east pixel
+			{
+				y++;
+				d += (v0.y - v1.y) + (v1.x - v0.x);
+			}
+			else // choose east pixel
+				d += (v0.y - v1.y) ;
+
+			c_vec3 = addVec3(c_vec3, dc);
+		}
+	}
+
+	else if (m > 1)
+	{
+		float x = v0.x;
+		float d = 0.5*(v0.y - v1.y) + (v1.x - v0.x);
+		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
+
+		for (int y = v0.y; y < v1.y; y++)
+		{
+			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
+
+			if (d < 0) // choose north pixel
+			{
+				d += (v1.x - v0.x);
+			}
+			else // choose north-east pixel
+			{
+				x++;
+				d += (v0.y - v1.y) + (v1.x - v0.x);
+			}
+
+			c_vec3 = addVec3(c_vec3, dc);
+		}
 
 	}
-	*/
 
+	else if (m >= -1 && m <= 0)
+	{
+		float y = v0.y;
+		float d = (v0.y - v1.y) - 0.5*(v1.x - v0.x);
+		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
 
+		for (int x = v0.x; x < v1.x; x++)
+		{			
+			// draw(x, y, round(c))
+			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
 
+			if (d < 0) // choose east pixel
+			{
+				d += (v0.y - v1.y);
+			}
+			else // choose south-east pixel
+			{
+				y--;
+				d += (v0.y - v1.y) - (v1.x - v0.x);
+			}
 
+			c_vec3 = addVec3(c_vec3, dc);
+		}
 
+	}
 
-	
-	
+	else if (m < -1)
+	{
+		float x = v0.x;
+		float d = 0.5*(v0.y - v1.y) - (v1.x - v0.x);
+		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
+
+		for (int y = v0.y; y < v1.y; y++)
+		{			
+			// draw(x, y, round(c))
+			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
+
+			if (d < 0) // choose south-east pixel
+			{
+				x++;
+				d += (v0.y - v1.y) - (v1.x - v0.x);
+			}
+			else // choose south pixel
+				d += - (v1.x - v0.x);
+
+			c_vec3 = addVec3(c_vec3, dc);
+		}
+	}
 }
 
 /*

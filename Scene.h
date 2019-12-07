@@ -63,7 +63,7 @@ public:
 	bool visible(float den, float num, float& tE, float& tL);
 	void line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1);
 
-	void line_drawing(Vec3 v0, Vec3 v1);
+	void line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy);
 
 
 };
