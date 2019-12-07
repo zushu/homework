@@ -63,10 +63,7 @@ int main(int argc, char *argv[])
         std::cout << "v0: " << v0 << " v1: " << v1 << std::endl;
 
         Vec3 v2(200, 200, 0.5, 2);
-        Vec3 v3(350, 300, 0.5, 3);
-
-
-
+        Vec3 v3(200, 50, 0.5, 3);
 
         scene->line_drawing(v2, v3, scene->image);
         /*

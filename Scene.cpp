@@ -372,108 +372,152 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 	Vec3 c1_vec3(c1.r, c1.g, c1.b, -1);
 
 	// m: line slope
-	float m = (v1.y - v0.y)/(v1.x - v0.x);
-
-	if (m > 0 && m <= 1)
+	float m;
+	if ((v1.x - v0.x) != 0)
 	{
+		m = (v1.y - v0.y)/(v1.x - v0.x);
 
-		float y = v0.y;
-		float d = (v0.y - v1.y) + 0.5*(v1.x - v0.x);
-		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
-			
-		for (int x = v0.x; x < v1.x; x++)
-		{			
-			// draw(x, y, round(c))
-			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
-
-			if (d < 0) // choose north-east pixel
-			{
-				y++;
-				d += (v0.y - v1.y) + (v1.x - v0.x);
-			}
-			else // choose east pixel
-				d += (v0.y - v1.y) ;
-
-			c_vec3 = addVec3(c_vec3, dc);
-		}
-	}
-
-	else if (m > 1)
-	{
-		float x = v0.x;
-		float d = 0.5*(v0.y - v1.y) + (v1.x - v0.x);
-		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
-
-		for (int y = v0.y; y < v1.y; y++)
+		if (m > 0 && m <= 1)
 		{
-			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
 
-			if (d < 0) // choose north pixel
-			{
-				d += (v1.x - v0.x);
-			}
-			else // choose north-east pixel
-			{
-				x++;
-				d += (v0.y - v1.y) + (v1.x - v0.x);
-			}
+			float y = v0.y;
+			float d = (v0.y - v1.y) + 0.5*(v1.x - v0.x);
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
+				
+			for (int x = v0.x; x < v1.x; x++)
+			{			
+				// draw(x, y, round(c))
+				image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
 
-			c_vec3 = addVec3(c_vec3, dc);
+				if (d < 0) // choose north-east pixel
+				{
+					y++;
+					d += (v0.y - v1.y) + (v1.x - v0.x);
+				}
+				else // choose east pixel
+					d += (v0.y - v1.y) ;
+
+				c_vec3 = addVec3(c_vec3, dc);
+			}
 		}
 
-	}
+		else if (m > 1)
+		{
+			float x = v0.x;
+			float d = 0.5*(v0.y - v1.y) + (v1.x - v0.x);
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
 
-	else if (m >= -1 && m <= 0)
-	{
-		float y = v0.y;
-		float d = (v0.y - v1.y) - 0.5*(v1.x - v0.x);
-		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
-
-		for (int x = v0.x; x < v1.x; x++)
-		{			
-			// draw(x, y, round(c))
-			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
-
-			if (d < 0) // choose east pixel
+			for (int y = v0.y; y < v1.y; y++)
 			{
-				d += (v0.y - v1.y);
-			}
-			else // choose south-east pixel
-			{
-				y--;
-				d += (v0.y - v1.y) - (v1.x - v0.x);
+				image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
+
+				if (d < 0) // choose north pixel
+				{
+					d += (v1.x - v0.x);
+				}
+				else // choose north-east pixel
+				{
+					x++;
+					d += (v0.y - v1.y) + (v1.x - v0.x);
+				}
+
+				c_vec3 = addVec3(c_vec3, dc);
 			}
 
-			c_vec3 = addVec3(c_vec3, dc);
 		}
 
-	}
+		else if (m >= -1 && m < 0)
+		{
+			float y = v0.y;
+			float d = (v0.y - v1.y) - 0.5*(v1.x - v0.x);
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
 
-	else if (m < -1)
+			for (int x = v0.x; x < v1.x; x++)
+			{			
+				// draw(x, y, round(c))
+				image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
+
+				if (d < 0) // choose east pixel
+				{
+					d += (v0.y - v1.y);
+				}
+				else // choose south-east pixel
+				{
+					y--;
+					d += (v0.y - v1.y) - (v1.x - v0.x);
+				}
+
+				c_vec3 = addVec3(c_vec3, dc);
+			}
+
+		}
+
+		else if (m < -1)
+		{
+			float x = v0.x;
+			float d = 0.5*(v0.y - v1.y) - (v1.x - v0.x);
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
+
+			for (int y = v0.y; y < v1.y; y++)
+			{			
+				// draw(x, y, round(c))
+				image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
+
+				if (d < 0) // choose south-east pixel
+				{
+					x++;
+					d += (v0.y - v1.y) - (v1.x - v0.x);
+				}
+				else // choose south pixel
+					d += - (v1.x - v0.x);
+
+				c_vec3 = addVec3(c_vec3, dc);
+			}
+		}
+
+		else if (m == 0) // horizontal line
+		{
+			std::cout << "horizontal" << std::endl;
+			float y = v0.y;
+			//float d = (v1.x - v0.x);
+
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
+
+			for (int x = v0.x; x < v1.x; x++)
+			{			
+				// draw(x, y, round(c))
+				image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
+
+				// choose north pixel
+				//d += (v1.x - v0.x);
+				c_vec3 = addVec3(c_vec3, dc);
+			}
+		}
+	}
+	else // vertical line
 	{
+		std::cout << "vertical" << std::endl;
 		float x = v0.x;
-		float d = 0.5*(v0.y - v1.y) - (v1.x - v0.x);
+		//float d = (v0.y - v1.y);
+		if (v1.y < v0.y)
+			{
+				std::swap(v0, v1);
+			}
 		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
-
+			
 		for (int y = v0.y; y < v1.y; y++)
 		{			
 			// draw(x, y, round(c))
 			image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
 
-			if (d < 0) // choose south-east pixel
-			{
-				x++;
-				d += (v0.y - v1.y) - (v1.x - v0.x);
-			}
-			else // choose south pixel
-				d += - (v1.x - v0.x);
-
+			// choose east pixel
+			//d += (v0.y - v1.y) ;
 			c_vec3 = addVec3(c_vec3, dc);
 		}
 	}
 }
 
-// TODO: WRITE TRIANGLE RASTERIZATION FUNCTION
+// TODO: WRITE TRIANGLE RASTERIZATION
 
 /*
 	Parses XML file
