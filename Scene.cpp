@@ -289,50 +289,38 @@ bool Scene::triangle_is_culled(Triangle triangle, Vec3 camera_pos, vector<Vec3*>
 		return true;	
 }
 
-// clipping - liang-barsky from the course slides
+// line clipping - liang-barsky algorithm from the course slides
 bool Scene::visible(float den, float num, float& tE, float& tL)
 {
 	float t;
 	if (den > 0) // potentially entering
 	{
 		t = num/den;
-		if (t > tL)
-		{
-			return false;
-		}
-		if (t > tE)
-		{
-			tE = t;
-		}
+		if (t > tL) return false;
+		if (t > tE) tE = t;
 	}
 	else if (den < 0) // potentially leaving
 	{
 		t = num/den;
-		if (t < tE)
-		{
-			return false;
-		}
-		if (t < tL)
-		{
-			tL = t;
-		}
+		if (t < tE) return false;
+		if (t < tL) tL = t;
 	}
 	else if (num > 0) // line parallel to edge
-	{
 		return false;
-	}
 
 	return true;
 }
 
 // v0, v1: line end points
 // v0, v1 is changed accordingly if clipping occurs 
-void Scene::line_clipping(Vec3& v0, Vec3& v1)
+// vmin, vmax: min and max coordinates of the clipping box
+// vmin = (-1, -1, -1), vmax = (1, 1, 1) in CVV (canonical viewing volume)
+void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
 {
 	float tE = 0, tL = 1;
 	// min and max coordinates of the canonical viewing volume (CVV)
-	float xmin = -1, ymin = -1, zmin = -1;
-	float xmax = 1, ymax = 1, zmax = 1;
+	float xmin = vmin.x, ymin = vmin.y, zmin = vmin.z;
+	float xmax = vmax.x, ymax = vmax.y, zmax = vmax.z;
 	bool line_is_visible = false;
 	float dx = v1.x - v0.x;
 	float dy = v1.y - v0.y;
@@ -361,6 +349,48 @@ void Scene::line_clipping(Vec3& v0, Vec3& v1)
 						}
 }
 
+// line rasterization - midpoint algorithm from the slides
+// v0, v1 - end points of the line in viewport coordinates
+// c0, c1 - color of vertices v0 and v1
+// TODO: FIX THE FUNCTION, NOT COMPLETE, NOT PROPERLY DEFINED YET, IT SHOULD NOT RETURN VOID (?)
+void Scene::line_drawing(Vec3 v0, Vec3 v1)
+{
+	Vec3 v0_rounded(round(v0.x), round(v0.y), round(v0.z), v0.colorId);
+	Vec3 v1_rounded(round(v1.x), round(v1.y), round(v1.z), v1.colorId);
+
+	if (v1_rounded.x < v0_rounded.x)
+		std::swap(v0_rounded, v1_rounded);
+
+	float y = v0_rounded.y;
+	float d = (v0_rounded.y - v1_rounded.y) + 0.5*(v1_rounded.x - v0_rounded.x);
+	Color c = *(colorsOfVertices[v0_rounded.colorId - 1]);
+	// -1 is a dummy value
+	Color c0 = *(colorsOfVertices[v0_rounded.colorId - 1]);
+	Color c1 = *(colorsOfVertices[v1_rounded.colorId - 1]);
+	Vec3 c_vec3(c.r, c.g, c.b, -1);
+	Vec3 c0_vec3(c0.r, c0.g, c0.b, -1);
+	Vec3 c1_vec3(c1.r, c1.g, c1.b, -1);
+	Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1_rounded.x - v0_rounded.x));
+
+	// LEFT HERE
+		// INCOMPLETE
+		/*
+	for (int x = v0_rounded.x; x < v1_rounded.x; x++)
+	{
+	
+		// draw(x, y, round(c))
+
+	}
+	*/
+
+
+
+
+
+
+	
+	
+}
 
 /*
 	Parses XML file
