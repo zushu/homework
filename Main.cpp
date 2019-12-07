@@ -61,7 +61,25 @@ int main(int argc, char *argv[])
         scene->line_clipping(vmin, vmax, v0, v1);
 
         std::cout << "v0: " << v0 << " v1: " << v1 << std::endl;
-        
+
+        Vec3 v2(200, 200, 0.5, 2);
+        Vec3 v3(350, 300, 0.5, 3);
+
+
+
+
+        scene->line_drawing(v2, v3, scene->image);
+        /*
+        for (auto& temp: scene->image)
+        {
+            for (auto& cl : temp)
+            {
+                std::cout << cl << " ";
+            }
+            std::cout << "\n";
+        }*/
+
+        scene->writeImageToPPMFile(scene->cameras[0]);
         return 0;
     }
 }
