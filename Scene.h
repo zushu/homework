@@ -51,13 +51,17 @@ public:
 	Matrix4 scaling_matrix(Scaling* sc);
 	Matrix4 transformation_matrix_of_model(Model* model);
 	Triangle transform_triangle(Triangle triangle, Matrix4 tf_matrix, vector<Vec3*>&  vertices_copy);
-	Model* transform_model(Model* model, vector<Vec3*>&  vertices_copy);
+	Model* transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy);
 
 
 	Matrix4 camera_transformation(Camera* camera);
 	Matrix4 projection_transformation(Camera* camera,int projection_type);
 	Matrix4 viewport_transformation(int nx, int ny);
 	vector< Vec3* > copy_vertices(vector< Vec3* > vertices);
+
+	bool triangle_is_culled(Triangle triangle, Vec3 camera_pos, vector<Vec3*>&  vertices_copy);
+	bool visible(float den, float num, float& tE, float& tL);
+	void line_clipping(Vec3& v0, Vec3& v1);
 
 
 };

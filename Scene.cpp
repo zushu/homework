@@ -35,14 +35,18 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	vector<Vec3*> vertices_copy = copy_vertices(vertices);
 	vector<Model*> transformed_models(models.size());
 
-	// ------- STOPPED HERE --------
-	/*
-	for (Model* model_ptr : models)
+	Matrix4 camera_tf = camera_transformation(camera);
+	Matrix4 projection_tf = projection_transformation(camera, projectionType);
+	Matrix4 viewport_tf = viewport_transformation(camera->horRes, camera->verRes);
+	
+	/*for (Model* model_ptr : models)
 	{
 		Model* model_transformed;
 		// modelling transformation
-	}
-	*/
+
+
+	}*/
+	
 }
 
 Matrix4 Scene::translation_matrix(Translation* tr)
@@ -185,15 +189,17 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 	return result;	
 }
 
-// TODO: decide, should i change models in place or add new models to the scene->models vector?
-Model* Scene::transform_model(Model* model, vector<Vec3*>&  vertices_copy)
+Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy)
 {
 	//Model* result = new Model();
 	vector<Triangle> new_triangles;
-	Matrix4 tf_matrix = transformation_matrix_of_model(model);
+	//Matrix4 tf_matrix = transformation_matrix_of_model(model);
 	for (Triangle triangle : model->triangles)
 	{
-		new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy));
+		if (! triangle_is_culled(triangle, camera_pos, vertices_copy))
+		{
+			new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy));
+		}
 	}
 
 	Model* result = new Model(model->modelId, model->type, model->numberOfTransformations, model->transformationIds, model->transformationTypes, model->numberOfTriangles, new_triangles);
@@ -262,6 +268,99 @@ vector< Vec3* > Scene::copy_vertices(vector< Vec3* > vertices){
 	}
 	return vertices_copy;
 }
+
+// culling
+bool Scene::triangle_is_culled(Triangle triangle, Vec3 camera_pos, vector<Vec3*>&  vertices_copy)
+{
+	Vec3 v1 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
+	Vec3 v2 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
+	Vec3 v3 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
+	Vec3 normal_triangle = crossProductVec3(subtractVec3(v2, v1), subtractVec3(v3, v1));
+
+	//taking the first vertex of triangle for the vector v from eye to the triangle
+	float v_dot_n = dotProductVec3(normalizeVec3(subtractVec3(v1, camera_pos)), normalizeVec3(normal_triangle));
+
+	if (v_dot_n < 0)
+	{
+		//std::cout << "not culled" << std::endl;
+		return false;
+	}
+	else
+		return true;	
+}
+
+// clipping - liang-barsky from the course slides
+bool Scene::visible(float den, float num, float& tE, float& tL)
+{
+	float t;
+	if (den > 0) // potentially entering
+	{
+		t = num/den;
+		if (t > tL)
+		{
+			return false;
+		}
+		if (t > tE)
+		{
+			tE = t;
+		}
+	}
+	else if (den < 0) // potentially leaving
+	{
+		t = num/den;
+		if (t < tE)
+		{
+			return false;
+		}
+		if (t < tL)
+		{
+			tL = t;
+		}
+	}
+	else if (num > 0) // line parallel to edge
+	{
+		return false;
+	}
+
+	return true;
+}
+
+// v0, v1: line end points
+// v0, v1 is changed accordingly if clipping occurs 
+void Scene::line_clipping(Vec3& v0, Vec3& v1)
+{
+	float tE = 0, tL = 1;
+	// min and max coordinates of the canonical viewing volume (CVV)
+	float xmin = -1, ymin = -1, zmin = -1;
+	float xmax = 1, ymax = 1, zmax = 1;
+	bool line_is_visible = false;
+	float dx = v1.x - v0.x;
+	float dy = v1.y - v0.y;
+	float dz = v1.z - v0.z;
+
+	if (this->visible(dx, xmin - v0.x, tE, tL)) // left
+		if (visible(-dx, v0.x - xmax, tE, tL)) // right
+			if (visible(dy, ymin - v0.y, tE, tL)) // bottom
+				if (visible(-dy, v0.y - ymax, tE, tL)) // top
+					if (visible(dz, zmin - v0.z, tE, tL)) // front
+						if (visible(-dz, v0.z - zmax, tE, tL)) // back
+						{
+							line_is_visible = true;
+							if (tL < 1)
+							{
+								v1.x = v0.x + dx * tL;
+								v1.y = v0.y + dy * tL;
+								v1.z = v0.z + dz * tL;
+							}
+							if (tE > 0)
+							{
+								v0.x = v0.x + dx * tE;
+								v0.y = v0.y + dy * tE;
+								v0.z = v0.z + dz * tE;
+							}
+						}
+}
+
 
 /*
 	Parses XML file

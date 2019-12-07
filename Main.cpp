@@ -40,41 +40,18 @@ int main(int argc, char *argv[])
             //scene->convertPPMToPNG(scene->cameras[i]->outputFileName, 99);
         }
 
-        /*
-        Translation tr(1, 0.1, 2, 4);
-        Matrix4 tr_m = scene->translation_matrix(&tr);
-        Rotation rot(1, 60.0, 1.0, 2.0, 1.0);
-        Matrix4 rot_m = scene->rotation_matrix(&rot);
-        std::cout << "tr: \n" << tr_m << std::endl;
-        std::cout << "final rot: \n" << rot_m << std::endl;
-        
-        Matrix4 model_tf_matrix = scene->transformation_matrix_of_model(scene->models[0]);
-        std::cout << "model_tf_matrix: \n" << model_tf_matrix << std::endl;
-        */
         vector<Vec3*> vertices_copy(scene->vertices.size());
         vertices_copy = scene->copy_vertices(scene->vertices);
         //Triangle tri_transformed = scene->transform_triangle(scene->models[0]->triangles[0], model_tf_matrix);
-        
-        /*
-        std::cout << "v1 before: " << *(scene->vertices[scene->models[0]->triangles[0].vertexIds[0] - 1]) << std::endl;
-        std::cout << "v2 before: " << *(scene->vertices[scene->models[0]->triangles[0].vertexIds[1] - 1]) << std::endl;
-        std::cout << "v3 before: " << *(scene->vertices[scene->models[0]->triangles[0].vertexIds[2] - 1]) << std::endl;
 
-        Vec3 v1 = *(scene->vertices[tri_transformed.vertexIds[0] - 1]);
-        Vec3 v2 = *(scene->vertices[tri_transformed.vertexIds[1] - 1]);
-        Vec3 v3 = *(scene->vertices[tri_transformed.vertexIds[2] - 1]);
+        //std::cout << "model: " << *(scene->models[0]) << std::endl;
 
-        std::cout << "v1: " << v1 << std::endl;
-        std::cout << "v2: " << v2 << std::endl;
-        std::cout << "v3: " << v3 << std::endl;
+        //std::cout << "transformed model: " << *new_model << std::endl;
 
-        */
-
-        std::cout << "model: " << *(scene->models[0]) << std::endl;
-
-        Model* new_model = scene->transform_model(scene->models[0], vertices_copy);
-
-        std::cout << "transformed model: " << *new_model << std::endl;
+        for (int i = 0 ; i < scene->models[0]->triangles.size(); i++)
+        {
+            std::cout << "is culled: " << scene->triangle_is_culled(scene->models[0]->triangles[i], scene->cameras[0]->pos, scene->vertices) << std::endl;
+        }
 
         return 0;
     }
