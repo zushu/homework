@@ -473,6 +473,8 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 	}
 }
 
+// TODO: WRITE TRIANGLE RASTERIZATION FUNCTION
+
 /*
 	Parses XML file
 */

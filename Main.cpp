@@ -53,15 +53,15 @@ int main(int argc, char *argv[])
             std::cout << "is culled: " << scene->triangle_is_culled(scene->models[0]->triangles[i], scene->cameras[0]->pos, scene->vertices) << std::endl;
         }
 
-        Vec3 v0(-1, -1, 2, -1);
-        Vec3 v1(2, 2, 4, -5);
+        Vec3 v0(-5, -0.5, -0.5, -1);
+        Vec3 v1(2, 0, 0, -1);
+        Vec3 vmin(-1, -1, -1, -1);
+        Vec3 vmax(1, 1, 1, -1);
+
+        scene->line_clipping(vmin, vmax, v0, v1);
 
         std::cout << "v0: " << v0 << " v1: " << v1 << std::endl;
-
-        std::swap(v0, v1);
-
-        std::cout << "v0: " << v0 << " v1: " << v1 << std::endl;
-
+        
         return 0;
     }
 }
