@@ -39,13 +39,15 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	Matrix4 projection_tf = projection_transformation(camera, projectionType);
 	Matrix4 viewport_tf = viewport_transformation(camera->horRes, camera->verRes);
 	
-	/*for (Model* model_ptr : models)
-	{
-		Model* model_transformed;
-		// modelling transformation
-
-
-	}*/
+	// loop for each model
+	// -- modelling + camera + projection tf of all vertices
+	// -- clipping
+	// -- clipping is only for the wireframe mode, so i believe there is no need to add new triangles for changed shapes (?) 
+	// -- (example: triangle is cut and it is a quadrangle now, there will be two new triangles)
+	// -- otherwise we have to handle this example case in clipping
+	// --viewport tf
+	// -- line rasterization for wireframe
+	// -- triangle rasterization for solid
 	
 }
 
@@ -189,6 +191,7 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 	return result;	
 }
 
+// TODO: decide, it might change or might not be used at all
 Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy)
 {
 	//Model* result = new Model();
@@ -270,6 +273,7 @@ vector< Vec3* > Scene::copy_vertices(vector< Vec3* > vertices){
 }
 
 // culling
+// TODO: vertices_copy is not changed, do not give a reference to it
 bool Scene::triangle_is_culled(Triangle triangle, Vec3 camera_pos, vector<Vec3*>&  vertices_copy)
 {
 	Vec3 v1 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
@@ -315,6 +319,7 @@ bool Scene::visible(float den, float num, float& tE, float& tL)
 // v0, v1 is changed accordingly if clipping occurs 
 // vmin, vmax: min and max coordinates of the clipping box
 // vmin = (-1, -1, -1), vmax = (1, 1, 1) in CVV (canonical viewing volume)
+// output: none, changes given v0 and v1 in place
 void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
 {
 	float tE = 0, tL = 1;
@@ -353,7 +358,7 @@ void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
 // v0, v1 - end points of the line in viewport coordinates
 // assuming v0 v1 are pixel coordinates (integer)
 // c0, c1 - color of vertices v0 and v1
-// TODO: FIX THE FUNCTION, NOT COMPLETE, NOT PROPERLY DEFINED YET, IT SHOULD NOT RETURN VOID (?)
+// output: none, changes given image_copy in place
 void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 {
 	
