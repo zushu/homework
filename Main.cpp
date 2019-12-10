@@ -25,29 +25,31 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < scene->cameras.size(); i++)
         {
+            std::cout << "camera " << i << std::endl;
             // initialize image with basic values
             scene->initializeImage(scene->cameras[i]);
 
             // do forward rendering pipeline operations
-            //scene->forwardRenderingPipeline(scene->cameras[i]);
+            scene->forwardRenderingPipeline(scene->cameras[i]);
 
             // generate PPM file
-            //scene->writeImageToPPMFile(scene->cameras[i]);
+            scene->writeImageToPPMFile(scene->cameras[i]);
 
             // Converts PPM image in given path to PNG file, by calling ImageMagick's 'convert' command.
             // Notice that os_type is not given as 1 (Ubuntu) or 2 (Windows), below call doesn't do conversion.
             // Change os_type to 1 or 2, after being sure that you have ImageMagick installed.
-            //scene->convertPPMToPNG(scene->cameras[i]->outputFileName, 99);
+            scene->convertPPMToPNG(scene->cameras[i]->outputFileName, 99);
         }
 
-        vector<Vec3*> vertices_copy(scene->vertices.size());
-        vertices_copy = scene->copy_vertices(scene->vertices);
+        //vector<Vec3*> vertices_copy(scene->vertices.size());
+        //vertices_copy = scene->copy_vertices(scene->vertices);
         //Triangle tri_transformed = scene->transform_triangle(scene->models[0]->triangles[0], model_tf_matrix);
 
         //std::cout << "model: " << *(scene->models[0]) << std::endl;
 
         //std::cout << "transformed model: " << *new_model << std::endl;
 
+        /*
         for (int i = 0 ; i < scene->models[0]->triangles.size(); i++)
         {
             std::cout << "is culled: " << scene->triangle_is_culled(scene->models[0]->triangles[i], scene->cameras[0]->pos, scene->vertices) << std::endl;
@@ -66,7 +68,7 @@ int main(int argc, char *argv[])
         Vec3 v3(200, 50, 0.5, 3);
 
         scene->line_drawing(v2, v3, scene->image);
-        /*
+        
         for (auto& temp: scene->image)
         {
             for (auto& cl : temp)
@@ -74,9 +76,9 @@ int main(int argc, char *argv[])
                 std::cout << cl << " ";
             }
             std::cout << "\n";
-        }*/
+        }
 
-        scene->writeImageToPPMFile(scene->cameras[0]);
+        scene->writeImageToPPMFile(scene->cameras[0]);*/
         return 0;
     }
 }

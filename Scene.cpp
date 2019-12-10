@@ -33,11 +33,13 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	//[Xvp,Yvp,Zvp] = M_vp,(perspective divide),-CLIPPING-CULLING-*M_projection*M_cam*M_model*[X,Y,Z,1]
 
 	vector<Vec3*> vertices_copy = copy_vertices(vertices);
-	vector<Model*> transformed_models(models.size());
+	//vector<Model*> transformed_models(models.size());
 
 	Matrix4 camera_tf = camera_transformation(camera);
 	Matrix4 projection_tf = projection_transformation(camera, projectionType);
 	Matrix4 viewport_tf = viewport_transformation(camera->horRes, camera->verRes);
+
+	Matrix4 camera_projection_tf = multiplyMatrixWithMatrix(projection_tf, camera_tf);
 	
 	// loop for each model
 	// -- modelling + camera + projection tf of all vertices
@@ -48,6 +50,50 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	// --viewport tf
 	// -- line rasterization for wireframe
 	// -- triangle rasterization for solid
+
+	for (Model* model : models)
+	{
+		Matrix4 modelling_tf = transformation_matrix_of_model(model);
+		Matrix4 proj_cam_mod_tf = multiplyMatrixWithMatrix(camera_projection_tf, modelling_tf);
+
+		Model* model_transformed = transform_model(model, proj_cam_mod_tf, camera->pos, vertices_copy);
+
+		// culling
+		if (cullingEnabled)
+		{
+			for (auto iter = model_transformed->triangles.begin(); iter != model_transformed->triangles.end(); iter++)
+			{
+				if (triangle_is_culled(*iter, camera->pos, vertices_copy) == true)
+				{
+					std::cout << "culled" << std::endl;
+					model_transformed->triangles.erase(iter);
+				}
+			}
+		}
+
+		// skipped clipping for now
+		// perspective divide has been done inside transform_model function
+		// viewport trasform
+		model_transformed = transform_model(model_transformed, viewport_tf, camera->pos, vertices_copy);
+		// wireframe
+		if (model->type == 0) // wireframe
+		{
+			for (Triangle triangle : model_transformed->triangles)
+			{
+				Vec3 v0 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
+				Vec3 v1 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
+				Vec3 v2 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
+				Vec3 v0_rounded(round(v0.x), round(v0.y), round(v0.z), v0.colorId);
+				Vec3 v1_rounded(round(v1.x), round(v1.y), round(v1.z), v1.colorId);
+				Vec3 v2_rounded(round(v2.x), round(v2.y), round(v2.z), v2.colorId);
+				line_drawing(v0_rounded, v1_rounded, this->image);
+				line_drawing(v1_rounded, v2_rounded, this->image);
+				line_drawing(v2_rounded, v0_rounded, this->image);
+			}
+		}
+
+
+	}
 	
 }
 
@@ -169,9 +215,12 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, v2_vec3->colorId);
 	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, v3_vec3->colorId); 
 
-	v1 = multiplyMatrixWithVec4(tf_matrix, v1);
-	v2 = multiplyMatrixWithVec4(tf_matrix, v2);
-	v3 = multiplyMatrixWithVec4(tf_matrix, v3);
+	//if (! is_vp)
+	//{
+		v1 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v1));
+		v2 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v2));
+		v3 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v3));
+	//}
 
 	Vec3* v1_vec3_transformed = new Vec3(); 
 	Vec3* v2_vec3_transformed = new Vec3(); 
@@ -199,10 +248,10 @@ Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, 
 	//Matrix4 tf_matrix = transformation_matrix_of_model(model);
 	for (Triangle triangle : model->triangles)
 	{
-		if (! triangle_is_culled(triangle, camera_pos, vertices_copy))
-		{
+		//if (! triangle_is_culled(triangle, camera_pos, vertices_copy))
+		//{
 			new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy));
-		}
+		//}
 	}
 
 	Model* result = new Model(model->modelId, model->type, model->numberOfTransformations, model->transformationIds, model->transformationTypes, model->numberOfTriangles, new_triangles);
@@ -257,7 +306,7 @@ Matrix4 Scene::viewport_transformation(int nx, int ny){
 	double M_viewport[4][4] = {	{nx/2.0, 0, 	0, 		(nx-1)/2.0}, 
 								{0, 	ny/2.0, 0, 		(ny-1)/2.0}, 
 							  	{0, 	0, 		0.5, 	0.5}, 
-							  	{0, 	0, 		0, 		0}};
+							  	{0, 	0, 		0, 		1}};
 	Matrix4 M_vp(M_viewport);
 	return M_vp;
 }
@@ -279,7 +328,7 @@ bool Scene::triangle_is_culled(Triangle triangle, Vec3 camera_pos, vector<Vec3*>
 	Vec3 v1 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
 	Vec3 v2 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
 	Vec3 v3 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
-	Vec3 normal_triangle = crossProductVec3(subtractVec3(v2, v1), subtractVec3(v3, v1));
+	Vec3 normal_triangle = normalizeVec3(crossProductVec3(subtractVec3(v2, v1), subtractVec3(v3, v1)));
 
 	//taking the first vertex of triangle for the vector v from eye to the triangle
 	float v_dot_n = dotProductVec3(normalizeVec3(subtractVec3(v1, camera_pos)), normalizeVec3(normal_triangle));
@@ -320,8 +369,10 @@ bool Scene::visible(float den, float num, float& tE, float& tL)
 // vmin, vmax: min and max coordinates of the clipping box
 // vmin = (-1, -1, -1), vmax = (1, 1, 1) in CVV (canonical viewing volume)
 // output: none, changes given v0 and v1 in place
-void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
+vector<Vec3> Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3 v0, Vec3 v1)
 {
+	vector<Vec3> result;
+	Vec3 v0_output(v0), v1_output(v1);
 	float tE = 0, tL = 1;
 	// min and max coordinates of the canonical viewing volume (CVV)
 	float xmin = vmin.x, ymin = vmin.y, zmin = vmin.z;
@@ -341,19 +392,61 @@ void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
 							line_is_visible = true;
 							if (tL < 1)
 							{
-								v1.x = v0.x + dx * tL;
-								v1.y = v0.y + dy * tL;
-								v1.z = v0.z + dz * tL;
+								v1_output.x = v0_output.x + dx * tL;
+								v1_output.y = v0_output.y + dy * tL;
+								v1_output.z = v0_output.z + dz * tL;
 							}
 							if (tE > 0)
 							{
-								v0.x = v0.x + dx * tE;
-								v0.y = v0.y + dy * tE;
-								v0.z = v0.z + dz * tE;
+								v0_output.x = v0_output.x + dx * tE;
+								v0_output.y = v0_output.y + dy * tE;
+								v0_output.z = v0_output.z + dz * tE;
 							}
 						}
-}
 
+	result.push_back(v0_output);
+	result.push_back(v1_output);
+	return result;
+}
+/*
+vector<Vec3> Scene::triangle_clipping(Vec3 vmin, Vec3 vmax, Triangle triangle, vector<Vec3*>&  vertices_copy)
+{
+	//Vec3 vmin(-1, -1, -1);
+	//Vec3 vmax(1, 1, 1);
+	Vec3 v0 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
+	Vec3 v1 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
+	Vec3 v2 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
+
+	vector<Vec3> clipped_polygon_vertices;
+	vector<Vec3> clipping_result = line_clipping(vmin, vmax, v0, v1);
+	if (clipping_result[0] != *(vertices_copy[triangle.getFirstVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[0]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	if (clipping_result[1] != *(vertices_copy[triangle.getSecondVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[1]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	clipping_result = line_clipping(vmin, vmax, v1, v2);
+	if (clipping_result[0] != *(vertices_copy[triangle.getSecondVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[0]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	if (clipping_result[1] != *(vertices_copy[triangle.getThirdVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[1]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	//line_clipping(vmin, vmax, v2, v0);
+}
+*/
 // line rasterization - midpoint algorithm from the slides
 // v0, v1 - end points of the line in viewport coordinates
 // assuming v0 v1 are pixel coordinates (integer)
@@ -482,7 +575,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 
 		else if (m == 0) // horizontal line
 		{
-			std::cout << "horizontal" << std::endl;
+			//std::cout << "horizontal" << std::endl;
 			float y = v0.y;
 			//float d = (v1.x - v0.x);
 
@@ -501,7 +594,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 	}
 	else // vertical line
 	{
-		std::cout << "vertical" << std::endl;
+		//std::cout << "vertical" << std::endl;
 		float x = v0.x;
 		//float d = (v0.y - v1.y);
 		if (v1.y < v0.y)

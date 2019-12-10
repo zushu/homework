@@ -61,7 +61,8 @@ public:
 
 	bool triangle_is_culled(Triangle triangle, Vec3 camera_pos, vector<Vec3*>&  vertices_copy);
 	bool visible(float den, float num, float& tE, float& tL);
-	void line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1);
+	vector<Vec3> line_clipping(Vec3 vmin, Vec3 vmax, Vec3 v0, Vec3 v1);
+	//vector<Vec3> triangle_clipping(Vec3 vmin, Vec3 vmax, Triangle triangle);
 
 	void line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy);
 
