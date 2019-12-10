@@ -556,7 +556,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 			float d = 0.5*(v0.y - v1.y) - (v1.x - v0.x);
 			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
 
-			for (int y = v0.y; y < v1.y; y++)
+			for (int y = v0.y; y < v1.y; y--)
 			{			
 				// draw(x, y, round(c))
 				image_copy[x][y] = Color(round(c_vec3.x), round(c_vec3.y), round(c_vec3.z));
