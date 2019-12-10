@@ -65,6 +65,7 @@ public:
 
 	void line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy);
 
+	void triangle_rasterization(Vec3 v1, Vec3 v2, Vec3 v3, vector< vector<Color> >& image_copy);
 
 };
 

@@ -209,3 +209,8 @@ Vec3 Vec4_to_Vec3(Vec4 v)
     Vec3 result(v.x, v.y, v.z, -1);
     return result;
 }
+
+Color multiplyColorByDouble(Color& c, double k){
+    Color color(c.r*k,c.g*k,c.b*k);
+    return color;
+}

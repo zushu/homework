@@ -523,7 +523,29 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 }
 
 // TODO: WRITE TRIANGLE RASTERIZATION
+void Scene::triangle_rasterization(Vec3 v0, Vec3 v1, Vec3 v2, vector< vector<Color> >& image_copy){
+	int min_x = std::min(std::min(v0.x,v1.x),v2.x);
+	int max_x = std::max(std::max(v0.x,v1.x),v2.x);
+	int min_y = std::min(std::min(v0.y,v1.y),v2.y);
+	int max_y = std::max(std::max(v0.y,v1.y),v2.y);
+	double alfa, beta, gama;
 
+	for (size_t y = min_y; y < max_y; y++){
+		for (size_t x = min_x; x < max_x; x++)
+		{	
+			//division by zero engellemek için epsilon kullanmak gerekir mi?
+			alfa = (x*(v1.y-v2.y) + y*(v2.x-v1.x) + v1.x*v2.y - v1.y*v2.x) / (v0.x*(v1.y-v2.y) + v0.y*(v2.x-v1.x) + v1.x*v2.y - v1.y*v2.x);
+			beta = (x*(v2.y-v0.y) + y*(v0.x-v2.x) + v2.x*v0.y - v2.y*v0.x) / (v1.x*(v2.y-v0.y) + v1.y*(v0.x-v2.x) + v2.x*v0.y - v2.y*v0.x);
+			gama = (x*(v0.y-v1.y) + y*(v1.x-v0.x) + v0.x*v1.y - v0.y*v1.x) / (v2.x*(v0.y-v1.y) + v2.y*(v1.x-v0.x) + v0.x*v1.y - v0.y*v1.x);
+			if ( alfa >= 0 && beta >= 0 && gama >= 0){
+				Color c0 = multiplyColorByDouble(*(colorsOfVertices[v0.colorId - 1]),alfa);
+				Color c1 = multiplyColorByDouble(*(colorsOfVertices[v1.colorId - 1]),beta);
+				Color c2 = multiplyColorByDouble(*(colorsOfVertices[v2.colorId - 1]),gama);
+				image_copy[x][y] =Color(round(c0.r+c1.r+c2.r),round(c0.g+c1.g+c2.g),round(c0.b+c1.b+c2.b));
+			}
+		}		
+	}
+}
 /*
 	Parses XML file
 */
