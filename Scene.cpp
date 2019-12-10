@@ -33,7 +33,7 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	//[Xvp,Yvp,Zvp] = M_vp,(perspective divide),-CLIPPING-CULLING-*M_projection*M_cam*M_model*[X,Y,Z,1]
 
 	vector<Vec3*> vertices_copy = copy_vertices(vertices);
-	vector<Model*> transformed_models(models.size());
+	//vector<Model*> transformed_models(models.size());
 
 	Matrix4 camera_tf = camera_transformation(camera);
 	Matrix4 projection_tf = projection_transformation(camera, projectionType);
@@ -56,27 +56,40 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 		Matrix4 modelling_tf = transformation_matrix_of_model(model);
 		Matrix4 proj_cam_mod_tf = multiplyMatrixWithMatrix(camera_projection_tf, modelling_tf);
 
-		Model* model_transformed = transform_model(model, proj_cam_mod_tf, camera->pos, vertices_copy);
+		Model* model_transformed = transform_model(model, proj_cam_mod_tf, camera->pos, vertices_copy, false);
 
 		// culling
-
+		/*
 		for (auto iter = model_transformed->triangles.begin(); iter != model_transformed->triangles.end(); iter++)
 		{
-			if (triangle_is_culled(*iter, camera->pos, vertices_copy))
+			if (triangle_is_culled(*iter, camera->pos, vertices_copy) == true)
 			{
+				std::cout << "culled" << std::endl;
 				model_transformed->triangles.erase(iter);
 			}
-		}
+		}*/
 
-		// clipping
-		/*
+		// skipped clipping for now
+		// perspective divide has been done inside transform_model function
+		// viewport trasform
+		model_transformed = transform_model(model_transformed, viewport_tf, camera->pos, vertices_copy, false);
 		if (model->type == 0) // wireframe
 		{
 			for (Triangle triangle : model_transformed->triangles)
 			{
-
+				Vec3 v0 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
+				Vec3 v1 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
+				Vec3 v2 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
+				Vec3 v0_rounded(round(v0.x), round(v0.y), round(v0.z), v0.colorId);
+				Vec3 v1_rounded(round(v1.x), round(v1.y), round(v1.z), v1.colorId);
+				Vec3 v2_rounded(round(v2.x), round(v2.y), round(v2.z), v2.colorId);
+				line_drawing(v0_rounded, v1_rounded, this->image);
+				line_drawing(v1_rounded, v2_rounded, this->image);
+				line_drawing(v2_rounded, v0_rounded, this->image);
 			}
-		}*/
+		}
+
+
 	}
 	
 }
@@ -190,7 +203,7 @@ Matrix4 Scene::transformation_matrix_of_model(Model* model)
 
 // Triangle return etmesi gerekmiyor mu? Ya da void yapmamız gerekmiyor mu? -- fixed
 
-Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<Vec3*>&  vertices_copy)
+Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<Vec3*>&  vertices_copy, bool is_vp)
 {
 	Vec3* v1_vec3 = vertices_copy[triangle.getFirstVertexId() - 1];
 	Vec3* v2_vec3 = vertices_copy[triangle.getSecondVertexId() - 1];
@@ -199,9 +212,12 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, v2_vec3->colorId);
 	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, v3_vec3->colorId); 
 
-	v1 = multiplyMatrixWithVec4(tf_matrix, v1);
-	v2 = multiplyMatrixWithVec4(tf_matrix, v2);
-	v3 = multiplyMatrixWithVec4(tf_matrix, v3);
+	if (! is_vp)
+	{
+		v1 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v1));
+		v2 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v2));
+		v3 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v3));
+	}
 
 	Vec3* v1_vec3_transformed = new Vec3(); 
 	Vec3* v2_vec3_transformed = new Vec3(); 
@@ -222,7 +238,7 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 }
 
 // TODO: decide, it might change or might not be used at all
-Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy)
+Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy, bool is_vp)
 {
 	//Model* result = new Model();
 	vector<Triangle> new_triangles;
@@ -231,7 +247,7 @@ Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, 
 	{
 		//if (! triangle_is_culled(triangle, camera_pos, vertices_copy))
 		//{
-			new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy));
+			new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy, is_vp));
 		//}
 	}
 
@@ -287,7 +303,7 @@ Matrix4 Scene::viewport_transformation(int nx, int ny){
 	double M_viewport[4][4] = {	{nx/2.0, 0, 	0, 		(nx-1)/2.0}, 
 								{0, 	ny/2.0, 0, 		(ny-1)/2.0}, 
 							  	{0, 	0, 		0.5, 	0.5}, 
-							  	{0, 	0, 		0, 		0}};
+							  	{0, 	0, 		0, 		1}};
 	Matrix4 M_vp(M_viewport);
 	return M_vp;
 }
@@ -309,7 +325,7 @@ bool Scene::triangle_is_culled(Triangle triangle, Vec3 camera_pos, vector<Vec3*>
 	Vec3 v1 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
 	Vec3 v2 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
 	Vec3 v3 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
-	Vec3 normal_triangle = crossProductVec3(subtractVec3(v2, v1), subtractVec3(v3, v1));
+	Vec3 normal_triangle = normalizeVec3(crossProductVec3(subtractVec3(v2, v1), subtractVec3(v3, v1)));
 
 	//taking the first vertex of triangle for the vector v from eye to the triangle
 	float v_dot_n = dotProductVec3(normalizeVec3(subtractVec3(v1, camera_pos)), normalizeVec3(normal_triangle));
@@ -556,7 +572,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 
 		else if (m == 0) // horizontal line
 		{
-			std::cout << "horizontal" << std::endl;
+			//std::cout << "horizontal" << std::endl;
 			float y = v0.y;
 			//float d = (v1.x - v0.x);
 
@@ -575,7 +591,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 	}
 	else // vertical line
 	{
-		std::cout << "vertical" << std::endl;
+		//std::cout << "vertical" << std::endl;
 		float x = v0.x;
 		//float d = (v0.y - v1.y);
 		if (v1.y < v0.y)

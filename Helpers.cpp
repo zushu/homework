@@ -206,6 +206,12 @@ Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v)
 Vec3 Vec4_to_Vec3(Vec4 v)
 {
     // -1 is a dummy value for the colorId field
-    Vec3 result(v.x, v.y, v.z, -1);
+    Vec3 result(v.x, v.y, v.z, v.colorId);
+    return result;
+}
+
+Vec4 perspective_divide(Vec4 v)
+{
+    Vec4 result(v.x/v.t, v.y/v.t, v.z/v.t, 1, v.colorId);
     return result;
 }

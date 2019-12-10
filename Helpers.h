@@ -77,5 +77,6 @@ Vec4 multiplyMatrixWithVec4(Matrix4 m, Vec4 v);
 
 // added
 Vec3 Vec4_to_Vec3(Vec4 v);
+Vec4 perspective_divide(Vec4 v);
 
 #endif
