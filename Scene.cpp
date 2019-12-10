@@ -56,23 +56,26 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 		Matrix4 modelling_tf = transformation_matrix_of_model(model);
 		Matrix4 proj_cam_mod_tf = multiplyMatrixWithMatrix(camera_projection_tf, modelling_tf);
 
-		Model* model_transformed = transform_model(model, proj_cam_mod_tf, camera->pos, vertices_copy, false);
+		Model* model_transformed = transform_model(model, proj_cam_mod_tf, camera->pos, vertices_copy);
 
 		// culling
-		/*
-		for (auto iter = model_transformed->triangles.begin(); iter != model_transformed->triangles.end(); iter++)
+		if (cullingEnabled)
 		{
-			if (triangle_is_culled(*iter, camera->pos, vertices_copy) == true)
+			for (auto iter = model_transformed->triangles.begin(); iter != model_transformed->triangles.end(); iter++)
 			{
-				std::cout << "culled" << std::endl;
-				model_transformed->triangles.erase(iter);
+				if (triangle_is_culled(*iter, camera->pos, vertices_copy) == true)
+				{
+					std::cout << "culled" << std::endl;
+					model_transformed->triangles.erase(iter);
+				}
 			}
-		}*/
+		}
 
 		// skipped clipping for now
 		// perspective divide has been done inside transform_model function
 		// viewport trasform
-		model_transformed = transform_model(model_transformed, viewport_tf, camera->pos, vertices_copy, false);
+		model_transformed = transform_model(model_transformed, viewport_tf, camera->pos, vertices_copy);
+		// wireframe
 		if (model->type == 0) // wireframe
 		{
 			for (Triangle triangle : model_transformed->triangles)
@@ -203,7 +206,7 @@ Matrix4 Scene::transformation_matrix_of_model(Model* model)
 
 // Triangle return etmesi gerekmiyor mu? Ya da void yapmamız gerekmiyor mu? -- fixed
 
-Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<Vec3*>&  vertices_copy, bool is_vp)
+Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<Vec3*>&  vertices_copy)
 {
 	Vec3* v1_vec3 = vertices_copy[triangle.getFirstVertexId() - 1];
 	Vec3* v2_vec3 = vertices_copy[triangle.getSecondVertexId() - 1];
@@ -212,12 +215,12 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 	Vec4 v2(v2_vec3->x, v2_vec3->y, v2_vec3->z, 1, v2_vec3->colorId);
 	Vec4 v3(v3_vec3->x, v3_vec3->y, v3_vec3->z, 1, v3_vec3->colorId); 
 
-	if (! is_vp)
-	{
+	//if (! is_vp)
+	//{
 		v1 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v1));
 		v2 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v2));
 		v3 = perspective_divide(multiplyMatrixWithVec4(tf_matrix, v3));
-	}
+	//}
 
 	Vec3* v1_vec3_transformed = new Vec3(); 
 	Vec3* v2_vec3_transformed = new Vec3(); 
@@ -238,7 +241,7 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 }
 
 // TODO: decide, it might change or might not be used at all
-Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy, bool is_vp)
+Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy)
 {
 	//Model* result = new Model();
 	vector<Triangle> new_triangles;
@@ -247,7 +250,7 @@ Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, 
 	{
 		//if (! triangle_is_culled(triangle, camera_pos, vertices_copy))
 		//{
-			new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy, is_vp));
+			new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy));
 		//}
 	}
 

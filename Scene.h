@@ -50,8 +50,8 @@ public:
 	Matrix4 rotation_matrix(Rotation* rot);
 	Matrix4 scaling_matrix(Scaling* sc);
 	Matrix4 transformation_matrix_of_model(Model* model);
-	Triangle transform_triangle(Triangle triangle, Matrix4 tf_matrix, vector<Vec3*>&  vertices_copy, bool is_vp);
-	Model* transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy, bool is_vp);
+	Triangle transform_triangle(Triangle triangle, Matrix4 tf_matrix, vector<Vec3*>&  vertices_copy);
+	Model* transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, vector<Vec3*>&  vertices_copy);
 
 
 	Matrix4 camera_transformation(Camera* camera);
