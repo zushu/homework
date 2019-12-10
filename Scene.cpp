@@ -38,6 +38,8 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	Matrix4 camera_tf = camera_transformation(camera);
 	Matrix4 projection_tf = projection_transformation(camera, projectionType);
 	Matrix4 viewport_tf = viewport_transformation(camera->horRes, camera->verRes);
+
+	Matrix4 camera_projection_tf = multiplyMatrixWithMatrix(projection_tf, camera_tf);
 	
 	// loop for each model
 	// -- modelling + camera + projection tf of all vertices
@@ -48,6 +50,46 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	// --viewport tf
 	// -- line rasterization for wireframe
 	// -- triangle rasterization for solid
+
+	for (Model* model : models)
+	{
+		Matrix4 modelling_tf = transformation_matrix_of_model(model);
+		Matrix4 proj_cam_mod_tf = multiplyMatrixWithMatrix(camera_projection_tf, modelling_tf);
+
+		Model* model_transformed = transform_model(model, proj_cam_mod_tf, camera->pos, vertices_copy);
+
+		// culling
+
+		for (auto iter = model_transformed->triangles.begin(); iter != model_transformed->triangles.end(); iter++)
+		{
+			if (triangle_is_culled(*iter, camera->pos, vertices_copy))
+			{
+				model_transformed->triangles.erase(iter);
+			}
+		}
+
+		// clipping
+		if (model->type == 0) // wireframe
+		{
+			for (Triangle triangle : model_transformed->triangles)
+			{
+				Vec3 vmin(-1, -1, -1);
+				Vec3 vmax(1, 1, 1);
+				Vec3 v0 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
+				Vec3 v1 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
+				Vec3 v2 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
+
+				vector<Vec3> clipping_result = line_clipping(vmin, vmax, v0, v1);
+				//if (clipping_result[0] != *(vertices_copy[triangle.getFirstVertexId() - 1]))
+				//{
+				//	*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+				//}
+				//line_clipping(vmin, vmax, v1, v2);
+				//line_clipping(vmin, vmax, v2, v0);
+			}
+		}
+	}
 	
 }
 
@@ -199,10 +241,10 @@ Model* Scene::transform_model(Model* model, Matrix4 tf_matrix, Vec3 camera_pos, 
 	//Matrix4 tf_matrix = transformation_matrix_of_model(model);
 	for (Triangle triangle : model->triangles)
 	{
-		if (! triangle_is_culled(triangle, camera_pos, vertices_copy))
-		{
+		//if (! triangle_is_culled(triangle, camera_pos, vertices_copy))
+		//{
 			new_triangles.push_back(transform_triangle(triangle, tf_matrix, vertices_copy));
-		}
+		//}
 	}
 
 	Model* result = new Model(model->modelId, model->type, model->numberOfTransformations, model->transformationIds, model->transformationTypes, model->numberOfTriangles, new_triangles);
@@ -320,8 +362,10 @@ bool Scene::visible(float den, float num, float& tE, float& tL)
 // vmin, vmax: min and max coordinates of the clipping box
 // vmin = (-1, -1, -1), vmax = (1, 1, 1) in CVV (canonical viewing volume)
 // output: none, changes given v0 and v1 in place
-void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
+vector<Vec3> Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3 v0, Vec3 v1)
 {
+	vector<Vec3> result;
+	Vec3 v0_output(v0), v1_output(v1);
 	float tE = 0, tL = 1;
 	// min and max coordinates of the canonical viewing volume (CVV)
 	float xmin = vmin.x, ymin = vmin.y, zmin = vmin.z;
@@ -341,17 +385,21 @@ void Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3& v0, Vec3& v1)
 							line_is_visible = true;
 							if (tL < 1)
 							{
-								v1.x = v0.x + dx * tL;
-								v1.y = v0.y + dy * tL;
-								v1.z = v0.z + dz * tL;
+								v1_output.x = v0_output.x + dx * tL;
+								v1_output.y = v0_output.y + dy * tL;
+								v1_output.z = v0_output.z + dz * tL;
 							}
 							if (tE > 0)
 							{
-								v0.x = v0.x + dx * tE;
-								v0.y = v0.y + dy * tE;
-								v0.z = v0.z + dz * tE;
+								v0_output.x = v0_output.x + dx * tE;
+								v0_output.y = v0_output.y + dy * tE;
+								v0_output.z = v0_output.z + dz * tE;
 							}
 						}
+
+	result.push_back(v0_output);
+	result.push_back(v1_output);
+	return result;
 }
 
 // line rasterization - midpoint algorithm from the slides
