@@ -91,10 +91,20 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 				line_drawing(v2_rounded, v0_rounded, this->image);
 			}
 		}
-
-
+		else
+		{
+			for (Triangle triangle : model_transformed->triangles)
+			{
+				Vec3 v0 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
+				Vec3 v1 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
+				Vec3 v2 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
+				Vec3 v0_rounded(round(v0.x), round(v0.y), round(v0.z), v0.colorId);
+				Vec3 v1_rounded(round(v1.x), round(v1.y), round(v1.z), v1.colorId);
+				Vec3 v2_rounded(round(v2.x), round(v2.y), round(v2.z), v2.colorId);
+				triangle_rasterization(v0_rounded,v1_rounded,v2_rounded,this->image);
+			}
+		}
 	}
-	
 }
 
 Matrix4 Scene::translation_matrix(Translation* tr)
@@ -230,7 +240,7 @@ Triangle Scene::transform_triangle(Triangle triangle, Matrix4 tf_matrix,vector<V
 	*(v2_vec3_transformed) = Vec4_to_Vec3(v2);
 	*(v3_vec3_transformed) = Vec4_to_Vec3(v3);
 
-	vertices_copy.push_back(v1_vec3_transformed);
+	vertices_copy.push_back(v1_vec3_transformed);					//Burada neden vertices_copy'e push_back yapıyoruz?
 	vertices_copy.push_back(v2_vec3_transformed);
 	vertices_copy.push_back(v3_vec3_transformed);
 
