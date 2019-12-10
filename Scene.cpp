@@ -69,26 +69,14 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 		}
 
 		// clipping
+		/*
 		if (model->type == 0) // wireframe
 		{
 			for (Triangle triangle : model_transformed->triangles)
 			{
-				Vec3 vmin(-1, -1, -1);
-				Vec3 vmax(1, 1, 1);
-				Vec3 v0 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
-				Vec3 v1 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
-				Vec3 v2 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
 
-				vector<Vec3> clipping_result = line_clipping(vmin, vmax, v0, v1);
-				//if (clipping_result[0] != *(vertices_copy[triangle.getFirstVertexId() - 1]))
-				//{
-				//	*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
-
-				//}
-				//line_clipping(vmin, vmax, v1, v2);
-				//line_clipping(vmin, vmax, v2, v0);
 			}
-		}
+		}*/
 	}
 	
 }
@@ -401,7 +389,45 @@ vector<Vec3> Scene::line_clipping(Vec3 vmin, Vec3 vmax, Vec3 v0, Vec3 v1)
 	result.push_back(v1_output);
 	return result;
 }
+/*
+vector<Vec3> Scene::triangle_clipping(Vec3 vmin, Vec3 vmax, Triangle triangle, vector<Vec3*>&  vertices_copy)
+{
+	//Vec3 vmin(-1, -1, -1);
+	//Vec3 vmax(1, 1, 1);
+	Vec3 v0 = *(vertices_copy[triangle.getFirstVertexId() - 1]);
+	Vec3 v1 = *(vertices_copy[triangle.getSecondVertexId() - 1]);
+	Vec3 v2 = *(vertices_copy[triangle.getThirdVertexId() - 1]);
 
+	vector<Vec3> clipped_polygon_vertices;
+	vector<Vec3> clipping_result = line_clipping(vmin, vmax, v0, v1);
+	if (clipping_result[0] != *(vertices_copy[triangle.getFirstVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[0]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	if (clipping_result[1] != *(vertices_copy[triangle.getSecondVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[1]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	clipping_result = line_clipping(vmin, vmax, v1, v2);
+	if (clipping_result[0] != *(vertices_copy[triangle.getSecondVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[0]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	if (clipping_result[1] != *(vertices_copy[triangle.getThirdVertexId() - 1]))
+	{
+		clipped_polygon_vertices.push_back(clipping_result[1]);
+		//*(vertices_copy[triangle.getFirstVertexId() - 1]) = clipping_result[0]
+
+	}
+	//line_clipping(vmin, vmax, v2, v0);
+}
+*/
 // line rasterization - midpoint algorithm from the slides
 // v0, v1 - end points of the line in viewport coordinates
 // assuming v0 v1 are pixel coordinates (integer)
