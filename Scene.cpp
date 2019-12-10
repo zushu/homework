@@ -481,7 +481,8 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 
 	// m: line slope
 	float m;
-	if ((v1.x - v0.x) != 0)
+	if (ABS(v1.x - v0.x) > EPSILON)
+	//if ((v1.x - v0.x) != 0)
 	{
 		m = (v1.y - v0.y)/(v1.x - v0.x);
 
@@ -490,7 +491,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 
 			float y = v0.y;
 			float d = (v0.y - v1.y) + 0.5*(v1.x - v0.x);
-			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1.0/(v1.x - v0.x));
 				
 			for (int x = v0.x; x < v1.x; x++)
 			{			
@@ -513,7 +514,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 		{
 			float x = v0.x;
 			float d = 0.5*(v0.y - v1.y) + (v1.x - v0.x);
-			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1.0/(v1.y - v0.y));
 
 			for (int y = v0.y; y < v1.y; y++)
 			{
@@ -538,7 +539,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 		{
 			float y = v0.y;
 			float d = (v0.y - v1.y) - 0.5*(v1.x - v0.x);
-			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1.0/(v1.x - v0.x));
 
 			for (int x = v0.x; x < v1.x; x++)
 			{			
@@ -564,7 +565,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 		{
 			float x = v0.x;
 			float d = 0.5*(v0.y - v1.y) - (v1.x - v0.x);
-			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1.0/(v1.y - v0.y));
 
 			for (int y = v0.y; y < v1.y; y--)
 			{			
@@ -583,13 +584,14 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 			}
 		}
 
-		else if (m == 0) // horizontal line
+		else if (ABS(m) < EPSILON)
+		//else if (m == 0) // horizontal line
 		{
 			//std::cout << "horizontal" << std::endl;
 			float y = v0.y;
 			//float d = (v1.x - v0.x);
 
-			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.x - v0.x));
+			Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1.0/(v1.x - v0.x));
 
 			for (int x = v0.x; x < v1.x; x++)
 			{			
@@ -611,7 +613,7 @@ void Scene::line_drawing(Vec3 v0, Vec3 v1, vector< vector<Color> >& image_copy)
 			{
 				std::swap(v0, v1);
 			}
-		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1/(v1.y - v0.y));
+		Vec3 dc = multiplyVec3WithScalar(subtractVec3(c1_vec3, c0_vec3), 1.0/(v1.y - v0.y));
 			
 		for (int y = v0.y; y < v1.y; y++)
 		{			
