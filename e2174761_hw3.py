@@ -1,6 +1,15 @@
-def eliminate_tautologies(clause):
-    
-    return
+def is_tautology(clause):
+    disjuncts = parse_clause(clause)  
+    negated = ('',[]) 
+    for disjunct in disjuncts:
+        if disjunct[0].startswith('~'):
+            negated = (disjunct[0][1:], disjunct[1])  
+
+    for disjunct in disjuncts:
+        if disjunct == negated:
+            return True
+
+    return False
 
 
 def parse_clause(clause):
