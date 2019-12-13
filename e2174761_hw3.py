@@ -1,18 +1,49 @@
 def is_tautology(clause):
-    disjuncts = parse_clause(clause)  
+    #disjuncts = parse_clause(clause)  
     negated = ('',[]) 
-    for disjunct in disjuncts:
+    for disjunct in clause:
         if disjunct[0].startswith('~'):
             negated = (disjunct[0][1:], disjunct[1])  
 
-    for disjunct in disjuncts:
+    for disjunct in clause:
         if disjunct == negated:
             return True
 
     return False
 
+def after_tautology_elimination(clauses):
+    for clause in clauses:
+        if is_tautology(clause):
+            clauses.remove(clause)
+    return clauses
+
+def subsumes(clause1, clause2):
+    func_names_1 = [disjunct[0] for disjunct in clause1]
+    func_names_2 = [disjunct[0] for disjunct in clause2]
+
+    for name1 in func_names_1:
+        for name2 in func_names_2:
+            if name1 == name2:
+                func_names_1.remove(name1)
+                func_names_2.remove(name2)
+                break
+    
+    if func_names_1 == []:
+        return True
+
+    return False
+    #return all(elem in func_names_2 for elem in func_names_1)
+
+
 def after_subsumption(clauses):
-    parsed_clauses = [parse_clause(clause) for clause in clauses]
+    #parsed_clauses = [parse_clause(clause) for clause in clauses]
+    for clause1 in clauses:
+        for clause2 in clauses:
+            if subsumes(clause1, clause2):
+                clauses.remove(clause2)
+                break
+
+    return clauses
  
 def replace(literal, replacement_value):
     replaced_literal = (literal[0], replacement_value)
@@ -43,6 +74,12 @@ def extract_parameters(literal):
 
 
 def theorem_prover(premises_list, negated_goal):
+    premises_parsed = [parse_clause(item) for item in premises_list]
+    #premises_parsed.append(parse_clause(negated_goal))
+    premises_parsed = after_tautology_elimination(premises_parsed)
+    premises_parsed = after_subsumption(premises_parsed)
+
+
     return ('no', [])
 
 
