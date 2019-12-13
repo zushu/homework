@@ -11,6 +11,13 @@ def is_tautology(clause):
 
     return False
 
+def after_subsumption(clauses):
+    parsed_clauses = [parse_clause(clause) for clause in clauses]
+ 
+def replace(literal, replacement_value):
+    replaced_literal = (literal[0], replacement_value)
+    return replaced_literal
+    
 
 def parse_clause(clause):
     literals = clause.split('+')
