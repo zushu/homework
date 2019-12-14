@@ -24,10 +24,25 @@ def parse_clause(clause):
 #    replaced_literal = (literal[0], replacement_value)
 #    return replaced_literal
 
-#def replace(clause, value):
-#    for elem in clause:
-#        for param in elem[1]:
+def replace(clause_item, param, value):
+    #for elem in clause:
+    #    for param in elem[1]:
+    if clause_item[1] == []:
+        if clause_item[0] == param:
+            return (value, [])
+        else:
+            return clause_item
+    #elif clause_item[0] != param and clause_item[1] == []:
+     #   return clause_item
+    else:
+        return (clause_item[0], [replace(clause_item_member, param, value) for clause_item_member in clause_item[1]])
+        
+def replace_in_clause(clause, param, value):
+    new_clause = []
+    for elem in clause:
+        new_clause.append(replace(elem, param, value))
 
+    return new_clause
 
 
 def is_tautology(clause):
@@ -86,11 +101,15 @@ def resolution(clause1, clause2):
                     if elem1[1] == elem2[1]:
                         res_exists = True
                         return list(set(clause1.remove(elem1)) | set(clause2.remove(elem2))) 
-                    #else:
-                    #    for param1 in elem1[1]:
-                    #        for param2 in elem2[1]:
-                    #            if param1[1] == [] and param2[1] == []:
-                    #                if param2[0].isupper():
+                    else:
+                        # TODO: find replacement value, call replace_in_clause function
+                        #for param1 in elem1[1]:
+                        #    for param2 in elem2[1]:
+                        #        if param1[1] == [] and param2[1] == []:
+                        #            if param2[0].isupper():
+
+
+    return res_exists
 
 
 
@@ -107,7 +126,12 @@ def theorem_prover(premises_list, negated_goal):
 
     goal_parsed = parse_clause(negated_goal)
 
+    set_of_support = [goal_parsed]
 
+    while set_of_support != []:
+        clause1 = set_of_support.pop()
+        for clause2 in premises_parsed:
+            resolution(clause1, clause2)
 
 
 
