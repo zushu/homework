@@ -44,23 +44,25 @@ def replace_in_clause(clause, param, value):
 
     return new_clause
 
-
+"""
 def find_replacement_value(clause_item1, clause_item2):
     if clause_item1[1] == [] and clause_item2[1] == []:
         # both constant
         if clause_item1[0].isupper() and clause_item2[0].isupper():
-            return clause_item2
+            return clause_item1[0]
         # 1st const, 2nd variable
         elif clause_item1[0].isupper() and clause_item2[0].islower():
-            return clause_item1
+            return clause_item1[0]
         # 1st var, 2nd const
         elif clause_item1[0].islower() and clause_item2[0].isupper():
-            return clause_item2
+            return clause_item2[0]
         # both var
         else:
-            return clause_item2
+            return clause_item2[0]
     
-    #else:
+    else:
+"""
+
 
 
 def is_tautology(clause):
