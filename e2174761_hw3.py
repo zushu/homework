@@ -45,6 +45,24 @@ def replace_in_clause(clause, param, value):
     return new_clause
 
 
+def find_replacement_value(clause_item1, clause_item2):
+    if clause_item1[1] == [] and clause_item2[1] == []:
+        # both constant
+        if clause_item1[0].isupper() and clause_item2[0].isupper():
+            return clause_item2
+        # 1st const, 2nd variable
+        elif clause_item1[0].isupper() and clause_item2[0].islower():
+            return clause_item1
+        # 1st var, 2nd const
+        elif clause_item1[0].islower() and clause_item2[0].isupper():
+            return clause_item2
+        # both var
+        else:
+            return clause_item2
+    
+    #else:
+
+
 def is_tautology(clause):
     #disjuncts = parse_clause(clause)  
     negated = ('',[]) 
@@ -92,6 +110,7 @@ def after_subsumption(clauses):
 
     return clauses
 
+
 def resolution(clause1, clause2):
     res_exists = False
     for elem1 in clause1:
@@ -101,7 +120,7 @@ def resolution(clause1, clause2):
                     if elem1[1] == elem2[1]:
                         res_exists = True
                         return list(set(clause1.remove(elem1)) | set(clause2.remove(elem2))) 
-                    else:
+                    #else:
                         # TODO: find replacement value, call replace_in_clause function
                         #for param1 in elem1[1]:
                         #    for param2 in elem2[1]:
