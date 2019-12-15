@@ -19,17 +19,35 @@ def parse_clause(clause):
 
     return result
 
-     
-#def replace(literal, replacement_value):
-#    replaced_literal = (literal[0], replacement_value)
-#    return replaced_literal
+def reverse_parsing_item(parsed_item):
+    result = ''
+    if parsed_item[1] == []:
+        return parsed_item[0]
+    else:
+        result = parsed_item[0]
+        for i in range(len(parsed_item[1])):
+            result = result + '(' + reverse_parsing_item(parsed_item[1][i])
+            if i != len(parsed_item[1]) - 1:
+                result = result + ','
+        result = result + ')'
+    
+    return result
+
+def reverse_parsing_clause(parsed_clause):
+    result = ''
+    for i in range(len(parsed_clause)):
+        result = result + reverse_parsing_item(parsed_clause[i])
+        if i != len( parsed_clause) - 1:
+            result = result + '+'
+    return result
+
 
 def replace(clause_item, param, value):
     #for elem in clause:
     #    for param in elem[1]:
     if clause_item[1] == []:
-        if clause_item[0] == param:
-            return (value, [])
+        if clause_item == param:
+            return value
         else:
             return clause_item
     #elif clause_item[0] != param and clause_item[1] == []:
@@ -44,29 +62,111 @@ def replace_in_clause(clause, param, value):
 
     return new_clause
 
-"""
+# resolve disjuncts
+# find MGU and return it
 def find_replacement_value(clause_item1, clause_item2):
     if clause_item1[1] == [] and clause_item2[1] == []:
-        # both constant
-        if clause_item1[0].isupper() and clause_item2[0].isupper():
-            return clause_item1[0]
-        # 1st const, 2nd variable
-        elif clause_item1[0].isupper() and clause_item2[0].islower():
-            return clause_item1[0]
-        # 1st var, 2nd const
-        elif clause_item1[0].islower() and clause_item2[0].isupper():
-            return clause_item2[0]
-        # both var
-        else:
-            return clause_item2[0]
-    
+        if clause_item1[0].isupper():
+            return clause_item1
+        elif clause_item2[0].isupper():
+            return clause_item2
+        elif clause_item1[0].islower() and clause_item2[0].islower():
+            return clause_item1
+
+    elif clause_item1[1] == [] and clause_item2[1] != []:
+        return clause_item2
+    elif clause_item1[1] != [] and clause_item2[1] == []:
+        return clause_item1    
     else:
-"""
+        case1 = clause_item1[0] == clause_item2[0]
+        #case2 =  clause_item1[0].startswith('~') and clause_item1[0][1:] == clause_item2[0]
+        #case3 =  clause_item2[0].startswith('~') and clause_item2[0][1:] == clause_item1[0]
+        
+        if case1: #or case2 or case3:
+            return (clause_item1[0], 
+                    [find_replacement_value(clause_item1_member1, clause_item2_member2) 
+                    for clause_item1_member1, clause_item2_member2 
+                    in zip(clause_item1[1], clause_item2[1])])
 
+# returns (param, value)
+def find_replacement_value2(clause_item1, clause_item2):
+    result = []
+    if clause_item1[1] == [] and clause_item2[1] == []:
+        if clause_item1[0].isupper():
+            return [(clause_item2, clause_item1)]
+        elif clause_item2[0].isupper():
+            return [(clause_item1, clause_item2)]
+        elif clause_item1[0].islower() and clause_item2[0].islower():
+            return [(clause_item2, clause_item1)]
 
+    elif clause_item1[1] == [] and clause_item2[1] != []:
+        return [(clause_item1, clause_item2)]
+    elif clause_item1[1] != [] and clause_item2[1] == []:
+        return [(clause_item2, clause_item1)]
+    else:
+        case1 = clause_item1[0] == clause_item2[0]
+        #case2 =  clause_item1[0].startswith('~') and clause_item1[0][1:] == clause_item2[0]
+        #case3 =  clause_item2[0].startswith('~') and clause_item2[0][1:] == clause_item1[0]
+        
+        if case1: #or case2 or case3:
+            #return [find_replacement_value2(clause_item1_member1, clause_item2_member2) 
+             #       for clause_item1_member1, clause_item2_member2 
+            #        in zip(clause_item1[1], clause_item2[1])]
+            for clause_item1_member1, clause_item2_member2 in zip(clause_item1[1], clause_item2[1]):
+                result.append(find_replacement_value2(clause_item1_member1, clause_item2_member2)[0])
+    return result
+            
+# resolve clauses
+# find MGU and return it
+def resolution(clause1, clause2):
+    new_clause = []
+    #new_clause = clause1.extend(clause2)
+    clause1_tmp = clause1 
+    clause2_tmp = clause2
+    found = False
+    for clause_item1 in clause1_tmp:
+        for clause_item2 in clause2_tmp:
+            if clause_item1[0].startswith('~'):
+                if clause_item2[0] == clause_item1[0][1:]:
+                    new_item = find_replacement_value((clause_item1[0][1:], clause_item1[1]), clause_item2)
+                    if new_item != None:
+                        found = True
+                        params_values_to_be_replaced = find_replacement_value2((clause_item1[0][1:], clause_item1[1]), clause_item2)
+                        # remove old
 
-def is_tautology(clause):
-    #disjuncts = parse_clause(clause)  
+                        clause1_tmp.remove(clause_item1)
+                        clause2_tmp.remove(clause_item2)                        
+                        temp = clause1_tmp
+                        temp.extend(clause2_tmp)
+                        new_clause = temp
+                        # make replacements
+                        if params_values_to_be_replaced != None:
+                            for (param, value) in params_values_to_be_replaced:
+                                new_clause = replace_in_clause(new_clause, param, value)
+                        return new_clause
+
+            elif clause_item2[0].startswith('~'):
+                if clause_item1[0] == clause_item2[0][1:]:
+                    new_item = find_replacement_value((clause_item2[0][1:], clause_item2[1]), clause_item1)
+                    if new_item != None:
+                        found = True
+                        params_values_to_be_replaced = find_replacement_value2((clause_item2[0][1:], clause_item2[1]), clause_item1)
+                        # remove old
+                        clause1_tmp.remove(clause_item1)
+                        clause2_tmp.remove(clause_item2) 
+
+                        temp = clause1_tmp
+                        temp.extend(clause2_tmp)
+                        new_clause = temp
+                        # make replacements
+                        if params_values_to_be_replaced != None:
+                            for param, value in params_values_to_be_replaced:
+                                new_clause = replace_in_clause(new_clause, param, value)
+                        return new_clause
+
+    return found
+
+def is_tautology(clause):  
     negated = ('',[]) 
     for disjunct in clause:
         if disjunct[0].startswith('~'):
@@ -106,58 +206,43 @@ def after_subsumption(clauses):
     #parsed_clauses = [parse_clause(clause) for clause in clauses]
     for clause1 in clauses:
         for clause2 in clauses:
-            if subsumes(clause1, clause2):
-                clauses.remove(clause2)
-                break
+            if clause2 != clause1:
+                if subsumes(clause1, clause2):
+                    clauses.remove(clause2)
+                    break
 
     return clauses
 
 
-def resolution(clause1, clause2):
-    res_exists = False
-    for elem1 in clause1:
-        for elem2 in clause2:
-            if elem1[0].startswith('~'):
-                if elem1[0][1:] == elem2[0]:
-                    if elem1[1] == elem2[1]:
-                        res_exists = True
-                        return list(set(clause1.remove(elem1)) | set(clause2.remove(elem2))) 
-                    #else:
-                        # TODO: find replacement value, call replace_in_clause function
-                        #for param1 in elem1[1]:
-                        #    for param2 in elem2[1]:
-                        #        if param1[1] == [] and param2[1] == []:
-                        #            if param2[0].isupper():
-
-
-    return res_exists
-
-
-
-
-
-
-
-
 def theorem_prover(premises_list, negated_goal):
+    res_list = []
+    return_list = []
     premises_parsed = [parse_clause(item) for item in premises_list]
-    #premises_parsed.append(parse_clause(negated_goal))
     premises_parsed = after_tautology_elimination(premises_parsed)
     premises_parsed = after_subsumption(premises_parsed)
 
-    goal_parsed = parse_clause(negated_goal)
+    goal_parsed = [parse_clause(item) for item in negated_goal]
 
-    set_of_support = [goal_parsed]
+    set_of_support = goal_parsed
 
     while set_of_support != []:
         clause1 = set_of_support.pop()
         for clause2 in premises_parsed:
-            resolution(clause1, clause2)
+            reversed_clause1 = reverse_parsing_clause(clause1)
+            reversed_clause2 = reverse_parsing_clause(clause2)
+            res = resolution(clause1, clause2)
+            if res != False:
+                if res != []:
+                    set_of_support = [res] + set_of_support
+                    return_val = reversed_clause1 + '$' + reversed_clause2 + '$' + reverse_parsing_clause(res)
+                    return_list.append(return_val)
+                else:
+                    return_val = reversed_clause1 + '$' + reversed_clause2 + '$' + 'empty'
+                    return_list.append(return_val)
+                    return ('yes', return_list)
 
-
-
-
-
+    #print return_list
     return ('no', [])
 
-
+#print theorem_prover(["p(A,f(t))", "q(z)+~p(z,f(B))", "~q(y)+r(y)", "m(C)+~m(x)"],["~r(A)"])
+#print theorem_prover(["p(A,f(t))", "q(z)+~p(z,f(B))", "q(y)+r(y)", "~q(x)+m(x)"],["~r(A)"])
