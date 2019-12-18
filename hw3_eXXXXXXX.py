@@ -15,11 +15,13 @@ class Leg:
         '''
         self.l = l
         self.Tfm_a1 = Tfm_init
-        #self.pos_a2 = None #position vector of knee joint (a2) of shape (3,). 
-        self.pos_a2 = np.matmul(self.Tfm_a1, np.transpose(np.array([l * np.cos(theta_2) * np.sin(theta_1),
-                                l * np.cos(theta_2) * np.cos(theta_1), 
-                                l * np.sin(theta_1)])))
+        self.pos_a2 = None #position vector of knee joint (a2) of shape (3,). 
+        #self.pos_a2 = np.matmul(self.Tfm_a1, np.transpose(np.array([l * np.cos(theta_2) * np.sin(theta_1),
+        #                        l * np.cos(theta_2) * np.cos(theta_1), 
+        #                        l * np.sin(theta_1), 1])))[:3,]
+
         self.pos_tip = None #position vector of the tip of shape (3,).
+        #self.pos_tip = np.add(self.pos_a2, np.array([l * np.cos(theta_2 + theta_3 + np.pi) * np.sin(theta_1), l * np.cos(theta_2 + theta_3 + np.pi) * np.cos(theta_1), l * np.sin(theta_2 + theta_3 + np.pi)]))
         self.set_f_kine(theta_1, theta_2, theta_3)
         
         #update all of these fields in the setters below
@@ -42,6 +44,25 @@ class Leg:
         new angles and the transform of the base joint. 
         Always returns True.
         '''
+        transl_mat1 = np.eye(4)
+        transl_mat1[0, 3] = self.l
+        rot_mat1 = np.eye(4)
+        rot_mat1[0:3, 0:3] = R.from_euler('y', np.pi + theta_3).as_dcm()
+
+        #transl_mat2 = np.eye(4)
+        #transl_mat2[0, 3] = self.l
+        rot_mat2 = np.eye(4)
+        rot_mat2[0:3, 0:3] = R.from_euler('y', theta_2).as_dcm()
+
+        rot_mat3 = np.eye(4)
+        rot_mat3[0:3, 0:3] = R.from_euler('z', np.pi/2 - theta_1).as_dcm()
+
+        global_origin = np.array([0, 0, 0, 1]).T
+        trans_mat_a2 = np.matmul(self.Tfm_a1, np.matmul(np.matmul( rot_mat3, rot_mat2), transl_mat1))
+        self.pos_a2 = np.matmul(trans_mat_a2, global_origin)[:3,]
+        trans_mat_tip = np.matmul(np.matmul(trans_mat_a2, rot_mat1), transl_mat1)
+        self.pos_tip = np.matmul(trans_mat_tip, global_origin)[:3, ]
+
         return True
         
     def set_i_kine(self, pos_tip):
@@ -62,13 +83,31 @@ class Leg:
         False otherwise.
         See set_i_kine.
         '''
+        pos_tip_4d = np.array([pos_tip[0,], pos_tip[1,], pos_tip[2,], 1]).T
+        pos_tip_leg_space = np.matmul(np.linalg.inv(self.Tfm_a1), pos_tip_4d)[:3,]
+        if np.linalg.norm(pos_tip_leg_space) <= 2*self.l:
+            return True
         return False
+        
     
     def i_kine(self, pos_tip):
         '''
         calculates inverse kinematics for the leg.
         See set_i_kine.
         '''
+        pos_tip_4d = np.array([pos_tip[0,], pos_tip[1,], pos_tip[2,], 1]).T
+        pos_tip_leg_space = np.matmul(np.linalg.inv(self.Tfm_a1), pos_tip_4d)[:3,]
+
+        theta_1 = np.arctan(pos_tip_leg_space[0,]/pos_tip_leg_space[1,])
+
+        # d: distance from tip to base
+        d = np.linalg.norm(pos_tip_leg_space)
+        theta_3 = -np.arccos((2 * self.l**2 - d**2)/(2 * self.l**2))
+
+        beta = np.arcsin(self.l * np.sin((theta_3 + np.pi))/d)
+
+        theta_2 = np.arcsin(pos_tip_leg_space[2,]/d) - beta
+
         return (theta_1,theta_2,theta_3)
 
 
