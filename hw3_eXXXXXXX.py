@@ -15,7 +15,10 @@ class Leg:
         '''
         self.l = l
         self.Tfm_a1 = Tfm_init
-        self.pos_a2 = None #position vector of knee joint (a2) of shape (3,). 
+        #self.pos_a2 = None #position vector of knee joint (a2) of shape (3,). 
+        self.pos_a2 = np.matmul(self.Tfm_a1, np.transpose(np.array([l * np.cos(theta_2) * np.sin(theta_1),
+                                l * np.cos(theta_2) * np.cos(theta_1), 
+                                l * np.sin(theta_1)])))
         self.pos_tip = None #position vector of the tip of shape (3,).
         self.set_f_kine(theta_1, theta_2, theta_3)
         
@@ -29,6 +32,8 @@ class Leg:
         Tfm_a1 is the new global transform of the joint a1.
         Always returns True.
         '''
+        self.Tfm_a1 = Tfm_a1
+
         return True
         
     def set_f_kine(self, theta_1, theta_2, theta_3):
