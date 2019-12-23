@@ -83,6 +83,11 @@ class Leg:
         False otherwise.
         See set_i_kine.
         '''
+        theta_1, theta_2, theta_3 = self.i_kine(pos_tip)
+        if theta_1 > -np.pi/2 and theta_1 < np.pi/2:
+            if theta_2 > -np.pi/2 and theta_2 < np.pi/2:
+                if theta_3 > -np.pi and theta_3 < 0:
+                    return True
         pos_tip_4d = np.array([pos_tip[0,], pos_tip[1,], pos_tip[2,], 1]).T
         pos_tip_leg_space = np.matmul(np.linalg.inv(self.Tfm_a1), pos_tip_4d)[:3,]
         if np.linalg.norm(pos_tip_leg_space) <= 2*self.l:
@@ -130,10 +135,44 @@ class Sphinx:
         self.d1 = d1
         self.d2 = d2
         self.l = l
+
+        rot_p3_to_s = np.eye(4)
+        rot_p3_to_s[0:3, 0:3] = R.from_euler('x', np.pi/2).as_dcm()
+        transl_p3_to_s = np.eye(4)
+        transl_p3_to_s[0, 3] = - self.d1
+
+        # transformation from p3 to world
+        Tfm_p3_to_s = np.matmul(transl_p3_to_s, rot_p3_to_s)
+        Tfm_p3 = np.matmul(Tfm_init, Tfm_p3_to_s)
+
+        # transformation from p2 to world
+        transl_p3_to_s[0, 3] = self.d1
+        Tfm_p2_to_s = np.matmul(transl_p3_to_s, rot_p3_to_s)
+        Tfm_p2 = np.matmul(Tfm_init, Tfm_p2_to_s)
+
+        # transformation from p1 to world
+        transl_p1_to_p2 = np.eye(4)
+        transl_p1_to_p2[2, 3] = - self.d2
+        Tfm_p1_to_s = np.matmul(Tfm_p2_to_s, transl_p1_to_p2)
+        Tfm_p1 = np.matmul(Tfm_init, Tfm_p1_to_s)
+
         
-        self.p1 = None # The fields for the legs. All of them are Leg objects. Initialize them accordingly.
-        self.p2 = None
-        self.p3 = None
+        #self.p1 = None # The fields for the legs. All of them are Leg objects. Initialize them accordingly.
+        global_origin = np.array([0, 0, 0]).T
+        self.p1 = Leg(Tfm_p1, l)
+        pos_p1_a1 = np.matmul(Tfm_p1, global_origin)[:3,]
+        pos_p1_tip = np.array([pos_p1_a1[0,], pos_p1_a1[1,], 0]).T
+        p1.set_i_kine(pos_p1_tip)
+        #self.p2 = None
+        self.p2 = Leg(Tfm_p2, l)
+        pos_p2_a1 = np.matmul(Tfm_p2, global_origin)[:3,]
+        pos_p2_tip = np.array([pos_p2_a1[0,], pos_p2_a1[1,], 0]).T
+        p2.set_i_kine(pos_p2_tip)
+        #self.p3 = None
+        self.p3 = Leg(Tfm_p3, l)
+        pos_p3_a1 = np.matmul(Tfm_p3, global_origin)[:3,]
+        pos_p3_tip = np.array([pos_p3_a1[0,], pos_p3_a1[1,], 0]).T
+        p3.set_i_kine(pos_p3_tip)
     
     def set_Tfm_fixed_legs(self, Tfm):
         '''
@@ -145,6 +184,8 @@ class Sphinx:
         returns True and updates the relevant fields. Otherwise, keeps
         the relevant fields as is and returns False.
         '''
+        
+
         return False
         
 def quaternion_slerp(quat_1,quat_2,alpha):
