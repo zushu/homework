@@ -137,7 +137,7 @@ class Sphinx:
         self.l = l
 
         rot_p3_to_s = np.eye(4)
-        rot_p3_to_s[0:3, 0:3] = R.from_euler('x', np.pi/2).as_dcm()
+        rot_p3_to_s[0:3, 0:3] = R.from_euler('x', - np.pi/2).as_dcm()
         transl_p3_to_s = np.eye(4)
         transl_p3_to_s[0, 3] = - self.d1
 
@@ -158,21 +158,21 @@ class Sphinx:
 
         
         #self.p1 = None # The fields for the legs. All of them are Leg objects. Initialize them accordingly.
-        global_origin = np.array([0, 0, 0]).T
+        global_origin = np.array([0, 0, 0, 1]).T
         self.p1 = Leg(Tfm_p1, l)
         pos_p1_a1 = np.matmul(Tfm_p1, global_origin)[:3,]
         pos_p1_tip = np.array([pos_p1_a1[0,], pos_p1_a1[1,], 0]).T
-        p1.set_i_kine(pos_p1_tip)
+        self.p1.set_i_kine(pos_p1_tip)
         #self.p2 = None
         self.p2 = Leg(Tfm_p2, l)
         pos_p2_a1 = np.matmul(Tfm_p2, global_origin)[:3,]
         pos_p2_tip = np.array([pos_p2_a1[0,], pos_p2_a1[1,], 0]).T
-        p2.set_i_kine(pos_p2_tip)
+        self.p2.set_i_kine(pos_p2_tip)
         #self.p3 = None
         self.p3 = Leg(Tfm_p3, l)
         pos_p3_a1 = np.matmul(Tfm_p3, global_origin)[:3,]
         pos_p3_tip = np.array([pos_p3_a1[0,], pos_p3_a1[1,], 0]).T
-        p3.set_i_kine(pos_p3_tip)
+        self.p3.set_i_kine(pos_p3_tip)
     
     def set_Tfm_fixed_legs(self, Tfm):
         '''
@@ -184,7 +184,9 @@ class Sphinx:
         returns True and updates the relevant fields. Otherwise, keeps
         the relevant fields as is and returns False.
         '''
+
         
+
 
         return False
         
@@ -206,7 +208,9 @@ def position_lerp(pos_1,pos_2,alpha):
     if alpha == 0, this function returns pos_1,
     if alpha == 1, this function returns pos_2.
     '''
-    pass
+    new_pos = alpha * pos_2 + (1 - alpha) * pos_1
+    return new_pos
+    #pass
 
 def interpolate_Tfms(Tfm_1,Tfm_2,alpha):
     '''
@@ -215,7 +219,9 @@ def interpolate_Tfms(Tfm_1,Tfm_2,alpha):
     if alpha == 0, this function returns Tfm_1,
     if alpha == 1, this function returns Tfm_2.
     '''
-    pass
+    new_tfm = alpha * Tfm_2 + (1 - alpha) * Tfm_1
+    return new_tfm
+    #pass
     
 
 
