@@ -83,15 +83,19 @@ class Leg:
         False otherwise.
         See set_i_kine.
         '''
+        pos_tip = np.array([pos_tip[0,], pos_tip[1,], pos_tip[2,]]).T
+
+        global_origin = np.array([0, 0, 0, 1]).T
+
+        pos_a1 = np.matmul(self.Tfm_a1, global_origin)[:3, ]
+        
+        #pos_tip_leg_space = np.matmul(np.linalg.inv(self.Tfm_a1), pos_tip_4d)[:3,]
         theta_1, theta_2, theta_3 = self.i_kine(pos_tip)
         if theta_1 > -np.pi/2 and theta_1 < np.pi/2:
             if theta_2 > -np.pi/2 and theta_2 < np.pi/2:
                 if theta_3 > -np.pi and theta_3 < 0:
+                    #if np.linalg.norm(pos_a1 - pos_tip) <= 2*self.l:
                     return True
-        pos_tip_4d = np.array([pos_tip[0,], pos_tip[1,], pos_tip[2,], 1]).T
-        pos_tip_leg_space = np.matmul(np.linalg.inv(self.Tfm_a1), pos_tip_4d)[:3,]
-        if np.linalg.norm(pos_tip_leg_space) <= 2*self.l:
-            return True
         return False
         
     
@@ -103,10 +107,14 @@ class Leg:
         pos_tip_4d = np.array([pos_tip[0,], pos_tip[1,], pos_tip[2,], 1]).T
         pos_tip_leg_space = np.matmul(np.linalg.inv(self.Tfm_a1), pos_tip_4d)[:3,]
 
+        global_origin = np.array([0, 0, 0, 1]).T
+
+        pos_a1 = np.matmul(self.Tfm_a1, global_origin)[:3, ]
+
         theta_1 = np.arctan(pos_tip_leg_space[0,]/pos_tip_leg_space[1,])
 
         # d: distance from tip to base
-        d = np.linalg.norm(pos_tip_leg_space)
+        d = np.linalg.norm(pos_tip - pos_a1)
         theta_3 = -np.arccos((2 * self.l**2 - d**2)/(2 * self.l**2))
 
         beta = np.arcsin(self.l * np.sin((theta_3 + np.pi))/d)
@@ -185,9 +193,48 @@ class Sphinx:
         the relevant fields as is and returns False.
         '''
 
+        #if self.p1.is_reachable(self.p1.pos_tip) and self.p2.is_reachable(self.p2.pos_tip) and self.p3.is_reachable(self.p3.pos_tip): 
+        self.Tfm = Tfm
+        rot_p3_to_s = np.eye(4)
+        rot_p3_to_s[0:3, 0:3] = R.from_euler('x', - np.pi/2).as_dcm()
+        transl_p3_to_s = np.eye(4)
+        transl_p3_to_s[0, 3] = - self.d1
+
+        # transformation from p3 to world
+        Tfm_p3_to_s = np.matmul(transl_p3_to_s, rot_p3_to_s)
+        Tfm_p3 = np.matmul(Tfm, Tfm_p3_to_s)
+
+        # transformation from p2 to world
+        transl_p3_to_s[0, 3] = self.d1
+        Tfm_p2_to_s = np.matmul(transl_p3_to_s, rot_p3_to_s)
+        Tfm_p2 = np.matmul(Tfm, Tfm_p2_to_s)
+
+        # transformation from p1 to world
+        transl_p1_to_p2 = np.eye(4)
+        transl_p1_to_p2[2, 3] = - self.d2
+        Tfm_p1_to_s = np.matmul(Tfm_p2_to_s, transl_p1_to_p2)
+        Tfm_p1 = np.matmul(Tfm, Tfm_p1_to_s)
+
         
+        #self.p1 = None # The fields for the legs. All of them are Leg objects. Initialize them accordingly.
+        global_origin = np.array([0, 0, 0, 1]).T
+        self.p1 = Leg(Tfm_p1, self.l)
+        pos_p1_a1 = np.matmul(Tfm_p1, global_origin)[:3,]
+        #pos_p1_tip = np.array([pos_p1_a1[0,], pos_p1_a1[1,], 0]).T
+        p1_true = self.p1.set_i_kine(self.p1.pos_tip)
+        #self.p2 = None
+        self.p2 = Leg(Tfm_p2, self.l)
+        pos_p2_a1 = np.matmul(Tfm_p2, global_origin)[:3,]
+        #pos_p2_tip = np.array([pos_p2_a1[0,], pos_p2_a1[1,], 0]).T
+        p2_true = self.p2.set_i_kine(self.p2.pos_tip)
+        #self.p3 = None
+        self.p3 = Leg(Tfm_p3, self.l)
+        pos_p3_a1 = np.matmul(Tfm_p3, global_origin)[:3,]
+        #pos_p3_tip = np.array([pos_p3_a1[0,], pos_p3_a1[1,], 0]).T
+        p3_true = self.p3.set_i_kine(self.p3.pos_tip)
 
-
+        if p1_true and p2_true and p3_true:
+            return True
         return False
         
 def quaternion_slerp(quat_1,quat_2,alpha):
@@ -199,7 +246,25 @@ def quaternion_slerp(quat_1,quat_2,alpha):
     if alpha == 0, this function returns quat_1,
     if alpha == 1, this function returns quat_2.
     '''
-    pass
+
+    #q1 = R.from_dcm(Tfm_1[:3, :3]).as_quat()
+    q1_conj = np.array([quat_1[0], -quat_1[1], -quat_1[2], -quat_1[3]])
+    #q2 = R.from_dcm(Tfm_2[:3, :3]).as_quat()
+    q1_conj_q2 = np.ndarray(shape=(4,), dtype='float')
+
+    q1_conj_q2[0] = q1_conj[0] + quat_2[0] - np.dot(q1_conj[1:], quat_2[1:])
+    q1_conj_q2[1:] = q1_conj[0] * quat_2[1:] + quat_2[0] * q1_conj[1:] + np.cross(q1_conj[1:], quat_2[1:])
+    q1_conj_q2_rotvec = R.from_quat(q1_conj_q2).as_rotvec()
+
+    q1_conj_q2_angle = np.linalg.norm(q1_conj_q2_rotvec)
+    new_angle = q1_conj_q2_angle * alpha
+    new_q = np.array([np.cos(new_angle/2), np.sin(new_angle/2) * q1_conj_q2_rotvec])
+    slerp = np.ndarray(shape=(4,), dtype='float')
+    slerp[0] = quat_1[0] + new_q[0] - np.dot(quat_1[1:], new_q[1:])
+    slerp[1:] = quat_1[0] * new_q[1:] + new_q[0] * quat_1[1:] + np.cross(quat_1[1:], new_q[1:])
+
+    return slerp
+    #pass
 
 def position_lerp(pos_1,pos_2,alpha):
     '''
@@ -219,7 +284,23 @@ def interpolate_Tfms(Tfm_1,Tfm_2,alpha):
     if alpha == 0, this function returns Tfm_1,
     if alpha == 1, this function returns Tfm_2.
     '''
-    new_tfm = alpha * Tfm_2 + (1 - alpha) * Tfm_1
+    q1 = R.from_dcm(Tfm_1[:3, :3]).as_quat()
+    q2 = R.from_dcm(Tfm_2[:3, :3]).as_quat()
+
+    slerp = quaternion_slerp(q1, q2, alpha)
+
+    rot_matrix = R.from_quat(slerp).as_dcm()
+
+    pos_1 = Tfm_1[:, 3]
+    pos_2 = Tfm_2[:, 3]
+
+    lerp = position_lerp(pos_1, pos_2, alpha)
+
+    new_tfm = np.ndarray(shape=(4, 4), dtype='float')
+    new_tfm[:3, :3] = rot_matrix
+    new_tfm[:, 3] = lerp
+
+    #new_tfm = alpha * Tfm_2 + (1 - alpha) * Tfm_1
     return new_tfm
     #pass
     
