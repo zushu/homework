@@ -115,10 +115,19 @@ def find_replacement_value2(clause_item1, clause_item2):
             for clause_item1_member1, clause_item2_member2 in zip(clause_item1[1], clause_item2[1]):
                 result.append(find_replacement_value2(clause_item1_member1, clause_item2_member2)[0])
     return result
-            
+
+def find_replacement_in_clauses2(clause1, clause2):
+    result = []
+    for item1 in clause1:
+        for item2 in clause2:
+            result.extend(find_replacement_value2(item1, item2))
+
+    return result
+
 # resolve clauses
 # find MGU and return it
 def resolution(clause1, clause2):
+    #new_clauses = []
     new_clause = []
     #new_clause = clause1.extend(clause2)
     clause1_tmp = clause1 
@@ -132,6 +141,7 @@ def resolution(clause1, clause2):
                     if new_item != None:
                         found = True
                         params_values_to_be_replaced = find_replacement_value2((clause_item1[0][1:], clause_item1[1]), clause_item2)
+                        params_values_to_be_replaced.extend(find_replacement_in_clauses2(clause1, clause2))
                         # remove old
 
                         clause1_tmp.remove(clause_item1)
@@ -143,7 +153,16 @@ def resolution(clause1, clause2):
                         if params_values_to_be_replaced != None:
                             for (param, value) in params_values_to_be_replaced:
                                 new_clause = replace_in_clause(new_clause, param, value)
-                        return new_clause
+
+                        #print new_clause
+                        new_clause_unique = []
+                        for i in new_clause:
+                            if i not in new_clause_unique:
+                                new_clause_unique.append(i)
+
+                        #if new_clause_unique != []:
+                        #new_clauses.append(new_clause_unique)
+                        return new_clause_unique
 
             elif clause_item2[0].startswith('~'):
                 if clause_item1[0] == clause_item2[0][1:]:
@@ -162,9 +181,19 @@ def resolution(clause1, clause2):
                         if params_values_to_be_replaced != None:
                             for param, value in params_values_to_be_replaced:
                                 new_clause = replace_in_clause(new_clause, param, value)
-                        return new_clause
+                        #print new_clause
+                        new_clause_unique = []
+                        for i in new_clause:
+                            if i not in new_clause_unique:
+                                new_clause_unique.append(i)
 
-    return found
+                        #if new_clause_unique != []:
+                        #new_clauses.append(new_clause_unique)
+                        return new_clause_unique
+    #if found:
+    #    return new_clauses
+
+    return False
 
 def is_tautology(clause):  
     negated = ('',[]) 
@@ -224,25 +253,44 @@ def theorem_prover(premises_list, negated_goal):
     goal_parsed = [parse_clause(item) for item in negated_goal]
 
     set_of_support = goal_parsed
+    print "set of support", set_of_support
 
     while set_of_support != []:
         clause1 = set_of_support.pop()
+        print "clause1", clause1
         for clause2 in premises_parsed:
+            print "clause2", clause2
             reversed_clause1 = reverse_parsing_clause(clause1)
             reversed_clause2 = reverse_parsing_clause(clause2)
             res = resolution(clause1, clause2)
+            
             if res != False:
+                #print res
                 if res != []:
                     set_of_support = [res] + set_of_support
+                    print "set of support", set_of_support
+                    #set_of_support = res + set_of_support
+                    #for res_i in res:
+                    #    if (res_i != []):
+                    #        set_of_support = [res_i] + set_of_support
+                    #        print "set of support", set_of_support
+                    #        return_val = reversed_clause1 + '$' + reversed_clause2 + '$' + reverse_parsing_clause(res_i)
                     return_val = reversed_clause1 + '$' + reversed_clause2 + '$' + reverse_parsing_clause(res)
                     return_list.append(return_val)
+        
+                        #else:
+                        #    #print 'hey'
+                         #   return_val = reversed_clause1 + '$' + reversed_clause2 + '$' + 'empty'
+                         #   return_list.append(return_val)
+                         #   return ('yes', return_list)
                 else:
                     return_val = reversed_clause1 + '$' + reversed_clause2 + '$' + 'empty'
                     return_list.append(return_val)
                     return ('yes', return_list)
 
-    #print return_list
+    print return_list
     return ('no', [])
 
-#print theorem_prover(["p(A,f(t))", "q(z)+~p(z,f(B))", "~q(y)+r(y)", "m(C)+~m(x)"],["~r(A)"])
+print theorem_prover(["p(A,f(t))", "q(z)+~p(z,f(B))", "~q(y)+r(y)+m(C)", '~m(y)'],["~r(A)"])
+print theorem_prover(["p(A,f(t))", "q(z)+~p(z,f(B))", "~q(y)+r(y)"],["~r(A)"])
 #print theorem_prover(["p(A,f(t))", "q(z)+~p(z,f(B))", "q(y)+r(y)", "~q(x)+m(x)"],["~r(A)"])
