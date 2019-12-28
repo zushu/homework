@@ -89,8 +89,8 @@ for i, j in lst_pitfalls:
 
 board[goal[0] - 1][goal[1] - 1] = 'G'
 
-for line in board:
-    print line, '\n'
+#for line in board:
+#    print line, '\n'
 
 rewards2 = {'R': r_regular, 'O': r_obstacle, 'P': r_pitfall, 'G': r_goal}
 actions2 = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)}
@@ -100,18 +100,17 @@ actions2 = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)}
 def value_iteration(states, rewards, actions, gamma, theta):
     utilities = [[0 for i in range(M)] for j in range(N)]   # U
     utilities_2 = [[float('inf') for i in range(M)] for j in range(N)] # U'
+    chosen_actions = [['0' for i in range(M)] for j in range(N)]
 
     delta = float('inf') # maximum change in the utility of any state in an iteration
 
     while delta >= theta:
-        print 'delta > theta'
         delta = 0
         utilities_2 = [item[:] for item in utilities] # deep copy
-        #actions_state = actions
         for i in range(M):
             for j in range(N):
                 # actions
-                actions_state = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)} # deep copy
+                actions_state = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)} # for deep copy
                 
                 if i == 0 and 'S' in actions_state: 
                     actions_state.pop('S')
@@ -123,26 +122,52 @@ def value_iteration(states, rewards, actions, gamma, theta):
                     actions_state.pop('E')
 
                 #max_action 
-                next_states_list = [utilities[i + a_i][j + a_j] for key, (a_i, a_j) in actions_state.iteritems()]
+                next_states_list = {key: utilities[i + a_i][j + a_j] for key, (a_i, a_j) in actions_state.iteritems()}
 
-                Q_a = [ns for ns in next_states_list]
-                for ind, next_state in enumerate(next_states_list):
-                    Q_a[ind] = rewards[states[i][j]] + gamma * next_state
+                Q_a = {key: val for key, val in next_states_list.iteritems()} # just for definition
+                for key, next_state in next_states_list.iteritems():
+                    Q_a[key] = rewards[states[i][j]] + gamma * next_state
                     #utilities_2[i][j] = rewards[states[i][j]] + gamma * next_state
-                utilities[i][j] = max(Q_a)
+                chosen_actions[i][j] = max(Q_a, key=Q_a.get)
+                utilities[i][j] = max(Q_a.values())
 
                 if abs(utilities_2[i][j] - utilities[i][j]) > delta:
                     delta = abs(utilities_2[i][j] - utilities[i][j])
-                #print 'delta', delta
+    
+    output_list = [[' ' for i in range(M)] for j in range(N)]
+    for i in range(M):
+            for j in range(N):
+                if chosen_actions[i][j] == 'N':
+                    chosen_actions[i][j] = '0'
+                elif chosen_actions[i][j] == 'E':
+                    chosen_actions[i][j] = '1'
+                elif chosen_actions[i][j] == 'S':
+                    chosen_actions[i][j] = '2'
+                elif chosen_actions[i][j] == 'W':
+                    chosen_actions[i][j] = '3'
+                output_list[i][j] = str(j + 1) + ' ' + str(i + 1) + ' ' + chosen_actions[i][j]
+                
 
-    return utilities
+    return output_list
 
 #print rewards2
-print 'gamma, theta: ', gamma, theta
+#print 'gamma, theta: ', gamma, theta
 
-for item in value_iteration(board, rewards2, actions2, gamma, theta):
-    print item, '\n' 
+#uti, ch_a = value_iteration(board, rewards2, actions2, gamma, theta)
+outp = value_iteration(board, rewards2, actions2, gamma, theta)
+#for i in range(M):
+#    for j in range(N):
+#        print outp[i][j]
 
+with open(sys.argv[2], 'w') as f:
+    for item in outp:
+        for elem in item:
+            print >> f, elem
+
+
+# Q-LEARNING
+def q_learning():
+    return
 
 
 
