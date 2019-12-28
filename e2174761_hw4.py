@@ -1,5 +1,6 @@
 import sys
 import random
+#import copy
 
 filepath = sys.argv[1]
 
@@ -52,7 +53,7 @@ with open(filepath) as fp:
             l_copy = l_copy - 1
 
         goal = tuple([int(item) for item in fp.readline().split()])
-        r_regular, r_obstacle, r_pitfall, r_goal = [int(item) for item in fp.readline().split()]
+        r_regular, r_obstacle, r_pitfall, r_goal = [float(item) for item in fp.readline().split()]
 
 
     elif line == 'Q':
@@ -77,7 +78,7 @@ with open(filepath) as fp:
             l_copy = l_copy - 1
 
         goal = tuple([int(item) for item in fp.readline().split()])
-        r_regular, r_obstacle, r_pitfall, r_goal = [int(item) for item in fp.readline().split()]
+        r_regular, r_obstacle, r_pitfall, r_goal = [float(item) for item in fp.readline().split()]
 
 
 board = [['R' for i in range(M)] for j in range(N)]
@@ -91,8 +92,8 @@ board[goal[0] - 1][goal[1] - 1] = 'G'
 for line in board:
     print line, '\n'
 
-rewards = {'R': r_regular, 'O': r_obstacle, 'P': r_pitfall, 'G': r_goal}
-actions = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)}
+rewards2 = {'R': r_regular, 'O': r_obstacle, 'P': r_pitfall, 'G': r_goal}
+actions2 = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)}
 
 
 # VALUE ITERATION
@@ -102,27 +103,44 @@ def value_iteration(states, rewards, actions, gamma, theta):
 
     delta = float('inf') # maximum change in the utility of any state in an iteration
 
-    while delta > theta:
+    while delta >= theta:
+        print 'delta > theta'
         delta = 0
-        utilities = utilities_2
+        utilities_2 = utilities
+        #actions_state = actions
         for i in range(M):
             for j in range(N):
                 # actions
-                actions_state = actions
-                if i == 0: 
+                actions_state = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)}
+                
+                if i == 0 and 'S' in actions_state: 
                     actions_state.pop('S')
-                if j == 0:
+                if j == 0 and 'W' in actions_state:
                     actions_state.pop('W')
-                if i == M - 1:
+                if i == M - 1 and 'N' in actions_state:
                     actions_state.pop('N')
-                if j == N - 1:
+                if j == N - 1 and 'E' in actions_state:
                     actions_state.pop('E')
 
                 #max_action 
-                #utilities_2[i][j] = rewards[states[i][j]] + gamma * max([])
+                next_states_list = [utilities[i + a_i][j + a_j] for key, (a_i, a_j) in actions_state.iteritems()]
 
+                utilities2_i_j_a = [ns for ns in next_states_list]
+                for ind, next_state in enumerate(next_states_list):
+                    utilities2_i_j_a[ind] = rewards[states[i][j]] + gamma * next_state
+                    #utilities_2[i][j] = rewards[states[i][j]] + gamma * next_state
+                utilities[i][j] = max(utilities2_i_j_a)
+                if abs(utilities_2[i][j] - utilities[i][j]) > delta:
+                    delta = abs(utilities_2[i][j] - utilities[i][j])
+                print 'delta', delta
 
+    return utilities
 
+#print rewards2
+print 'gamma, theta: ', gamma, theta
+
+for item in value_iteration(board, rewards2, actions2, gamma, theta):
+    print item, '\n' 
 
 
 
