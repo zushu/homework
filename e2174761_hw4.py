@@ -99,19 +99,19 @@ actions2 = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)}
 # VALUE ITERATION
 def value_iteration(states, rewards, actions, gamma, theta):
     utilities = [[0 for i in range(M)] for j in range(N)]   # U
-    utilities_2 = [[0 for i in range(M)] for j in range(N)] # U'
+    utilities_2 = [[float('inf') for i in range(M)] for j in range(N)] # U'
 
     delta = float('inf') # maximum change in the utility of any state in an iteration
 
     while delta >= theta:
         print 'delta > theta'
         delta = 0
-        utilities_2 = utilities
+        utilities_2 = [item[:] for item in utilities] # deep copy
         #actions_state = actions
         for i in range(M):
             for j in range(N):
                 # actions
-                actions_state = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)}
+                actions_state = {'N': (1, 0), 'S': (-1, 0), 'E': (0, 1), 'W': (0, -1)} # deep copy
                 
                 if i == 0 and 'S' in actions_state: 
                     actions_state.pop('S')
@@ -125,14 +125,15 @@ def value_iteration(states, rewards, actions, gamma, theta):
                 #max_action 
                 next_states_list = [utilities[i + a_i][j + a_j] for key, (a_i, a_j) in actions_state.iteritems()]
 
-                utilities2_i_j_a = [ns for ns in next_states_list]
+                Q_a = [ns for ns in next_states_list]
                 for ind, next_state in enumerate(next_states_list):
-                    utilities2_i_j_a[ind] = rewards[states[i][j]] + gamma * next_state
+                    Q_a[ind] = rewards[states[i][j]] + gamma * next_state
                     #utilities_2[i][j] = rewards[states[i][j]] + gamma * next_state
-                utilities[i][j] = max(utilities2_i_j_a)
+                utilities[i][j] = max(Q_a)
+
                 if abs(utilities_2[i][j] - utilities[i][j]) > delta:
                     delta = abs(utilities_2[i][j] - utilities[i][j])
-                print 'delta', delta
+                #print 'delta', delta
 
     return utilities
 
