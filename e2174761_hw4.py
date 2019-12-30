@@ -166,7 +166,49 @@ with open(sys.argv[2], 'w') as f:
 
 
 # Q-LEARNING
-def q_learning():
+def q_learning(current_state, board, rewards, actions, alpha, gamma, epsilon, num_episodes):
+    # state action pair mapping for action rewards
+    Q = [[{key: 0 for key, _ in actions.iteritems()} for j in range(M)] for k in range(N)]
+    # state action pair mapping for action frequencies
+    N = [[{key: 0 for key, _ in actions.iteritems()} for j in range(M)] for k in range(N)]
+
+    rand_state = None
+    rand_action = None
+
+    regulars_list = []
+    for i in range(M):
+        for j in range(N):
+            if board[i][j] == 'R':
+                regulars_list.append((i, j))
+
+
+    while num_episodes > 0: 
+        # choose random state to start at each episode
+        rand_state_index = random.choice(regulars_list)
+        rand_state = board[rand_state_index[0]][rand_state_index[1]]
+
+        Q_a = Q[rand_state_index[0]][rand_state_index[1]]
+
+        # choose an action with epsilon greedy approach
+        probability = random.random()
+
+        if probability <= epsilon:
+            rand_action = random.choice(actions)
+            rand_action_value = Q_a[rand_action] 
+
+        else:
+            # key
+            rand_action = max(Q_a, key=Q_a.get)
+            # value
+            rand_action_value = Q_a[rand_action]
+
+
+        #if 
+
+
+        num_episodes = num_episodes - 1
+
+    
     return
 
 
