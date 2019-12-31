@@ -82,9 +82,9 @@ with open(filepath) as fp:
 
 
 board = [['R' for i in range(M)] for j in range(N)]
-for i, j in lst_obstacles:
+for j, i in lst_obstacles:
     board[i-1][j-1] = 'O'
-for i, j in lst_pitfalls:
+for j, i in lst_pitfalls:
     board[i-1][j-1] = 'P'
 
 board[goal[0] - 1][goal[1] - 1] = 'G'
@@ -119,11 +119,16 @@ def value_iteration(states=board, rewards=rewards, actions=actions, gamma=gamma,
                 if j == N - 1 and 'E' in actions_state:
                     actions_state.pop('E')
 
+                for key in actions_state.keys():
+                    a_i, a_j = actions_state[key]
+                    if states[i + a_i][j + a_j] == 'O':
+                        actions_state.pop(key)
+
                 #max_action 
                 next_states_list = {key: utilities[i + a_i][j + a_j] for key, (a_i, a_j) in actions_state.iteritems()}
-                for key, (a_i, a_j) in actions_state.iteritems():
-                    if states[i + a_i][j + a_j] == 'O':
-                        next_states_list.pop(key)
+                #for key, (a_i, a_j) in actions_state.iteritems():
+                #    if states[i + a_i][j + a_j] == 'O':
+                #        next_states_list.pop(key)
 
                 #if next_states_list != {}:
 
@@ -132,7 +137,8 @@ def value_iteration(states=board, rewards=rewards, actions=actions, gamma=gamma,
                     Q_a[key] = rewards[states[i][j]] + gamma * next_state
                     #utilities_2[i][j] = rewards[states[i][j]] + gamma * next_state
                 chosen_actions[i][j] = max(Q_a, key=Q_a.get)
-                utilities[i][j] = max(Q_a.values())
+                #utilities[i][j] = max(Q_a.values())
+                utilities[i][j] = Q_a[chosen_actions[i][j]]
 
                 if abs(utilities_2[i][j] - utilities[i][j]) > delta:
                     delta = abs(utilities_2[i][j] - utilities[i][j])
@@ -197,7 +203,7 @@ def q_learning(board=board, rewards=rewards, actions=actions, alpha=alpha, gamma
             y_coord = rand_state_index[0] + actions[rand_action][0]
             x_coord = rand_state_index[1] + actions[rand_action][1]
             outside_board = y_coord < 0 or y_coord >= M or x_coord < 0 or x_coord >= N
-            if outside_board: # or board[y_coord][x_coord] == 'O':
+            if outside_board:# or board[y_coord][x_coord] == 'O':
                 # stay in the current cell
                 Q[rand_state_index[0]][rand_state_index[1]][rand_action] = (1 - alpha) * Q_a[rand_action] + alpha * (rewards[board[rand_state_index[0]][rand_state_index[1]]] + gamma * rand_action_value)
             else:
