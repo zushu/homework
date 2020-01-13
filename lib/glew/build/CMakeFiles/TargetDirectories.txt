@@ -1,0 +1,12 @@
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/install/strip.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/install.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/visualinfo.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/list_install_components.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/rebuild_cache.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/edit_cache.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/install/local.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/libglewmx_shared.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/glewinfo.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/libglew_shared.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/libglewmx_static.dir
+/Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/CMakeFiles/libglew_static.dir

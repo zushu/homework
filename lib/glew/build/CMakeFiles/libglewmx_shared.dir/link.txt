@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/cc  -dynamiclib -Wl,-headerpad_max_install_names  -o lib/libglewmx.dylib -install_name /Users/zumrudshukurlu/Desktop/dersler20191/OpenGL_CMake_Skeleton/lib/glew/build/lib/libglewmx.dylib CMakeFiles/libglewmx_shared.dir/src/glew.c.o -framework OpenGL -framework AGL 
