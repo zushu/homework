@@ -19,6 +19,15 @@ int widthTexture, heightTexture;
 GLfloat heightFactor = 10;
 GLfloat cam_speed = 0;
 
+  // eye
+  glm::vec3 cam_pos;
+  // gaze
+  glm::vec3 cam_gaze;
+  // up
+  glm::vec3 cam_v;
+  // right
+  glm::vec3 cam_u;
+
 static void errorCallback(int error,
   const char * description) {
   fprintf(stderr, "Error: %s\n", description);
@@ -50,7 +59,7 @@ int main(int argc, char * argv[]) {
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-  win = glfwCreateWindow(600, 600, "CENG477 - HW3", NULL, NULL);
+  win = glfwCreateWindow(1000, 1000, "CENG477 - HW3", NULL, NULL);
 
   if (!win) {
     glfwTerminate();
@@ -89,13 +98,13 @@ int main(int argc, char * argv[]) {
   GLdouble aspect = 1;
 
   // eye
-  glm::vec3 cam_pos = glm::vec3(widthTexture/2, widthTexture/10, -widthTexture/4);
+  cam_pos = glm::vec3(widthTexture/2, widthTexture/10, -widthTexture/4);
   // gaze
-  glm::vec3 cam_gaze = glm::vec3(0, 0, 1);
+  cam_gaze = glm::vec3(0, 0, 1);
   // up
-  glm::vec3 cam_v = glm::vec3(0, 1, 0);
+  cam_v = glm::vec3(0, 1, 0);
   // right
-  glm::vec3 cam_u = glm::cross(cam_v, -cam_gaze);
+  cam_u = glm::cross(cam_v, -cam_gaze);
   // center of viewport
   glm::vec3 center_of_vp = glm::vec3(cam_pos + cam_gaze * near);
  
@@ -245,22 +254,48 @@ int main(int argc, char * argv[]) {
 // from recitation slides
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+  if (key == GLFW_KEY_ESCAPE && (action == GLFW_PRESS || action == GLFW_REPEAT)){
     glfwSetWindowShouldClose(window, GLFW_TRUE);
+  }
 
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS) {
-        cam_speed += 0.01;
-        cout<<"Y pressed cam_speed:"<<cam_speed<<endl;
-    }
+  // cam_speed   Y & H & X  
+  if (key == GLFW_KEY_Y && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      cam_speed += 0.01;
+  }
+  if (key == GLFW_KEY_H && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      cam_speed -= 0.01;
+  }
+  if (key == GLFW_KEY_X && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      cam_speed = 0.0;
+  }
 
-    if (key == GLFW_KEY_H && action == GLFW_PRESS) {
-        cam_speed -= 0.01;
-        cout<<"H pressed cam_speed:"<<cam_speed<<endl;
-    }
-
-    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
-        cam_speed = 0.0;
-        cout<<"X pressed cam_speed:"<<cam_speed<<endl;
-    }
-
+  // heightFactor   R & F
+  if (key == GLFW_KEY_R && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      heightFactor += 0.5;
+      GLint heightFactorLocation = glGetUniformLocation(idProgramShader, "heightFactor");
+      glUniform1f(heightFactorLocation, heightFactor);
+  }
+  if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      heightFactor -= 0.5;
+      GLint heightFactorLocation = glGetUniformLocation(idProgramShader, "heightFactor");
+      glUniform1f(heightFactorLocation, heightFactor);
+  }
+  
+  //Pitch and yaw   W & A & S & D
+  if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    cam_gaze = glm::rotate(cam_gaze, 0.05f, cam_u);
+    cam_v = glm::rotate(cam_v, 0.05f, cam_u);
+  }
+  if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    cam_gaze = glm::rotate(cam_gaze, 0.05f, cam_v);
+    cam_u = glm::rotate(cam_u, 0.05f, cam_v);
+  }
+  if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    cam_gaze = glm::rotate(cam_gaze, -0.05f, cam_u);
+    cam_v = glm::rotate(cam_v, -0.05f, cam_u);
+  }
+  if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    cam_gaze = glm::rotate(cam_gaze, -0.05f, cam_v);
+    cam_u = glm::rotate(cam_u, -0.05f, cam_v);
+  }
 }
