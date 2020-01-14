@@ -28,7 +28,7 @@ int main(int argc, char * argv[]) {
 
   //printf("Supported GLSL version is %s.\n", (char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-  if (argc != 3) {
+  if (argc != 2) {
     printf("Two texture images expected!\n");
     exit(-1);
   }
