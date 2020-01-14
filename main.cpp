@@ -19,14 +19,16 @@ int widthTexture, heightTexture;
 GLfloat heightFactor = 10;
 GLfloat cam_speed = 0;
 
-  // eye
-  glm::vec3 cam_pos;
-  // gaze
-  glm::vec3 cam_gaze;
-  // up
-  glm::vec3 cam_v;
-  // right
-  glm::vec3 cam_u;
+//light position
+glm::vec3 light_pos;
+// eye
+glm::vec3 cam_pos;
+// gaze
+glm::vec3 cam_gaze;
+// up
+glm::vec3 cam_v;
+// right
+glm::vec3 cam_u;
 
 static void errorCallback(int error,
   const char * description) {
@@ -97,6 +99,8 @@ int main(int argc, char * argv[]) {
   GLdouble fovy = 45;
   GLdouble aspect = 1;
 
+  //light
+  light_pos = glm::vec3(widthTexture/2, 100, heightTexture/2);
   // eye
   cam_pos = glm::vec3(widthTexture/2, widthTexture/10, -widthTexture/4);
   // gaze
@@ -120,6 +124,9 @@ int main(int argc, char * argv[]) {
   glm::mat4 mvp_mat = perspective_mat * view_mat;
   // viewing transformation matrix for normals
   glm::mat4 normal_view_mat = glm::inverseTranspose(view_mat);
+
+  GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+  glUniform3fv(lightPositionLocation, 1, &light_pos[0]);  
 
   // bind cam_pos to uniform cameraPosition of shaders
   // GLint glGetUniformLocation(GLuint program, const GLchar *name);
@@ -218,6 +225,9 @@ int main(int argc, char * argv[]) {
     // viewing transformation matrix for normals
     glm::mat4 normal_view_mat = glm::inverseTranspose(view_mat);
 
+    //update lightPosition
+    GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+    glUniform3fv(lightPositionLocation, 1, &light_pos[0]);  
     // bind cam_pos to uniform cameraPosition of shaders
     // GLint glGetUniformLocation(GLuint program, const GLchar *name);
     GLint cameraPositionLocation = glGetUniformLocation(idProgramShader, "cameraPosition");
@@ -268,7 +278,7 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
   if (key == GLFW_KEY_X && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
       cam_speed = 0.0;
   }
-
+ 
   // heightFactor   R & F
   if (key == GLFW_KEY_R && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
       heightFactor += 0.5;
@@ -281,6 +291,20 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
       glUniform1f(heightFactorLocation, heightFactor);
   }
   
+  // light_pos   T & G
+  if (key == GLFW_KEY_T && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      light_pos.y += 5;
+      GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+      glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
+      cout<<"T  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+  }
+  if (key == GLFW_KEY_G && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      light_pos.y -= 5;
+      GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+      glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
+      cout<<"G  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+  }
+
   //Pitch and yaw   W & A & S & D
   if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     cam_gaze = glm::rotate(cam_gaze, 0.05f, cam_u);

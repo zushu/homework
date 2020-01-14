@@ -8,6 +8,7 @@ attribute vec3 pos;
 uniform mat4 MVP; // ModelViewProjection Matrix
 uniform mat4 MV; // ModelView idMVPMatrix
 uniform vec4 cameraPosition;
+uniform vec4 lightPosition;
 uniform float heightFactor;
 uniform mat4 normal_view_mat;
 
@@ -30,7 +31,6 @@ varying vec3 ToCameraVector; // Vector from Vertex to Camera;
 //out vec3 ToLightVector; // Vector from Vertex to Light;
 //out vec3 ToCameraVector; // Vector from Vertex to Camera;
 
-vec3 light_pos = vec3(widthTexture/2, 100, heightTexture/2);
 //vec3 intensity = vec3(1, 1, 1);
 
 
@@ -58,7 +58,7 @@ void main()
     vec3 final_normal = calculate_normal(final_pos);
 
     // compute toLight vector vertex coordinate in VCS
-    ToLightVector = normalize(vec3(MV*vec4(light_pos - final_pos, 0)));
+    ToLightVector = normalize(vec3(MV*vec4(vec3(lightPosition) - final_pos, 0)));
     ToCameraVector = normalize(vec3(MV*(vec4(vec3(cameraPosition) - final_pos, 0))));
     vertexNormal = normalize(vec3(normal_view_mat*vec4(final_normal,0)));
 
