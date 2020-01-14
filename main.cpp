@@ -214,6 +214,7 @@ int main(int argc, char * argv[]) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     cam_pos += cam_speed * cam_gaze;
+
     //update center_of_vp
     center_of_vp = glm::vec3(cam_pos + cam_gaze * near);
     glm::mat4 view_mat = glm::lookAt(cam_pos, center_of_vp, cam_v);
@@ -225,6 +226,7 @@ int main(int argc, char * argv[]) {
     // viewing transformation matrix for normals
     glm::mat4 normal_view_mat = glm::inverseTranspose(view_mat);
 
+    
     //update lightPosition
     GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
     glUniform3fv(lightPositionLocation, 1, &light_pos[0]);  
@@ -291,18 +293,42 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
       glUniform1f(heightFactorLocation, heightFactor);
   }
   
-  // light_pos   T & G
+  // light_pos   T & G & arrow_keys
   if (key == GLFW_KEY_T && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
       light_pos.y += 5;
       GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
       glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
-      cout<<"T  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+      //cout<<"T  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
   }
   if (key == GLFW_KEY_G && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
       light_pos.y -= 5;
       GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
       glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
-      cout<<"G  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+      //cout<<"G  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+  }
+  if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      light_pos.x += 5;
+      GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+      glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
+      //cout<<"RIGHT  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+  }
+  if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      light_pos.x -= 5;
+      GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+      glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
+      //cout<<"LEFT  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+  }
+  if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      light_pos.z += 5;
+      GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+      glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
+      //cout<<"UP  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
+  }
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+      light_pos.z -= 5;
+      GLint lightPositionLocation = glGetUniformLocation(idProgramShader, "lightPosition");
+      glUniform3fv(lightPositionLocation, 1, &light_pos[0]);
+      //cout<<"DOWN  x:"<<light_pos.x<<" y:"<<light_pos.y<<" z:"<<light_pos.z<<endl;
   }
 
   //Pitch and yaw   W & A & S & D
