@@ -10,8 +10,8 @@ static GLFWwindow * win = NULL;
 GLuint idProgramShader;
 GLuint idFragmentShader;
 GLuint idVertexShader;
-//GLuint idJpegTexture[2];
-GLuint idJpegTexture;
+GLuint idJpegTexture[2];
+//GLuint idJpegTexture;
 GLuint idMVPMatrix;
 
 int widthTexture, heightTexture;
@@ -41,14 +41,15 @@ int main(int argc, char * argv[]) {
 
   //printf("Supported GLSL version is %s.\n", (char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-  /*if (argc != 3) {
+  if (argc != 3) {
     printf("Two texture images expected!\n");
     exit(-1);
-  }*/
+  }
+  /*
   if (argc != 2) {
     printf("One texture image expected!\n");
     exit(-1);
-  }
+  }*/
 
   glfwSetErrorCallback(errorCallback);
 
@@ -91,8 +92,8 @@ int main(int argc, char * argv[]) {
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, idJpegTexture[1]);
   */
-  //initTexture(argv[1], argv[2], & widthTexture, & heightTexture);
-  initTexture(argv[1], & widthTexture, & heightTexture);
+  initTexture(argv[1], argv[2], & widthTexture, & heightTexture);
+  //initTexture(argv[1], & widthTexture, & heightTexture);
 
   GLdouble near = 0.1;
   GLdouble far = 1000;
@@ -180,8 +181,9 @@ int main(int argc, char * argv[]) {
   // rgbTexture: This variable represents the texture unit index. If its value is zero it will fetch from texture unit 0. Its value is given such as glUniform1i(mySamplerLoc, 0)
   GLint samplerLocation = glGetUniformLocation(idProgramShader, "rgbTexture");
   glUniform1i(samplerLocation, 0);
-  //GLint samplerLocation2 = glGetUniformLocation(idProgramShader, "height_texture");
-  //glUniform1i(samplerLocation2, 1);
+
+  GLint samplerLocation2 = glGetUniformLocation(idProgramShader, "height_texture");
+  glUniform1i(samplerLocation2, 1);
   // bound to be used in shaders
   GLint widthTextureLocation = glGetUniformLocation(idProgramShader, "widthTexture");
   glUniform1i(widthTextureLocation, widthTexture);

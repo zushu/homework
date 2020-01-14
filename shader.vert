@@ -51,7 +51,8 @@ void main()
     // output: normalised RGBA
     vec4 tex_color = texture2D(rgbTexture, textureCoordinate); 
     //vec4 tex_color = texture(rgbTexture, textureCoordinate);
-    float red = tex_color.x;
+    vec4 height_color = texture2D(height_texture, textureCoordinate); 
+    float red = height_color.x;//tex_color.x;
     final_pos.y = heightFactor * red;
     // compute normal vector using also the heights of neighbor vertices
     //vec3* neighbours = get_neighbours(final_pos);
