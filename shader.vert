@@ -1,9 +1,9 @@
-//#version 120
-#version 410
+#version 120
+//#version 410
 
 // input at each vertex
-layout(location = 0) in vec3 pos;
-//attribute vec3 pos;
+//layout(location = 0) in vec3 pos;
+attribute vec3 pos;
 // Data from CPU 
 uniform mat4 MVP; // ModelViewProjection Matrix
 uniform mat4 MV; // ModelView idMVPMatrix
@@ -13,21 +13,22 @@ uniform mat4 normal_view_mat;
 
 // Texture-related data
 uniform sampler2D rgbTexture;
-//layout(binding = 1) uniform sampler2D height_texture;
+//layout(binding = 1) 
+uniform sampler2D height_texture;
 uniform int widthTexture;
 uniform int heightTexture;
 
 
 
 // Output to Fragment Shader
-//varying vec2 textureCoordinate; // For texture-color
-//varying vec3 vertexNormal; // For Lighting computation
-//varying vec3 ToLightVector; // Vector from Vertex to Light;
-//varying vec3 ToCameraVector; // Vector from Vertex to Camera;
-out vec2 textureCoordinate; // For texture-color
-out vec3 vertexNormal; // For Lighting computation
-out vec3 ToLightVector; // Vector from Vertex to Light;
-out vec3 ToCameraVector; // Vector from Vertex to Camera;
+varying vec2 textureCoordinate; // For texture-color
+varying vec3 vertexNormal; // For Lighting computation
+varying vec3 ToLightVector; // Vector from Vertex to Light;
+varying vec3 ToCameraVector; // Vector from Vertex to Camera;
+//out vec2 textureCoordinate; // For texture-color
+//out vec3 vertexNormal; // For Lighting computation
+//out vec3 ToLightVector; // Vector from Vertex to Light;
+//out vec3 ToCameraVector; // Vector from Vertex to Camera;
 
 vec3 light_pos = vec3(widthTexture/2, 100, heightTexture/2);
 //vec3 intensity = vec3(1, 1, 1);
@@ -48,8 +49,8 @@ void main()
     //texture — retrieves texels from a texture
     // gvec4 texture( 	gsampler2D sampler, vec2 P, [float bias]);
     // output: normalised RGBA
-    //vec4 tex_color = texture2D(rgbTexture, textureCoordinate); 
-    vec4 tex_color = texture(rgbTexture, textureCoordinate);
+    vec4 tex_color = texture2D(rgbTexture, textureCoordinate); 
+    //vec4 tex_color = texture(rgbTexture, textureCoordinate);
     float red = tex_color.x;
     final_pos.y = heightFactor * red;
     // compute normal vector using also the heights of neighbor vertices
@@ -71,8 +72,8 @@ float calculate_y_coord(vec3 vertex)
     vec2 tex_coord;
     tex_coord.x = abs(vertex.x-widthTexture)/widthTexture;
     tex_coord.y = abs(vertex.z-heightTexture)/heightTexture;
-    //vec4 tex_color = texture2D(rgbTexture, tex_coord);
-    vec4 tex_color = texture(rgbTexture, tex_coord);
+    vec4 tex_color = texture2D(rgbTexture, tex_coord);
+    //vec4 tex_color = texture(rgbTexture, tex_coord);
     float y = heightFactor * tex_color.x;
     return y;
 }
