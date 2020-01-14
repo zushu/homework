@@ -10,10 +10,14 @@ static GLFWwindow * win = NULL;
 GLuint idProgramShader;
 GLuint idFragmentShader;
 GLuint idVertexShader;
+//GLuint idJpegTexture[2];
 GLuint idJpegTexture;
 GLuint idMVPMatrix;
 
 int widthTexture, heightTexture;
+
+GLfloat heightFactor = 10;
+GLfloat cam_speed = 0;
 
 static void errorCallback(int error,
   const char * description) {
@@ -24,8 +28,8 @@ int main(int argc, char * argv[]) {
 
   //printf("Supported GLSL version is %s.\n", (char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-  if (argc != 2) {
-    printf("Only one texture image expected!\n");
+  if (argc != 3) {
+    printf("Two texture images expected!\n");
     exit(-1);
   }
 
@@ -35,8 +39,8 @@ int main(int argc, char * argv[]) {
     exit(-1);
   }
 
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
@@ -58,6 +62,18 @@ int main(int argc, char * argv[]) {
 
   initShaders();
   glUseProgram(idProgramShader);
+
+  //GLuint textures[texturec];
+  //glGenTextures(2, idJpegTexture);
+  //glGenTextures(1, &idJpegTexture);
+/*
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, idJpegTexture[0]);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, idJpegTexture[1]);
+  */
+  //initTexture(argv[1], argv[2], & widthTexture, & heightTexture);
   initTexture(argv[1], & widthTexture, & heightTexture);
 
   GLdouble near = 0.1;
@@ -135,11 +151,78 @@ int main(int argc, char * argv[]) {
     }
   }
 
+  // If enabled, do depth comparisons and update the depth buffer.
+  glEnable(GL_DEPTH_TEST);
+  // from Week11 Texture Mapping Slide page 17
+  // rgbTexture: This variable represents the texture unit index. If its value is zero it will fetch from texture unit 0. Its value is given such as glUniform1i(mySamplerLoc, 0)
+  GLint samplerLocation = glGetUniformLocation(idProgramShader, "rgbTexture");
+  glUniform1i(samplerLocation, 0);
+  //GLint samplerLocation2 = glGetUniformLocation(idProgramShader, "height_texture");
+  //glUniform1i(samplerLocation2, 1);
+  // bound to be used in shaders
+  GLint widthTextureLocation = glGetUniformLocation(idProgramShader, "widthTexture");
+  glUniform1i(widthTextureLocation, widthTexture);
+  // bound to be used in shaders
+  GLint heightTextureLocation = glGetUniformLocation(idProgramShader, "heightTexture");
+  glUniform1i(heightTextureLocation, heightTexture);
+  // bound to be used in shaders
+
+  GLint heightFactorLocation = glGetUniformLocation(idProgramShader, "heightFactor");
+  glUniform1f(heightFactorLocation, heightFactor);
+
+  // This variable represents the texture unit index. If its value is zero it will fetch from texture unit 0. Its value is given such as glUniform1i(mySamplerLoc, 0)
+
+  //GLFWmonitor* glfwGetPrimaryMonitor 	( 	void  		) 	
+  //This function returns the primary monitor. This is usually the monitor where elements like the task bar or global menu bar are located.
+  GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+  // const GLFWvidmode* glfwGetVideoMode 	( 	GLFWmonitor *  	monitor	) 	
+  const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+  int current_width = 0, current_height = 0;
+  glfwGetWindowSize( win, &current_width, &current_height);
 
 
 
-
+  int vertex_count = 6 * widthTexture * heightTexture;
   while (!glfwWindowShouldClose(win)) {
+
+    glClearColor(0, 0, 0, 1);
+    glClearDepth(1.0f);
+    glClearStencil(0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    cam_pos += cam_speed * cam_gaze;
+    glm::mat4 view_mat = glm::lookAt(cam_pos, center_of_vp, cam_v);
+    // perspective projection transform
+    // perspective (T fovy, T aspect, T near, T far)
+    glm::mat4 perspective_mat = glm::perspective(fovy, aspect, near, far);
+    // MVP transformation - M is indentity, skipped here
+    glm::mat4 mvp_mat = perspective_mat * view_mat;
+    // viewing transformation matrix for normals
+    glm::mat4 normal_view_mat = glm::inverseTranspose(view_mat);
+
+    // bind cam_pos to uniform cameraPosition of shaders
+    // GLint glGetUniformLocation(GLuint program, const GLchar *name);
+    GLint cameraPositionLocation = glGetUniformLocation(idProgramShader, "cameraPosition");
+    // void glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    glUniform3fv(cameraPositionLocation, 1, &cam_pos[0]);  
+    // bind view_mat to uniform MV mat of shaders
+    GLint view_location = glGetUniformLocation(idProgramShader, "MV"); 
+    glUniformMatrix4fv(view_location, 1, GL_FALSE, &view_mat[0][0]);
+    // bind mvp_mat to uniform MVP mat of shaders
+    GLint mvp_location = glGetUniformLocation(idProgramShader, "MVP");
+    glUniformMatrix4fv(mvp_location, 1, GL_FALSE, &mvp_mat[0][0]);
+    // bind normal_view_mat to uniform normal_view_mat mat of shaders
+    GLint normal_view_mat_location = glGetUniformLocation(idProgramShader, "normal_view_mat");
+    glUniformMatrix4fv(normal_view_mat_location, 1, GL_FALSE, &normal_view_mat[0][0]);
+
+    glViewport(0,0, window_width, window_height);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, vertices);
+
+    glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
     glfwSwapBuffers(win);
     glfwPollEvents();
   }
@@ -148,4 +231,11 @@ int main(int argc, char * argv[]) {
   glfwTerminate();
 
   return 0;
+}
+
+// from recitation slides
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
 }

@@ -14,6 +14,7 @@
 extern GLuint idProgramShader;
 extern GLuint idFragmentShader;
 extern GLuint idVertexShader;
+//extern GLuint idJpegTexture[2];
 extern GLuint idJpegTexture;
 
 using namespace std;
@@ -26,6 +27,7 @@ GLuint initFragmentShader(const string& filename);
 
 bool readDataFromFile(const string& fileName, string &data);
 
-void initTexture(char *filename,int *w, int *h);
+//void initTexture(char *filename, char* filename2, int *w, int *h);
+void initTexture(char *filename, int *w, int *h);
 
 #endif
