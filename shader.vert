@@ -89,10 +89,10 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[0] = vec3(vertex.x + 1, 0, vertex.z);
         neighbours[0].y = calculate_y_coord(neighbours[0]);
         // north
-        neighbours[1] = vec3(vertex.x, 0, vertex.z + 1);
+        neighbours[1] = vec3(vertex.x, 0, vertex.z - 1);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // north-east neighbour
-        neighbours[2] = vec3(vertex.x + 1, 0, vertex.z + 1);
+        neighbours[2] = vec3(vertex.x + 1, 0, vertex.z - 1);
         neighbours[2].y = calculate_y_coord(neighbours[2]);
 
         vec3 v1 = neighbours[0] - vertex; // directed to right
@@ -112,7 +112,7 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[0] = vec3(vertex.x - 1, 0, vertex.z);
         neighbours[0].y = calculate_y_coord(neighbours[0]);
         // north
-        neighbours[1] = vec3(vertex.x, 0, vertex.z + 1);
+        neighbours[1] = vec3(vertex.x, 0, vertex.z - 1);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // north-west neighbour
         //neighbours[2] = vec3(vertex.x - 1, 0, vertex.z + 1);
@@ -132,7 +132,7 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[0] = vec3(vertex.x + 1, 0, vertex.z);
         neighbours[0].y = calculate_y_coord(neighbours[0]);
         // south
-        neighbours[1] = vec3(vertex.x, 0, vertex.z - 1);
+        neighbours[1] = vec3(vertex.x, 0, vertex.z + 1);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // south-east neighbour
         //neighbours[2] = vec3(vertex.x + 1, 0, vertex.z - 1);
@@ -151,10 +151,10 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[0] = vec3(vertex.x - 1, 0, vertex.z);
         neighbours[0].y = calculate_y_coord(neighbours[0]);
         // south
-        neighbours[1] = vec3(vertex.x, 0, vertex.z - 1);
+        neighbours[1] = vec3(vertex.x, 0, vertex.z + 1);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // south-west neighbour
-        neighbours[2] = vec3(vertex.x - 1, 0, vertex.z - 1);
+        neighbours[2] = vec3(vertex.x - 1, 0, vertex.z + 1);
         neighbours[2].y = calculate_y_coord(neighbours[2]);
 
         vec3 v1 = neighbours[0] - vertex; // directed to left
@@ -176,10 +176,10 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[1] = vec3(vertex.x + 1, 0, vertex.z);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // north
-        neighbours[2] = vec3(vertex.x, 0, vertex.z + 1);
+        neighbours[2] = vec3(vertex.x, 0, vertex.z - 1);
         neighbours[2].y = calculate_y_coord(neighbours[2]);
         // north-east neighbour
-        neighbours[3] = vec3(vertex.x + 1, 0, vertex.z + 1);
+        neighbours[3] = vec3(vertex.x + 1, 0, vertex.z - 1);
         neighbours[3].y = calculate_y_coord(neighbours[3]);
 
         vec3 v1 = neighbours[0] - vertex; // directed to left
@@ -203,10 +203,10 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[1] = vec3(vertex.x + 1, 0, vertex.z);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // south
-        neighbours[2] = vec3(vertex.x, 0, vertex.z - 1);
+        neighbours[2] = vec3(vertex.x, 0, vertex.z + 1);
         neighbours[2].y = calculate_y_coord(neighbours[2]);
         // south-west neighbour
-        neighbours[3] = vec3(vertex.x - 1, 0, vertex.z - 1);
+        neighbours[3] = vec3(vertex.x - 1, 0, vertex.z + 1);
         neighbours[3].y = calculate_y_coord(neighbours[3]);
 
         vec3 v1 = neighbours[0] - vertex; // directed to left
@@ -227,13 +227,13 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[0] = vec3(vertex.x + 1, 0, vertex.z);
         neighbours[0].y = calculate_y_coord(neighbours[0]);
         //north
-        neighbours[1] = vec3(vertex.x, 0, vertex.z + 1);
+        neighbours[1] = vec3(vertex.x, 0, vertex.z - 1);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // south
-        neighbours[2] = vec3(vertex.x, 0, vertex.z - 1);
+        neighbours[2] = vec3(vertex.x, 0, vertex.z + 1);
         neighbours[2].y = calculate_y_coord(neighbours[2]);
         // north-east neighbour
-        neighbours[3] = vec3(vertex.x + 1, 0, vertex.z + 1);
+        neighbours[3] = vec3(vertex.x + 1, 0, vertex.z - 1);
         neighbours[3].y = calculate_y_coord(neighbours[3]);
 
         vec3 v1 = neighbours[0] - vertex; // directed to right
@@ -255,13 +255,13 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[0] = vec3(vertex.x - 1, 0, vertex.z);
         neighbours[0].y = calculate_y_coord(neighbours[0]);
         //north
-        neighbours[1] = vec3(vertex.x, 0, vertex.z + 1);
+        neighbours[1] = vec3(vertex.x, 0, vertex.z - 1);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         // south
-        neighbours[2] = vec3(vertex.x, 0, vertex.z - 1);
+        neighbours[2] = vec3(vertex.x, 0, vertex.z + 1);
         neighbours[2].y = calculate_y_coord(neighbours[2]);
         // south-west neighbour
-        neighbours[3] = vec3(vertex.x - 1, 0, vertex.z - 1);
+        neighbours[3] = vec3(vertex.x - 1, 0, vertex.z + 1);
         neighbours[3].y = calculate_y_coord(neighbours[3]);
 
 
@@ -286,16 +286,16 @@ vec3 calculate_normal(vec3 vertex)
         neighbours[1] = vec3(vertex.x + 1, 0, vertex.z);
         neighbours[1].y = calculate_y_coord(neighbours[1]);
         //north
-        neighbours[2] = vec3(vertex.x, 0, vertex.z + 1);
+        neighbours[2] = vec3(vertex.x, 0, vertex.z - 1);
         neighbours[2].y = calculate_y_coord(neighbours[2]);
         // south
-        neighbours[3] = vec3(vertex.x, 0, vertex.z - 1);
+        neighbours[3] = vec3(vertex.x, 0, vertex.z + 1);
         neighbours[3].y = calculate_y_coord(neighbours[3]);
         // south-west neighbour
-        neighbours[4] = vec3(vertex.x - 1, 0, vertex.z - 1);
+        neighbours[4] = vec3(vertex.x - 1, 0, vertex.z + 1);
         neighbours[4].y = calculate_y_coord(neighbours[4]);
         // north-east
-        neighbours[5] = vec3(vertex.x + 1, 0, vertex.z + 1);
+        neighbours[5] = vec3(vertex.x + 1, 0, vertex.z - 1);
         neighbours[5].y = calculate_y_coord(neighbours[5]);
 
         vec3 v1 = neighbours[0] - vertex; // directed to left
