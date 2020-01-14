@@ -24,6 +24,8 @@ static void errorCallback(int error,
   fprintf(stderr, "Error: %s\n", description);
 }
 
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
 int main(int argc, char * argv[]) {
 
   //printf("Supported GLSL version is %s.\n", (char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -63,6 +65,7 @@ int main(int argc, char * argv[]) {
     glfwTerminate();
     exit(-1);
   }
+  glfwSetKeyCallback(win, keyCallback);
 
   initShaders();
   glUseProgram(idProgramShader);
@@ -195,6 +198,8 @@ int main(int argc, char * argv[]) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     cam_pos += cam_speed * cam_gaze;
+    //update center_of_vp
+    center_of_vp = glm::vec3(cam_pos + cam_gaze * near);
     glm::mat4 view_mat = glm::lookAt(cam_pos, center_of_vp, cam_v);
     // perspective projection transform
     // perspective (T fovy, T aspect, T near, T far)
@@ -242,4 +247,20 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    if (key == GLFW_KEY_Y && action == GLFW_PRESS) {
+        cam_speed += 0.01;
+        cout<<"Y pressed cam_speed:"<<cam_speed<<endl;
+    }
+
+    if (key == GLFW_KEY_H && action == GLFW_PRESS) {
+        cam_speed -= 0.01;
+        cout<<"H pressed cam_speed:"<<cam_speed<<endl;
+    }
+
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+        cam_speed = 0.0;
+        cout<<"X pressed cam_speed:"<<cam_speed<<endl;
+    }
+
 }
