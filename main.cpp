@@ -28,8 +28,12 @@ int main(int argc, char * argv[]) {
 
   //printf("Supported GLSL version is %s.\n", (char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-  if (argc != 3) {
+  /*if (argc != 3) {
     printf("Two texture images expected!\n");
+    exit(-1);
+  }*/
+  if (argc != 2) {
+    printf("One texture image expected!\n");
     exit(-1);
   }
 
@@ -39,9 +43,9 @@ int main(int argc, char * argv[]) {
     exit(-1);
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
   win = glfwCreateWindow(600, 600, "CENG477 - HW3", NULL, NULL);
