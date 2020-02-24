@@ -2,6 +2,13 @@ LIST    P=18F8722
 #include <p18F8722.inc>
     
 CONFIG OSC = HSPLL, FCMEN = OFF, IESO = OFF, PWRT = OFF, BOREN = OFF, WDT = OFF, MCLRE = ON, LPT1OSC = OFF, LVP = OFF, XINST = OFF, DEBUG = OFF
+    
+; equ: define an assembly constant
+    
+iter1 equ 0x21
+iter2 equ 0x22
+iter3 equ 0x23
+iter4 equ 0x24
 
     ORG 0x00
     goto init
@@ -36,10 +43,10 @@ init:
     movwf TRISD
     
 main:
-    call turnOnLeds
+    call turnonleds
     goto main
     
-turnOnLeds
+turnonleds
     
     movlw h'F0' ; b'11110000'
     movwf LATB ; turn on RB[0-3]
@@ -53,7 +60,25 @@ turnOnLeds
     call delay ; 1 second delay   
     return
 
-delay
+smalldelay
+    
+    movlw 40
+    movwf iter1
+outerloop
+    movlw 250
+    movwf iter2
+innerloop
+    decfsz iter2, F
+    goto innerloop
+    
+    decfsz iter1, F
+    goto outerloop
+    
+    return
+    
+; RESUME FROM ABOVE, CALCULATION OF TIME DELAY WITH LOOPS
+; CAN I USE 4 NESTED LOOPS? 
+    
     
     
     
