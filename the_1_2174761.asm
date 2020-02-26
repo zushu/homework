@@ -1,6 +1,5 @@
 LIST    P=18F8722
-#include <p18F8722.inc>
-    
+#INCLUDE <p18f8722.inc>
 CONFIG OSC = HSPLL, FCMEN = OFF, IESO = OFF, PWRT = OFF, BOREN = OFF, WDT = OFF, MCLRE = ON, LPT1OSC = OFF, LVP = OFF, XINST = OFF, DEBUG = OFF
     
 ; equ: define an assembly constant
@@ -8,7 +7,7 @@ CONFIG OSC = HSPLL, FCMEN = OFF, IESO = OFF, PWRT = OFF, BOREN = OFF, WDT = OFF,
 iter1 equ 0x01
 iter2 equ 0x02
 iter3 equ 0x03
-iter4 equ 0x04
+;iter4 equ 0x04
 
     ORG 0x00
     goto init
