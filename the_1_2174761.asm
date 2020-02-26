@@ -5,10 +5,10 @@ CONFIG OSC = HSPLL, FCMEN = OFF, IESO = OFF, PWRT = OFF, BOREN = OFF, WDT = OFF,
     
 ; equ: define an assembly constant
     
-iter1 equ 0x21
-iter2 equ 0x22
-iter3 equ 0x23
-iter4 equ 0x24
+iter1 equ 0x01
+iter2 equ 0x02
+iter3 equ 0x03
+iter4 equ 0x04
 
     ORG 0x00
     goto init
@@ -48,36 +48,42 @@ main:
     
 turnonleds
     
-    movlw h'F0' ; b'11110000'
+    movlw h'0F' ; b'11110000'
     movwf LATB ; turn on RB[0-3]
     
     ;movlw h'F0' 
     movwf LATC ; turn on RC[0-3]
     
-    movlw h'00'
+    movlw h'FF'
     movwf LATD ; turn on RD[0-7]
     
-    call delay ; 1 second delay   
+    call delay ; 1 second (?) delay   
     return
 
-smalldelay
+delay
     
-    movlw 40
+    movlw d'40'
     movwf iter1
-outerloop
-    movlw 250
-    movwf iter2
-innerloop
-    decfsz iter2, F
-    goto innerloop
-    
-    decfsz iter1, F
-    goto outerloop
+    outerloop
+	movlw d'250'
+	movwf iter2
+	innerloop
+	    movlw d'250'
+	    movwf iter3
+	    innerloop2
+		decfsz iter3, F
+		goto innerloop2
+	    decfsz iter2, F
+	    goto innerloop   
+	decfsz iter1, F
+	goto outerloop
     
     return
     
 ; RESUME FROM ABOVE, CALCULATION OF TIME DELAY WITH LOOPS
 ; CAN I USE 4 NESTED LOOPS? 
+    
+end
     
     
     
