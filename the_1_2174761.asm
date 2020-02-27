@@ -8,6 +8,8 @@ iter1 equ 0x01
 iter2 equ 0x02
 iter3 equ 0x03
 ;iter4 equ 0x04
+buttoncounter equ 0x04
+re3buttoncounter equ 0x05
 
     ORG 0x00
     goto init
@@ -34,12 +36,11 @@ init:
     
     movlw h'00' ; not sure
     movwf TRISB
-    
-    ;movlw h'00' ; not sure
     movwf TRISC
-    
-    ;movlw h'00' ; not sure
     movwf TRISD
+    movwf buttoncounter
+    
+    
     
 main:
     call turnonleds
@@ -47,16 +48,14 @@ main:
     
 turnonleds
     
-    movlw h'0F' ; b'11110000'
-    movwf LATB ; turn on RB[0-3]
-    
-    ;movlw h'F0' 
-    movwf LATC ; turn on RC[0-3]
+    movlw h'0F'	    ; b'11110000'
+    movwf LATB	    ; turn on RB[0-3] 
+    movwf LATC	    ; turn on RC[0-3]
     
     movlw h'FF'
-    movwf LATD ; turn on RD[0-7]
+    movwf LATD	    ; turn on RD[0-7]
     
-    call delay ; 1 second (?) delay   
+    call delay	    ; 1 second (?) delay   
     return
 
 delay
@@ -80,7 +79,32 @@ delay
     return
     
 ; RESUME FROM ABOVE, CALCULATION OF TIME DELAY WITH LOOPS
-; CAN I USE 4 NESTED LOOPS? 
+    
+buttonpress:
+    btfsc PORTA, 4
+    goto buttonpress
+buttonrelease:
+    btfss PORTA, 4
+    goto buttonrelease
+    incf buttoncounter
+
+additioncheck:
+    movlw h'01'
+    cpfseq buttoncounter    ; compare buttoncounter with 1
+    goto subtractioncheck
+    goto addition	    ; TODO IMPLEMENT
+    
+subtractioncheck:
+    movlw h'02'
+    cpfseq buttoncounter
+    goto additioncheck	    ; ??? not sure
+    goto subtraction	    ; TODO IMPLEMENT
+    
+; portselection:
+       
+    ; increment buttoncounter until 2 for RA4 then set back to 0
+    ; check if it is 1, do addition, goto buttonpress
+    ; if it is 2, do subtraction and set buttoncounter to 0, goto buttonpress
     
 end
     
