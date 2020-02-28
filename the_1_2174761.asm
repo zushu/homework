@@ -44,6 +44,7 @@ init:
     
 main:
     call turnonleds
+    call buttoncountercheck
     goto main
     
 turnonleds
@@ -55,18 +56,23 @@ turnonleds
     movlw h'FF'
     movwf LATD	    ; turn on RD[0-7]
     
-    call delay	    ; 1 second (?) delay   
+    call delay	    ; 1 second (?) delay  
+    
+    movlw h'00'	    ; turn off leds
+    movwf LATB
+    movwf LATC
+    movwf LATD
     return
 
 delay
     
-    movlw d'40'
+    movlw h'01' ;movlw d'40'
     movwf iter1
     outerloop
-	movlw d'250'
+	movlw h'01' ;movlw d'250' 
 	movwf iter2
 	innerloop
-	    movlw d'250'
+	    movlw h'01' ;movlw d'250'
 	    movwf iter3
 	    innerloop2
 		decfsz iter3, F
@@ -80,27 +86,67 @@ delay
     
 ; RESUME FROM ABOVE, CALCULATION OF TIME DELAY WITH LOOPS
     
-buttonpress:
-    btfsc PORTA, 4
-    goto buttonpress
-buttonrelease:
-    btfss PORTA, 4
-    goto buttonrelease
-    incf buttoncounter
-
-additioncheck:
+buttoncountercheck:
     movlw h'01'
     cpfseq buttoncounter    ; compare buttoncounter with 1
-    goto subtractioncheck
-    goto addition	    ; TODO IMPLEMENT
+    goto buttonpress1
+    goto buttonpress2
     
-subtractioncheck:
-    movlw h'02'
-    cpfseq buttoncounter
-    goto additioncheck	    ; ??? not sure
-    goto subtraction	    ; TODO IMPLEMENT
+buttonpress1:
+    btfsc PORTA, 4	    ; check RA4 press
+    goto buttonpress1
+    goto buttonrelease1
     
-; portselection:
+buttonrelease1:
+    btfss PORTA, 4	    ; check RA4 release
+    goto buttonrelease1
+    incf buttoncounter	    ; buttoncounter becomes 1
+    goto buttonpress2
+    
+buttonpress2:
+    btfsc PORTA, 4
+    goto addition	    ; if RA4 is still released, do addition
+    goto buttonrelease2
+    
+buttonrelease2:
+    btfss PORTA, 4
+    goto buttonrelease2
+    incf buttoncounter	    ; buttoncounter becomes 2
+    ;goto subtraction
+    
+buttonpress3:
+    btfsc PORTA, 4
+    goto subtraction	    ; if RA4 is pressed and released again, do subtraction
+    goto buttonrelease3
+    
+buttonrelease3:
+    btfss PORTA, 4
+    goto buttonrelease3
+    decf buttoncounter	    ; buttoncounter becomes 1
+    goto buttoncountercheck
+    
+    
+;portselection:
+    
+    
+    
+addition
+;    goto portselection
+    return
+subtraction
+;    goto portselection
+    return
+;re3buttonpress:    
+;    btfsc PORTE, 3	    ; check RE3 press
+;   goto re3buttonpress
+;re3buttonrelease:
+;    btfss PORTE, 3	    ; check RE3 release
+;    goto re3buttonrelease
+;    incf re3buttoncounter
+    
+; choose PORTB
+    
+    
        
     ; increment buttoncounter until 2 for RA4 then set back to 0
     ; check if it is 1, do addition, goto buttonpress
