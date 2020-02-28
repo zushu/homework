@@ -14,8 +14,7 @@ re3buttoncounter equ 0x05
     ORG 0x00
     goto init
     
-init:
-    
+init:    
     clrf LATA
     clrf LATB
     clrf LATC
@@ -47,8 +46,7 @@ main:
     call buttoncountercheck
     goto main
     
-turnonleds
-    
+turnonleds:    
     movlw h'0F'	    ; b'11110000'
     movwf LATB	    ; turn on RB[0-3] 
     movwf LATC	    ; turn on RC[0-3]
@@ -64,8 +62,7 @@ turnonleds
     movwf LATD
     return
 
-delay
-    
+delay:    
     movlw h'01' ;movlw d'40'
     movwf iter1
     outerloop
@@ -126,7 +123,65 @@ buttonrelease3:
     goto buttoncountercheck
     
     
-;portselection:
+portselectioncheck:
+    movlw h'01'
+    cpfseq re3buttoncounter
+    goto re3press1
+    goto re3press2
+    
+re3press1:
+    btfsc PORTE, 3
+    goto re3press1
+    goto re3release1
+ 
+re3release1:
+    btfss PORTE, 3
+    goto re3release1
+    incf re3buttoncounter
+    goto re3press2
+    
+re3press2:
+    btfsc PORTE, 3
+    goto portbselection
+    goto re3release2
+    
+re3release2:
+    btfss PORTE, 3
+    goto re3release2
+    incf re3buttoncounter
+    
+re3press3:
+    btfsc PORTE, 3
+    goto portcselection
+    goto re3release3
+    
+re3release3:
+    btfss PORTE, 3
+    goto re3release3
+    incf re3buttoncounter
+    goto re3press4
+    
+re3press4:
+    btfsc PORTE, 3
+    goto portdselection
+    goto re3release4
+    
+re3release4:
+    btfss PORTE, 3
+    goto re3release4
+    clrf re3buttoncounter
+    incf re3buttoncounter
+    goto portselectioncheck
+    
+portbselection:
+    clrf LATB
+    clrf PORTB
+    
+;portcselection:
+    
+;portdselection:
+    
+    
     
     
     
