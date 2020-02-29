@@ -51,6 +51,7 @@ init:
 main:
     call turnonleds
     call buttoncountercheck
+    ;call portselectioncheck
     goto main
     
 turnonleds:    
@@ -134,7 +135,12 @@ portselectioncheck:
     movlw h'01'
     cpfseq re3buttoncounter
     goto re3press1
+    movlw h'02'
+    cpfseq re3buttoncounter
     goto re3press2
+    movlw h'03'
+    cpfseq re3buttoncounter
+    goto re3press3
     
 re3press1:
     btfsc PORTE, 3
@@ -181,8 +187,8 @@ re3release4:
     goto portselectioncheck
     
 portbselection:
-    clrf LATB
-    clrf PORTB
+    ;clrf LATB
+    ;clrf PORTB
     btfsc PORTE, 3
     goto re4press1
     incf re3buttoncounter
@@ -190,12 +196,13 @@ portbselection:
     
     
 portcselection:
-    clrf LATC
-    clrf PORTC
+    ;clrf LATC
+    ;clrf PORTC
     btfsc PORTE, 3
     goto re4portcpress1
     incf re3buttoncounter
     goto portselectioncheck
+    ;goto re3press4
     
 portdselection:
     clrf LATD
@@ -214,7 +221,10 @@ re4press1:
 re4release1:
     btfss PORTE, 4
     goto re4release1
+    movlw h'01'		    ; b'00000001'
     incf portbvalue	    ; 1 led RB0 - replace with latb value assignment to turn on the led
+    movf portbvalue, 0
+    movwf LATB		    ; turn on RB0 
     goto re4press2
     
 re4press2:
@@ -225,7 +235,11 @@ re4press2:
 re4release2:
     btfss PORTE, 4
     goto re4release2
+    
     incf portbvalue	    ; 2 leds - RB1
+    ;movf portbvalue, 0
+    movlw h'03'
+    movwf LATB		    ; turn on RB0, RB1
     goto re4press3
     
 re4press3:
@@ -237,6 +251,9 @@ re4release3:
     btfss PORTE, 4
     goto re4release3
     incf portbvalue	    ; 3 leds - RB2
+    ;movf portbvalue, 0
+    movlw h'07'
+    movwf LATB		    ; turn on RB0, RB1, RB2
     goto re4press4
     
 re4press4:
@@ -248,6 +265,9 @@ re4release4:
     btfss PORTE, 4
     goto re4release4
     incf portbvalue	    ; 4 leds, RB3
+    ;movf portbvalue, 0	    ; TODO change to set bit
+    movlw h'0F'
+    movwf LATB		    ; turn on RB0, RB1, RB2, RB3
     goto re4press5
     
 re4press5:
@@ -271,7 +291,10 @@ re4portcpress1:
 re4portcrelease1:
     btfss PORTE, 4
     goto re4portcrelease1
-    incf portcvalue
+    incf portcvalue ; RC0
+    ;movf portcvalue, 0
+    movlw h'01'
+    movwf LATC		    ; turn on RC0
     goto re4portcpress2
     
 re4portcpress2:
@@ -282,7 +305,10 @@ re4portcpress2:
 re4portcrelease2:
     btfss PORTE, 4
     goto re4portcrelease2
-    incf portcvalue
+    incf portcvalue ; RC1
+    ;movf portcvalue, 0
+    movlw h'03'
+    movwf LATC		    ; turn on RC0, RC1
     goto re4portcpress3
     
 re4portcpress3:
@@ -293,7 +319,10 @@ re4portcpress3:
 re4portcrelease3:
     btfss PORTE, 4
     goto re4portcrelease3
-    incf portcvalue
+    incf portcvalue ; RC2
+    ;movf portcvalue, 0
+    movlw h'07'
+    movwf LATC		    ; turn on RC0, RC1, RC2
     goto re4portcpress4
     
 re4portcpress4:
@@ -304,7 +333,10 @@ re4portcpress4:
 re4portcrelease4:
     btfss PORTE, 4
     goto re4portcrelease4
-    incf portcvalue
+    incf portcvalue ; RC3
+    ;movf portcvalue, 0
+    movlw h'0F'
+    movwf LATC		    ; turn on RC0, RC1, RC2, RC3
     goto re4portcpress5
     
 re4portcpress5:
@@ -317,44 +349,127 @@ re4portcrelease5:
     goto re4portcrelease5
     clrf portcvalue
     goto portcselection
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-addition
-;    goto portselection
+       
+addition:
     movlw h'05'
     movwf opcode
-    goto operation
-subtraction
+    goto portselectioncheck
+    ;movlw h'05'
+    ;movwf opcode
+    ;goto operation
+    
+subtraction:
     movlw h'0A'
     movwf opcode
-    goto operation
+    goto portselectioncheck
+    ;movlw h'0A'
+    ;movwf opcode
+    ;goto operation
    
-operation
+operation:
     movlw h'05'
     cpfseq opcode
     goto opsubtraction
     goto opaddition
     
+opaddition:
+    movf portbvalue, 0
+    addwf portcvalue, 0	    ; d = 0, store result back in the WREG
+    ;movwf LATD		    ; turn on RD pins
+    ;call delay
+    ;clrf LATD
+    movwf portdvalue
+    goto turnonportdleds
     
+opsubtraction:
+    movf portbvalue, 0	    ; movfw
+    cpfsgt portcvalue	    ; skip the next instruction if portbvalue is greater than portcvalue
+    goto subcfromb
+    goto subbfromc
     
+subcfromb:
+    subfwb portcvalue, 0    ; portbvalue in WREG
+    ;movwf LATD		    ; turn on RD pins
+    movwf portdvalue
+    goto turnonportdleds
+    ;return
+    
+subbfromc:
+    subwf portcvalue, 0	    ; portbvalue in WREG
+    ;movwf LATD		    ; turn on RD pins
+    movwf portdvalue
+    goto turnonportdleds
+    ;return
+    
+turnonportdleds:
+    ;movf portdvalue, 0 ; TODO : you should use set bit
+    goto ledstord7
+finalcall:
+    call delay
+    clrf LATB
+    clrf LATC
+    clrf LATD
+    goto main   
        
-    ; increment buttoncounter until 2 for RA4 then set back to 0
-    ; check if it is 1, do addition, goto buttonpress
-    ; if it is 2, do subtraction and set buttoncounter to 0, goto buttonpress
+ledstord7:
+    movlw h'08'
+    cpfseq portdvalue
+    goto ledstord6
+    movlw h'FF'
+    movwf LATD
+    
+    
+ledstord6:
+    movlw h'07'
+    cpfseq portdvalue
+    goto ledstord5
+    movlw h'7F'
+    movwf LATD
+
+ledstord5:
+    movlw h'06'
+    cpfseq portdvalue
+    goto ledstord4
+    movlw h'3F'
+    movwf LATD
+    
+ledstord4:
+    movlw h'05'
+    cpfseq portdvalue
+    goto ledstord3
+    movlw h'1F'
+    movwf LATD
+    
+ledstord3:
+    movlw h'04'
+    cpfseq portdvalue
+    goto ledstord2
+    movlw h'0F'
+    movwf LATD
+
+ledstord2:
+    movlw h'03'
+    cpfseq portdvalue
+    goto ledstord1
+    movlw h'07'
+    movwf LATD
+
+ledstord1:
+    movlw h'02'
+    cpfseq portdvalue
+    goto ledstord0
+    movlw h'03'
+    movwf LATD
+    
+ledstord0:
+    movlw h'01'
+    cpfseq portdvalue
+    goto finalcall
+    movlw h'01'
+    movwf LATD
+    goto finalcall
+    
+    
     
 end
     
