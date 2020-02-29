@@ -10,6 +10,10 @@ iter3 equ 0x03
 ;iter4 equ 0x04
 buttoncounter equ 0x04
 re3buttoncounter equ 0x05
+portbvalue equ 0x06
+portcvalue equ 0x07
+portdvalue equ 0x08
+opcode equ 0x09
 
     ORG 0x00
     goto init
@@ -38,6 +42,9 @@ init:
     movwf TRISC
     movwf TRISD
     movwf buttoncounter
+    movwf portbvalue
+    movwf portcvalue
+    movwf portdvalue
     
     
     
@@ -176,10 +183,151 @@ re3release4:
 portbselection:
     clrf LATB
     clrf PORTB
+    btfsc PORTE, 3
+    goto re4press1
+    incf re3buttoncounter
+    goto portselectioncheck
     
-;portcselection:
     
-;portdselection:
+portcselection:
+    clrf LATC
+    clrf PORTC
+    btfsc PORTE, 3
+    goto re4portcpress1
+    incf re3buttoncounter
+    goto portselectioncheck
+    
+portdselection:
+    clrf LATD
+    clrf PORTD
+    btfsc PORTE, 3
+    goto operation
+    incf re3buttoncounter
+    goto portselectioncheck
+    
+; for PORTB
+re4press1:
+    btfsc PORTE, 4
+    goto portselectioncheck ; ????
+    goto re4release1
+    
+re4release1:
+    btfss PORTE, 4
+    goto re4release1
+    incf portbvalue	    ; 1 led RB0 - replace with latb value assignment to turn on the led
+    goto re4press2
+    
+re4press2:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4release2
+    
+re4release2:
+    btfss PORTE, 4
+    goto re4release2
+    incf portbvalue	    ; 2 leds - RB1
+    goto re4press3
+    
+re4press3:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4release3
+    
+re4release3:
+    btfss PORTE, 4
+    goto re4release3
+    incf portbvalue	    ; 3 leds - RB2
+    goto re4press4
+    
+re4press4:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4release4
+    
+re4release4:
+    btfss PORTE, 4
+    goto re4release4
+    incf portbvalue	    ; 4 leds, RB3
+    goto re4press5
+    
+re4press5:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4release5
+    
+re4release5:
+    btfss PORTE, 4
+    goto re4release5
+    clrf portbvalue	    ; 5 presses, clear PORTB
+    goto portbselection
+ 
+    
+; for PORTC
+re4portcpress1:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4portcrelease1
+    
+re4portcrelease1:
+    btfss PORTE, 4
+    goto re4portcrelease1
+    incf portcvalue
+    goto re4portcpress2
+    
+re4portcpress2:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4portcrelease2
+    
+re4portcrelease2:
+    btfss PORTE, 4
+    goto re4portcrelease2
+    incf portcvalue
+    goto re4portcpress3
+    
+re4portcpress3:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4portcrelease3
+    
+re4portcrelease3:
+    btfss PORTE, 4
+    goto re4portcrelease3
+    incf portcvalue
+    goto re4portcpress4
+    
+re4portcpress4:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4portcrelease4
+    
+re4portcrelease4:
+    btfss PORTE, 4
+    goto re4portcrelease4
+    incf portcvalue
+    goto re4portcpress5
+    
+re4portcpress5:
+    btfsc PORTE, 4
+    goto portselectioncheck
+    goto re4portcrelease5
+    
+re4portcrelease5:
+    btfss PORTE, 4
+    goto re4portcrelease5
+    clrf portcvalue
+    goto portcselection
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -187,19 +335,20 @@ portbselection:
     
 addition
 ;    goto portselection
-    return
+    movlw h'05'
+    movwf opcode
+    goto operation
 subtraction
-;    goto portselection
-    return
-;re3buttonpress:    
-;    btfsc PORTE, 3	    ; check RE3 press
-;   goto re3buttonpress
-;re3buttonrelease:
-;    btfss PORTE, 3	    ; check RE3 release
-;    goto re3buttonrelease
-;    incf re3buttoncounter
+    movlw h'0A'
+    movwf opcode
+    goto operation
+   
+operation
+    movlw h'05'
+    cpfseq opcode
+    goto opsubtraction
+    goto opaddition
     
-; choose PORTB
     
     
        
