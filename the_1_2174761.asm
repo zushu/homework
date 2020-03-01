@@ -132,15 +132,32 @@ buttonrelease3:
     
     
 portselectioncheck:
-    movlw h'01'
-    cpfseq re3buttoncounter
+    movlw h'00'
+    cpfsgt re3buttoncounter
     goto re3press1
-    movlw h'02'
-    cpfseq re3buttoncounter
+    goto check2
+    
+    check2:
+    movlw h'01'
+    cpfsgt re3buttoncounter
     goto re3press2
-    movlw h'03'
-    cpfseq re3buttoncounter
+    goto check3
+    
+    check3:
+    movlw h'02'
+    cpfsgt re3buttoncounter
     goto re3press3
+    goto check4
+    
+    check4:
+    movlw h'03'
+    cpfsgt re3buttoncounter
+    goto re3press4
+    goto check5
+    
+    check5:
+    subwf re3buttoncounter
+    goto portselectioncheck
     
 re3press1:
     btfsc PORTE, 3
