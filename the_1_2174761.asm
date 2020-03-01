@@ -16,7 +16,8 @@ portdvalue equ 0x08
 opcode equ 0x09
 
     ORG 0x00
-    goto init
+    ;goto init
+    goto main
     
 init:    
     clrf LATA
@@ -45,10 +46,12 @@ init:
     movwf portbvalue
     movwf portcvalue
     movwf portdvalue
+    return
     
     
     
 main:
+    call init
     call turnonleds
     call buttoncountercheck
     ;call portselectioncheck
@@ -71,13 +74,13 @@ turnonleds:
     return
 
 delay:    
-    movlw h'01' ;movlw d'40'
+    movlw d'158' ;movlw h'01'
     movwf iter1
     outerloop
-	movlw h'01' ;movlw d'250' 
+	movlw d'153' 
 	movwf iter2
 	innerloop
-	    movlw h'01' ;movlw d'250'
+	    movlw d'137'
 	    movwf iter3
 	    innerloop2
 		decfsz iter3, F
