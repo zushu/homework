@@ -225,8 +225,8 @@ portcselection:
     ;goto re3press4
     
 portdselection:
-    clrf LATD
-    clrf PORTD
+    ;clrf LATD
+    ;clrf PORTD
     btfsc PORTE, 3
     goto operation
     incf re3buttoncounter
@@ -488,9 +488,7 @@ ledstord0:
     movlw h'01'
     movwf LATD
     goto finalcall
-    
-    
-    
+        
 end
     
     
