@@ -4,15 +4,23 @@ CONFIG OSC = HSPLL, FCMEN = OFF, IESO = OFF, PWRT = OFF, BOREN = OFF, WDT = OFF,
     
 ; equ: define an assembly constant
     
-iter1 equ 0x01
-iter2 equ 0x02
-iter3 equ 0x03
-;iter4 equ 0x04
-ra4buttoncounter equ 0x04
-re3buttoncounter equ 0x05
-portbvalue equ 0x06 ; re4buttoncounter for portb
-portcvalue equ 0x07 ; re4buttoncounter for portc
-portdvalue equ 0x08
+iter1 udata 0x01
+iter1
+iter2 udata 0x02
+iter2
+iter3 udata 0x03
+iter3
+
+ra4buttoncounter udata 0x04
+ra4buttoncounter 
+re3buttoncounter udata 0x05
+re3buttoncounter 
+portbvalue udata 0x06 ; re4buttoncounter for portb
+portbvalue 
+portcvalue udata 0x07 ; re4buttoncounter for portc
+portcvalue  
+portdvalue udata 0x08
+portdvalue 
 ;opcode equ 0x09
 
     ORG 0x00
@@ -59,10 +67,17 @@ init:
 main:
     call init
     call turnonleds
-buttonaction:
+    buttonaction:
+    call init
     call ra4countcheck
-    ;call portselectioncheck
-    call buttonaction
+    ;call init
+    ;clrf ra4buttoncounter, 0 ; INITIALIZE VARS WITH 0
+    ;clrf re3buttoncounter,0
+    ;clrf portbvalue, 0
+    ;clrf portcvalue, 0
+    ;clrf portdvalue, 0
+    
+    goto buttonaction
     
 ; TURN ON LEDS, DELAY FOR 1 SEC, TURN OFF LEDS, RETURN
     
@@ -484,7 +499,7 @@ finalcall:
     clrf LATB
     clrf LATC
     clrf LATD
-    goto main
+    goto buttonaction
     
 ledstord7:    
     movlw h'08'
