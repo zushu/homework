@@ -59,10 +59,10 @@ init:
 main:
     call init
     call turnonleds
-    buttonaction:
+buttonaction:
     call ra4countcheck
     ;call portselectioncheck
-    goto buttonaction
+    call buttonaction
     
 ; TURN ON LEDS, DELAY FOR 1 SEC, TURN OFF LEDS, RETURN
     
@@ -253,7 +253,7 @@ determineport:
     ;portdcheck:
     movlw h'03'
     cpfsgt re3buttoncounter
-    goto portdcalc ; TODO: NOT IMPLEMENTED YET
+    goto portdcalc 
     subwf re3buttoncounter
     goto determineport
     
@@ -262,14 +262,14 @@ determineport:
 portbre4endcheck:
     btfss PORTE, 3
     goto portbre4countcheck 
-    ;incf re3buttoncounter
+    ;incf re3buttoncounter ; TODO DELETE THIS LINE
     goto re3endcheck ; or re3countcheck ????
     
 portbre4countcheck:
     movlw h'00'
     cpfsgt portbvalue
-    ;goto re3endcheck ; re4press1
-    goto portbre4endcheck
+    goto re3endcheck ; re4press1
+    ;goto portbre4endcheck
     
     movlw h'01'
     cpfsgt portbvalue
@@ -347,8 +347,8 @@ portbre4release5:
     
 portcre4endcheck:
     btfss PORTE, 3
-    goto portcre4countcheck ; NOT IMPLEMENTED YET
-    incf re3buttoncounter
+    goto portcre4countcheck 
+    ;incf re3buttoncounter
     goto re3endcheck ; re4press1
     
 portcre4countcheck:
@@ -381,7 +381,7 @@ portcre4release1:
     incf portcvalue
     movlw h'01' ; TURN ON RC0
     movwf LATC
-    goto portcre4endcheck ; NOT IMPLEMENTED YET
+    goto portcre4endcheck 
     
 portcre4press2:
     btfss PORTE, 4
@@ -464,7 +464,9 @@ subtraction:
     goto subbfromc 
     
 subcfromb:
-    subfwb portcvalue, 0
+    ;subfwb portcvalue, 0
+    movf portcvalue, 0
+    subwf portbvalue, 0
     movwf portdvalue
     goto turnonportdleds
     
