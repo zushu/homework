@@ -104,14 +104,35 @@ delay:
 ra4endcheck: ; re3press1
     btfsc PORTE, 3
     goto ra4countcheck
-    incf re3buttoncounter
+    ;incf re3buttoncounter
     goto re3release1
      
 ra4countcheck:
+    movlw h'00'
+    cpfseq ra4buttoncounter
+    goto ra4check1
+    goto ra4press1
+    ra4check1:
     movlw h'01'
     cpfseq ra4buttoncounter
-    goto ra4press1
+    goto ra4check2
     goto ra4press2
+    ra4check2:
+    movlw h'02'
+    cpfseq ra4buttoncounter
+    goto ra4check3
+    goto ra4press3
+    ra4check3:
+    movlw h'03'
+    cpfseq ra4buttoncounter
+    goto ra4check4
+    clrf ra4buttoncounter
+    incf ra4buttoncounter
+    goto ra4countcheck
+    ra4check4:
+    decf ra4buttoncounter
+    decf ra4buttoncounter
+    goto ra4countcheck
     
 ra4press1:
     btfsc PORTA, 4
@@ -128,14 +149,17 @@ ra4press2:
 ra4release2:
     btfss PORTA, 4
     goto ra4release2
-    incf ra4buttoncounter    
+    incf ra4buttoncounter
+    goto ra4endcheck
 ra4press3:
     btfsc PORTA, 4
     goto ra4endcheck
 ra4release3:
     btfss PORTA, 4
     goto ra4release3
-    decf ra4buttoncounter
+    clrf ra4buttoncounter
+    incf ra4buttoncounter
+    ;decf ra4buttoncounter
     goto ra4endcheck
  
   
@@ -166,9 +190,10 @@ re3countcheck: ; old portselectioncheck
     check3:
     movlw h'03'
     cpfseq re3buttoncounter
+    goto check4
     goto portdcalc ; NOT IMPLEMENTED YET
     ;goto re3press4
-    ; check4
+    check4:
     subwf re3buttoncounter
     goto re3countcheck
 
@@ -234,13 +259,14 @@ determineport:
 portbre4endcheck:
     btfsc PORTE, 3
     goto portbre4countcheck 
-    incf re3buttoncounter
+    ;incf re3buttoncounter
     goto re3endcheck ; or re3countcheck ????
     
 portbre4countcheck:
     movlw h'00'
     cpfsgt portbvalue
-    goto re3endcheck ; re4press1
+    ;goto re3endcheck ; re4press1
+    goto portbre4endcheck
     
     movlw h'01'
     cpfsgt portbvalue
@@ -399,6 +425,8 @@ portcre4release5:
     
 
 portdcalc:   ; operation
+    btfss PORTE, 3
+    goto portdcalc
     movlw h'00'
     cpfseq ra4buttoncounter
     goto addcheck
@@ -412,24 +440,25 @@ portdcalc:   ; operation
     movlw h'02' ; subtraction
     cpfseq ra4buttoncounter
     goto finalcheck
-    goto subtraction ; NOT IMPLEMENTED YET
+    goto subtraction 
     finalcheck:
     cpfsgt ra4buttoncounter
     goto portdcalc
-    subwf ra4buttoncounter
+    decf ra4buttoncounter
+    decf ra4buttoncounter
     goto portdcalc
     
 addition:
     movf portbvalue, 0
     addwf portcvalue, 0
     movwf portdvalue
-    goto turnonportdleds ; NOT IMPLEMENTED YET
+    goto turnonportdleds 
     
 subtraction:
     movf portbvalue, 0
     cpfsgt portcvalue
-    goto subcfromb  ; NOT IMPLEMENTED YET
-    goto subbfromc; NOT IMPLEMENTED YET
+    goto subcfromb  
+    goto subbfromc 
     
 subcfromb:
     subfwb portcvalue, 0
@@ -458,8 +487,7 @@ ledstord7:
     goto ledstord6
     movlw h'FF'
     movwf LATD
-    
-    
+       
 ledstord6:
     movlw h'07'
     cpfseq portdvalue
@@ -509,13 +537,6 @@ ledstord0:
     movlw h'01'
     movwf LATD
     goto finalcall
-    
-
-    
-    
-    
-    
-    
 
 end
     
