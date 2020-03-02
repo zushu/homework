@@ -56,9 +56,10 @@ init:
 main:
     call init
     call turnonleds
-    call buttoncountercheck
+    buttonaction:
+    call ra4countcheck
     ;call portselectioncheck
-    goto main
+    goto buttonaction
     
 ; TURN ON LEDS, DELAY FOR 1 SEC, TURN OFF LEDS, RETURN
     
@@ -149,20 +150,24 @@ re3endcheck: ; re4press1
 re3countcheck: ; old portselectioncheck
     ; check0
     movlw h'00'
-    cpfsgt re3buttoncounter
+    cpfseq re3buttoncounter
+    goto check1
     goto ra4endcheck
-    ; check1
+    check1:
     movlw h'01'
-    cpfsgt re3buttoncounter
+    cpfseq re3buttoncounter
+    goto check2
     goto re3press2
-    ; check2
+    check2:
     movlw h'02'
-    cpfsgt re3buttoncounter
+    cpfseq re3buttoncounter
+    goto check3
     goto re3press3
-    ; check3
+    check3:
     movlw h'03'
-    cpfsgt re3buttoncounter
-    goto re3press4
+    cpfseq re3buttoncounter
+    goto portdcalc ; NOT IMPLEMENTED YET
+    ;goto re3press4
     ; check4
     subwf re3buttoncounter
     goto re3countcheck
@@ -215,7 +220,7 @@ determineport:
     ;portccheck:
     movlw h'02'
     cpfsgt re3buttoncounter
-    goto portcre4release1 ; TODO: NOT IMPLEMENTED YET
+    goto portcre4release1 
     ;goto portdcheck
     ;portdcheck:
     movlw h'03'
@@ -260,6 +265,8 @@ portbre4release1:
     btfss PORTE, 4
     goto portbre4release1
     incf portbvalue
+    movlw h'01' ; TURN ON RB0
+    movwf LATB
     goto portbre4endcheck
     
 portbre4press2:
@@ -269,6 +276,8 @@ portbre4release2:
     btfss PORTE, 4
     goto portbre4release2
     incf portbvalue
+    movlw h'03' ; TURN ON RB0, RB1
+    movwf LATB
     goto portbre4endcheck
     
 portbre4press3:
@@ -278,6 +287,8 @@ portbre4release3:
     btfss PORTE, 4
     goto portbre4release3
     incf portbvalue
+    movlw h'07' ; TURN ON RB0, RB1, RB2
+    movwf LATB
     goto portbre4endcheck
     
 portbre4press4:
@@ -287,6 +298,8 @@ portbre4release4:
     btfss PORTE, 4
     goto portbre4release4
     incf portbvalue
+    movlw h'0F' ; TURN ON RB0, RB1, RB2, RB3
+    movwf LATB
     goto portbre4endcheck
     
 portbre4press5:
@@ -296,6 +309,8 @@ portbre4release5:
     btfss PORTE, 4
     goto portbre4release5
     clrf portbvalue
+    ;movlw h'00' ; TURN OFF ALL RB LEDS
+    clrf LATB
     goto portbre4endcheck
     
  
@@ -335,6 +350,8 @@ portcre4release1:
     btfss PORTE, 4
     goto portcre4release1
     incf portcvalue
+    movlw h'01' ; TURN ON RC0
+    movwf LATC
     goto portcre4endcheck ; NOT IMPLEMENTED YET
     
 portcre4press2:
@@ -344,6 +361,8 @@ portcre4release2:
     btfss PORTE, 4
     goto portcre4release2
     incf portcvalue
+    movlw h'03' ; TURN ON RC0, RC1
+    movwf LATC
     goto portcre4endcheck
     
 portcre4press3:
@@ -353,6 +372,8 @@ portcre4release3:
     btfss PORTE, 4
     goto portcre4release3
     incf portcvalue
+    movlw h'07' ; TURN ON RC0, RC1, RC2
+    movwf LATC
     goto portcre4endcheck
     
 portcre4press4:
@@ -362,6 +383,8 @@ portcre4release4:
     btfss PORTE, 4
     goto portcre4release4
     incf portcvalue
+    movlw h'0F' ; TURN ON RC0, RC1, RC2, RC3
+    movwf LATC
     goto portcre4endcheck
     
 portcre4press5:
@@ -371,9 +394,121 @@ portcre4release5:
     btfss PORTE, 4
     goto portcre4release5
     clrf portcvalue
+    clrf LATC ; TURN OFF ALL RC LEDS
     goto portcre4endcheck
     
 
+portdcalc:   ; operation
+    movlw h'00'
+    cpfseq ra4buttoncounter
+    goto addcheck
+    goto ra4endcheck ; ra4press1 maybe ??
+    addcheck:
+    movlw h'01' ; addition
+    cpfseq ra4buttoncounter
+    goto subcheck
+    goto addition 
+    subcheck:
+    movlw h'02' ; subtraction
+    cpfseq ra4buttoncounter
+    goto finalcheck
+    goto subtraction ; NOT IMPLEMENTED YET
+    finalcheck:
+    cpfsgt ra4buttoncounter
+    goto portdcalc
+    subwf ra4buttoncounter
+    goto portdcalc
+    
+addition:
+    movf portbvalue, 0
+    addwf portcvalue, 0
+    movwf portdvalue
+    goto turnonportdleds ; NOT IMPLEMENTED YET
+    
+subtraction:
+    movf portbvalue, 0
+    cpfsgt portcvalue
+    goto subcfromb  ; NOT IMPLEMENTED YET
+    goto subbfromc; NOT IMPLEMENTED YET
+    
+subcfromb:
+    subfwb portcvalue, 0
+    movwf portdvalue
+    goto turnonportdleds
+    
+subbfromc:
+    subwf portcvalue, 0
+    movwf portdvalue
+    goto turnonportdleds
+    
+
+turnonportdleds:
+    goto ledstord7
+    
+finalcall:
+    call delay
+    clrf LATB
+    clrf LATC
+    clrf LATD
+    goto main
+    
+ledstord7:    
+    movlw h'08'
+    cpfseq portdvalue
+    goto ledstord6
+    movlw h'FF'
+    movwf LATD
+    
+    
+ledstord6:
+    movlw h'07'
+    cpfseq portdvalue
+    goto ledstord5
+    movlw h'7F'
+    movwf LATD
+
+ledstord5:
+    movlw h'06'
+    cpfseq portdvalue
+    goto ledstord4
+    movlw h'3F'
+    movwf LATD
+    
+ledstord4:
+    movlw h'05'
+    cpfseq portdvalue
+    goto ledstord3
+    movlw h'1F'
+    movwf LATD
+    
+ledstord3:
+    movlw h'04'
+    cpfseq portdvalue
+    goto ledstord2
+    movlw h'0F'
+    movwf LATD
+
+ledstord2:
+    movlw h'03'
+    cpfseq portdvalue
+    goto ledstord1
+    movlw h'07'
+    movwf LATD
+
+ledstord1:
+    movlw h'02'
+    cpfseq portdvalue
+    goto ledstord0
+    movlw h'03'
+    movwf LATD
+    
+ledstord0:
+    movlw h'01'
+    cpfseq portdvalue
+    goto finalcall
+    movlw h'01'
+    movwf LATD
+    goto finalcall
     
 
     
