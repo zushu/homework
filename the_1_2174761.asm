@@ -13,7 +13,7 @@ re3buttoncounter equ 0x05
 portbvalue equ 0x06 ; re4buttoncounter for portb
 portcvalue equ 0x07 ; re4buttoncounter for portc
 portdvalue equ 0x08
-opcode equ 0x09
+;opcode equ 0x09
 
     ORG 0x00
     ;goto init
@@ -36,14 +36,17 @@ init:
     
     movlw h'10' ; b'00010000' ; SET RA4 AS DIGITAL INPUT
     movwf TRISA 
+    ;movwf PORTA
     
     movlw h'18' ; b'00011000' ; SET RE3 AND RE4 AS DIGITAL INPUT
     movwf TRISE
+    ;movwf PORTE
     
     movlw h'00' 
     movwf TRISB ; not sure
     movwf TRISC
     movwf TRISD
+    
     movwf ra4buttoncounter ; INITIALIZE VARS WITH 0
     movwf re3buttoncounter
     movwf portbvalue
@@ -102,7 +105,7 @@ delay:
 ; RA4 LOOP
     
 ra4endcheck: ; re3press1
-    btfsc PORTE, 3
+    btfss PORTE, 3
     goto ra4countcheck
     ;incf re3buttoncounter
     goto re3release1
@@ -135,27 +138,27 @@ ra4countcheck:
     goto ra4countcheck
     
 ra4press1:
-    btfsc PORTA, 4
+    btfss PORTA, 4
     goto ra4press1
 ra4release1:
-    btfss PORTA, 4
+    btfsc PORTA, 4
     goto ra4release1
     incf ra4buttoncounter
     goto ra4endcheck
     
 ra4press2:
-    btfsc PORTA, 4
+    btfss PORTA, 4
     goto ra4endcheck
 ra4release2:
-    btfss PORTA, 4
+    btfsc PORTA, 4
     goto ra4release2
     incf ra4buttoncounter
     goto ra4endcheck
 ra4press3:
-    btfsc PORTA, 4
+    btfss PORTA, 4
     goto ra4endcheck
 ra4release3:
-    btfss PORTA, 4
+    btfsc PORTA, 4
     goto ra4release3
     clrf ra4buttoncounter
     incf ra4buttoncounter
@@ -166,7 +169,7 @@ ra4release3:
 ; RE3 LOOP 
     
 re3endcheck: ; re4press1
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto re3countcheck 
     ;goto re4release1 ; NOT IMPLEMENTED YET
     goto determineport
@@ -200,34 +203,34 @@ re3countcheck: ; old portselectioncheck
 ;re3press1:
 ;    goto ra4countcheck
 re3release1:
-    btfss PORTE, 3
+    btfsc PORTE, 3
     goto re3release1
     incf re3buttoncounter
     goto re3endcheck
     
 re3press2:
-    btfsc PORTE, 3
+    btfss PORTE, 3
     goto re3endcheck
 re3release2:   
-    btfss PORTE, 3
+    btfsc PORTE, 3
     goto re3release2
     incf re3buttoncounter
     goto re3endcheck
     
 re3press3:
-    btfsc PORTE, 3
+    btfss PORTE, 3
     goto re3endcheck
 re3release3:
-    btfss PORTE, 3
+    btfsc PORTE, 3
     goto re3release3
     incf re3buttoncounter
     goto re3endcheck
     
 re3press4:
-    btfsc PORTE, 3
+    btfss PORTE, 3
     goto re3endcheck
 re3release4:
-    btfss PORTE, 3
+    btfsc PORTE, 3
     goto re3release4
     clrf re3buttoncounter
     incf re3buttoncounter
@@ -257,7 +260,7 @@ determineport:
 ; RE4 LOOP FOR PORTB
     
 portbre4endcheck:
-    btfsc PORTE, 3
+    btfss PORTE, 3
     goto portbre4countcheck 
     ;incf re3buttoncounter
     goto re3endcheck ; or re3countcheck ????
@@ -288,7 +291,7 @@ portbre4countcheck:
     goto portbre4countcheck
         
 portbre4release1:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portbre4release1
     incf portbvalue
     movlw h'01' ; TURN ON RB0
@@ -296,10 +299,10 @@ portbre4release1:
     goto portbre4endcheck
     
 portbre4press2:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portbre4endcheck
 portbre4release2:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portbre4release2
     incf portbvalue
     movlw h'03' ; TURN ON RB0, RB1
@@ -307,10 +310,10 @@ portbre4release2:
     goto portbre4endcheck
     
 portbre4press3:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portbre4endcheck
 portbre4release3:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portbre4release3
     incf portbvalue
     movlw h'07' ; TURN ON RB0, RB1, RB2
@@ -318,10 +321,10 @@ portbre4release3:
     goto portbre4endcheck
     
 portbre4press4:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portbre4endcheck
 portbre4release4:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portbre4release4
     incf portbvalue
     movlw h'0F' ; TURN ON RB0, RB1, RB2, RB3
@@ -329,10 +332,10 @@ portbre4release4:
     goto portbre4endcheck
     
 portbre4press5:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portbre4endcheck
 portbre4release5:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portbre4release5
     clrf portbvalue
     ;movlw h'00' ; TURN OFF ALL RB LEDS
@@ -343,7 +346,7 @@ portbre4release5:
 ; RE4 LOOP FOR PORTC
     
 portcre4endcheck:
-    btfsc PORTE, 3
+    btfss PORTE, 3
     goto portcre4countcheck ; NOT IMPLEMENTED YET
     incf re3buttoncounter
     goto re3endcheck ; re4press1
@@ -373,7 +376,7 @@ portcre4countcheck:
     goto portcre4countcheck
     
 portcre4release1:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portcre4release1
     incf portcvalue
     movlw h'01' ; TURN ON RC0
@@ -381,10 +384,10 @@ portcre4release1:
     goto portcre4endcheck ; NOT IMPLEMENTED YET
     
 portcre4press2:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portcre4endcheck
 portcre4release2:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portcre4release2
     incf portcvalue
     movlw h'03' ; TURN ON RC0, RC1
@@ -392,10 +395,10 @@ portcre4release2:
     goto portcre4endcheck
     
 portcre4press3:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portcre4endcheck
 portcre4release3:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portcre4release3
     incf portcvalue
     movlw h'07' ; TURN ON RC0, RC1, RC2
@@ -403,10 +406,10 @@ portcre4release3:
     goto portcre4endcheck
     
 portcre4press4:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portcre4endcheck
 portcre4release4:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portcre4release4
     incf portcvalue
     movlw h'0F' ; TURN ON RC0, RC1, RC2, RC3
@@ -414,10 +417,10 @@ portcre4release4:
     goto portcre4endcheck
     
 portcre4press5:
-    btfsc PORTE, 4
+    btfss PORTE, 4
     goto portcre4endcheck
 portcre4release5:
-    btfss PORTE, 4
+    btfsc PORTE, 4
     goto portcre4release5
     clrf portcvalue
     clrf LATC ; TURN OFF ALL RC LEDS
@@ -425,7 +428,7 @@ portcre4release5:
     
 
 portdcalc:   ; operation
-    btfss PORTE, 3
+    btfsc PORTE, 3
     goto portdcalc
     movlw h'00'
     cpfseq ra4buttoncounter
