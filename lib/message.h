@@ -1,6 +1,7 @@
 #ifndef CENG334HOMEWORK1_MESSAGE_H
 #define CENG334HOMEWORK1_MESSAGE_H
 
+// message_id types
 #define CLIENT_CONNECT 1
 #define CLIENT_BID 2
 #define CLIENT_FINISHED 3
@@ -9,11 +10,13 @@
 #define SERVER_BID_RESULT 2
 #define SERVER_AUCTION_FINISHED 3
 
+// bid_info result
 #define BID_ACCEPTED 0
 #define BID_LOWER_THAN_STARTING_BID 1
 #define BID_LOWER_THAN_CURRENT 2
 #define BID_INCREMENT_LOWER_THAN_MINIMUM 3
 
+// CLIENT
 typedef union client_message_parameters {
     int status;
     int bid;
@@ -25,6 +28,7 @@ typedef struct client_message {
     cmp params;
 } cm;
 
+// SERVER
 typedef struct connection_established_info {
     int client_id;
     int starting_bid;
