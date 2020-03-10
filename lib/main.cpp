@@ -4,6 +4,9 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
+#include "message.h"
+#include "logging.h"
 #define PIPE(fd) socketpair(AF_UNIX, SOCK_STREAM, PF_UNIX, fd)
 
 // TODO: WRITE IN C++
@@ -12,23 +15,41 @@ int main()
     // INPUT 
     int starting_bid, min_increment, num_bidders;
     std::cin >> starting_bid >> min_increment >> num_bidders;
-    std::string bidder_name[num_bidders];
+
+    //std::string bidder_name[num_bidders];
+    char* bidder_name[num_bidders];
     int num_args[num_bidders];
-    int* args[num_bidders];
+    //std::string* args[num_bidders];
+    char** args[num_bidders];
 
     for (int i = 0; i < num_bidders; i++)
     {
-        std::cin >> bidder_name[i] >> num_args[i];
-        args[i] = new int[num_args[i]];
-        for (int j = 0; j < num_args[i]; j++)
+        std::string bidder_name_temp;
+        //std::cin >> bidder_name[i] >> num_args[i];
+        std::cin >> bidder_name_temp >> num_args[i];
+        bidder_name[i] = new char(bidder_name_temp.length());
+        strcpy(bidder_name[i], bidder_name_temp.c_str());
+
+        //args[i] = new std::string[num_args[i] + 1];
+        args[i] = new char*[num_args[i] + 1];
+        for (int j = 0; j < num_args[i] + 1; j++)
         {
-            
-            std::cin >> args[i][j];
+            if (j == num_args[i])
+            {
+                args[i][num_args[i]] = NULL;
+                continue;
+            }
+            std::string arg_temp;
+            //std::cin >> args[i][j];
+            std::cin >> arg_temp;
+            args[i][j] = new char[arg_temp.length()];
+            strcpy(args[i][j], arg_temp.c_str());
         }
+        //args[i][num_args[i]] = NULL;
     }
 
     // TESTING INPUT
-    /*for (int i = 0; i < num_bidders; i++)
+    for (int i = 0; i < num_bidders; i++)
     {
         std::cout << bidder_name[i] << " " <<num_args[i] << " ";
         for (int j = 0 ; j < num_args[i]; j++)
@@ -36,7 +57,40 @@ int main()
             std::cout << args[i][j] << " ";
         }
         std::cout << "\n";
-    }*/
+    }
 
+    int fd_array[num_bidders][2];
+    cm cm_array[num_bidders];
+    sm sm_array[num_bidders];
+    pid_t pids[num_bidders];
 
+    for (int i = 0; i < num_bidders; i++)
+    {
+        if (PIPE(fd_array[i]) < 0)
+        {
+            perror("pipe error");
+        }
+        if ((pids[i]) = fork() < 0)
+        {
+            perror("fork error");
+        }
+        else if (pids[i] > 0) // parent
+        {
+            close(fd_array[i][0]); // will use fd[1] to read and write
+            dup2(fd_array[i][1], 0); // redirect stdin to read end
+            dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
+            close(fd_array[i][1]); // it is duplicated to stdin&stdout, so close
+            
+        }
+        else // child
+        {
+            close(fd_array[i][1]); // will use fd[0] to read and write
+            dup2(fd_array[i][0], 0); // redirect stdin to read end
+            dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
+            close(fd_array[i][0]); // it is duplicated to stdin&stdout, so close
+            execvp(bidder_name[i], args[i]);
+
+        }
+
+    }
 }
