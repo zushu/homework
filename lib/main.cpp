@@ -113,7 +113,7 @@ int main()
             std::cout << "parent loop 2: " << getpid() <<std::endl;
             close(fd_array[i][0]); // will use fd[1] to read and write
             dup2(fd_array[i][1], 0); // redirect stdin to read end
-            dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
+            //dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
             //close(fd_array[i][1]); // it is duplicated to stdin&stdout, so close
             //write(fd_array[i][1], "hello", 5*sizeof(char));
             //write(0, "hello", 5*sizeof(char));
