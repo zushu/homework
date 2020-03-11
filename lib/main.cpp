@@ -75,6 +75,9 @@ int main()
         {
             perror("pipe error");
         }
+    
+    //for (int i = 0; i < num_bidders; i++)
+    //{
         //pids[i] = fork();
         pid = fork();
         //if (pids[i] < 0)
@@ -89,37 +92,38 @@ int main()
             std::cout << "child " << i << " " << getpid() << " parentid: " << getppid() <<std::endl;
             close(fd_array[i][1]); // will use fd[0] to read and write
             dup2(fd_array[i][0], 0); // redirect stdin to read end
-            dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
+            //dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
             close(fd_array[i][0]); // it is duplicated to stdin&stdout, so close
-            execvp(bidder_name[i], args[i]);
-            //exit(0);
+            //execvp(bidder_name[i], args[i]);
+            //execl("/bin/echo", "echo", )
+            char tmp2[6];
+            //fgets(tmp2, 6*sizeof(char), stdin);
+            read(0, tmp2, 6*sizeof(char));
+            //dup2(1, 1);
+            printf("%s\n", tmp2);
+            exit(0);
 
         }
-        //else if (pids[i] > 0) // parent
-        //else
-        /*if (pid > 0)
-        {
-            std::cout << "parent" << std::endl;
-            close(fd_array[i][0]); // will use fd[1] to read and write
-            dup2(fd_array[i][1], 0); // redirect stdin to read end
-            dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
-            close(fd_array[i][1]); // it is duplicated to stdin&stdout, so close
-        
-        }*/
 
     }
     if (pid > 0)
-    for (int i = 0; i< num_bidders; i++)
     {
-         std::cout << "parent loop 2: " << getpid() <<std::endl;
-         close(fd_array[i][0]); // will use fd[1] to read and write
-         dup2(fd_array[i][1], 0); // redirect stdin to read end
-         dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
-         close(fd_array[i][1]); // it is duplicated to stdin&stdout, so close
+        for (int i = 0; i< num_bidders; i++)
+        {
+            std::cout << "parent loop 2: " << getpid() <<std::endl;
+            close(fd_array[i][0]); // will use fd[1] to read and write
+            dup2(fd_array[i][1], 0); // redirect stdin to read end
+            dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
+            //close(fd_array[i][1]); // it is duplicated to stdin&stdout, so close
+            //write(fd_array[i][1], "hello", 5*sizeof(char));
+            //write(0, "hello", 5*sizeof(char));
+            char tmp[6] = "hello";
+            write(fd_array[i][1], tmp, 5*sizeof(char));
 
-        std::cout << "waiting for child " << i << std::endl;
-        wait(&child_status);
-        std::cout << "child " << i << " finished with status " << child_status << std::endl;
+            //std::cout << "waiting for child " << i << std::endl;
+            wait(&child_status);
+            std::cout << "child " << i << " finished with status " << child_status << std::endl;
+        }
     }
     
     return 0;
