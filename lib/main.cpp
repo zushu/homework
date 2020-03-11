@@ -60,6 +60,7 @@ int main()
         std::cout << "\n";
     }*/
 
+    int fd[2];
     int fd_array[num_bidders][2];
     cm cm_array[num_bidders];
     sm sm_array[num_bidders];
@@ -67,6 +68,7 @@ int main()
     pid_t pid;
 
     int child_status;
+    std::cout << "parent " << getpid() << std::endl; 
     for (int i = 0; i < num_bidders; i++)
     {
         if (PIPE(fd_array[i]) < 0)
@@ -82,19 +84,20 @@ int main()
         }
         
         //else if (pids[i] == 0)// child
-        else if (pid == 0)
+        if (pid == 0)
         {
-            std::cout << "child " << i << std::endl;
+            std::cout << "child " << i << " " << getpid() << " parentid: " << getppid() <<std::endl;
             close(fd_array[i][1]); // will use fd[0] to read and write
             dup2(fd_array[i][0], 0); // redirect stdin to read end
             dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
             close(fd_array[i][0]); // it is duplicated to stdin&stdout, so close
-            //execvp(bidder_name[i], args[i]);
-            exit(0);
+            execvp(bidder_name[i], args[i]);
+            //exit(0);
 
         }
         //else if (pids[i] > 0) // parent
-        /*else
+        //else
+        /*if (pid > 0)
         {
             std::cout << "parent" << std::endl;
             close(fd_array[i][0]); // will use fd[1] to read and write
@@ -105,9 +108,15 @@ int main()
         }*/
 
     }
-    //if (pid)
+    if (pid > 0)
     for (int i = 0; i< num_bidders; i++)
     {
+         std::cout << "parent loop 2: " << getpid() <<std::endl;
+         close(fd_array[i][0]); // will use fd[1] to read and write
+         dup2(fd_array[i][1], 0); // redirect stdin to read end
+         dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
+         close(fd_array[i][1]); // it is duplicated to stdin&stdout, so close
+
         std::cout << "waiting for child " << i << std::endl;
         wait(&child_status);
         std::cout << "child " << i << " finished with status " << child_status << std::endl;
