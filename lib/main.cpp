@@ -28,12 +28,14 @@ int main()
         std::string bidder_name_temp;
         //std::cin >> bidder_name[i] >> num_args[i];
         std::cin >> bidder_name_temp >> num_args[i];
-        bidder_name[i] = new char(bidder_name_temp.length());
-        strcpy(bidder_name[i], bidder_name_temp.c_str());
-
+        bidder_name[i] = new char[bidder_name_temp.length() + 8*sizeof(char)];
+        strcpy(bidder_name[i], "../bin/");
+        strcat(bidder_name[i], bidder_name_temp.c_str());
         //args[i] = new std::string[num_args[i] + 1];
-        args[i] = new char*[num_args[i] + 1];
-        for (int j = 0; j < num_args[i] + 1; j++)
+        args[i] = new char*[num_args[i] + 2];
+        args[i][0] = new char[bidder_name_temp.length() + 8*sizeof(char)];
+        args[i][0] = bidder_name[i];
+        for (int j = 1; j < num_args[i] + 2; j++)
         {
             if (j == num_args[i])
             {
@@ -50,15 +52,15 @@ int main()
     }
 
     // TESTING INPUT
-    /*for (int i = 0; i < num_bidders; i++)
+    for (int i = 0; i < num_bidders; i++)
     {
-        std::cout << bidder_name[i] << " " <<num_args[i] << " ";
+        //std::cout << bidder_name[i] << " " <<num_args[i] << " ";
         for (int j = 0 ; j < num_args[i]; j++)
         {
             std::cout << args[i][j] << " ";
         }
         std::cout << "\n";
-    }*/
+    }
 
     int fd[2];
     int fd_array[num_bidders][2];
@@ -92,16 +94,9 @@ int main()
             std::cout << "child " << i << " " << getpid() << " parentid: " << getppid() <<std::endl;
             close(fd_array[i][1]); // will use fd[0] to read and write
             dup2(fd_array[i][0], 0); // redirect stdin to read end
-            //dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
-            close(fd_array[i][0]); // it is duplicated to stdin&stdout, so close
-            //execvp(bidder_name[i], args[i]);
-            //execl("/bin/echo", "echo", )
-            char tmp2[6];
-            //fgets(tmp2, 6*sizeof(char), stdin);
-            read(0, tmp2, 6*sizeof(char));
-            //dup2(1, 1);
-            printf("%s\n", tmp2);
-            exit(0);
+            dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
+            //exit(0);
+            execvp(bidder_name[i], args[i]);
 
         }
 
@@ -113,17 +108,17 @@ int main()
             std::cout << "parent loop 2: " << getpid() <<std::endl;
             close(fd_array[i][0]); // will use fd[1] to read and write
             dup2(fd_array[i][1], 0); // redirect stdin to read end
-            //dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
-            //close(fd_array[i][1]); // it is duplicated to stdin&stdout, so close
-            //write(fd_array[i][1], "hello", 5*sizeof(char));
-            //write(0, "hello", 5*sizeof(char));
-            char tmp[6] = "hello";
-            write(fd_array[i][1], tmp, 5*sizeof(char));
+            dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
 
             //std::cout << "waiting for child " << i << std::endl;
             wait(&child_status);
             std::cout << "child " << i << " finished with status " << child_status << std::endl;
         }
+        //bool bidders_not_finished = 1;
+        //while(bidders_not_finished)
+        //{
+
+        //}
     }
     
     return 0;
