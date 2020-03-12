@@ -25,6 +25,7 @@ int main()
 
     for (int i = 0; i < num_bidders; i++)
     {
+        // TODO: FIX THIS UGLY MESS!!!
         std::string bidder_name_temp;
         //std::cin >> bidder_name[i] >> num_args[i];
         std::cin >> bidder_name_temp >> num_args[i];
@@ -37,9 +38,9 @@ int main()
         args[i][0] = bidder_name[i];
         for (int j = 1; j < num_args[i] + 2; j++)
         {
-            if (j == num_args[i])
+            if (j == (num_args[i] + 1))
             {
-                args[i][num_args[i]] = NULL;
+                args[i][num_args[i] + 1] = NULL;
                 continue;
             }
             std::string arg_temp;
@@ -55,9 +56,9 @@ int main()
     for (int i = 0; i < num_bidders; i++)
     {
         //std::cout << bidder_name[i] << " " <<num_args[i] << " ";
-        for (int j = 0 ; j < num_args[i]; j++)
+        for (int j = 0 ; j < num_args[i] + 2; j++)
         {
-            std::cout << args[i][j] << " ";
+            std::cout << "arg: " << args[i][j] << " \n";
         }
         std::cout << "\n";
     }
