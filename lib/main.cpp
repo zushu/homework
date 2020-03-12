@@ -3,7 +3,9 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include <sys/select.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <string>
 #include <string.h>
 #include "message.h"
@@ -11,6 +13,10 @@
 #define PIPE(fd) socketpair(AF_UNIX, SOCK_STREAM, PF_UNIX, fd)
 
 // TODO: WRITE IN C++
+
+void server(int fd_array[][2], 
+            int starting_bid, int min_increment, int num_bidders,
+            cm cm_array[], sm sm_array[]);
 int main()
 {
     // INPUT 
@@ -70,6 +76,8 @@ int main()
     pid_t pids[num_bidders];
     pid_t pid;
 
+    int stdout_copy = dup(1);
+
     int child_status;
     std::cout << "parent " << getpid() << std::endl; 
     for (int i = 0; i < num_bidders; i++)
@@ -92,16 +100,22 @@ int main()
         //else if (pids[i] == 0)// child
         if (pid == 0)
         {
+            //int stdout_copy = dup(1);
             std::cout << "child " << i << " " << getpid() << " parentid: " << getppid() <<std::endl;
             close(fd_array[i][1]); // will use fd[0] to read and write
             dup2(fd_array[i][0], 0); // redirect stdin to read end
             dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
+            //close(fd_array[i][0]);
+            //dup2(stdout_copy, 1);
+            //close(stdout_copy);
             //exit(0);
             execvp(bidder_name[i], args[i]);
 
         }
 
     }
+
+    bool bidder_finished[num_bidders];
     if (pid > 0)
     {
         for (int i = 0; i< num_bidders; i++)
@@ -110,10 +124,13 @@ int main()
             close(fd_array[i][0]); // will use fd[1] to read and write
             dup2(fd_array[i][1], 0); // redirect stdin to read end
             dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
+            //close(fd_array[i][1]);
 
-            //std::cout << "waiting for child " << i << std::endl;
+            //dup2(stdout_copy, 1);
+            //close(stdout_copy);
+            std::cout << "waiting for child " << i << std::endl;
             wait(&child_status);
-            std::cout << "child " << i << " finished with status " << child_status << std::endl;
+            //std::cout << "child " << i << " finished with status " << child_status << std::endl;
         }
         //bool bidders_not_finished = 1;
         //while(bidders_not_finished)
@@ -123,5 +140,14 @@ int main()
     }
     
     return 0;
+
+}
+
+void server(int fd_array[][2], 
+            int starting_bid, int min_increment, int num_bidders,
+            cm cm_array[], sm sm_array[])
+{
+    fd_set readset;
+    
 
 }
