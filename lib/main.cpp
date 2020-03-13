@@ -10,6 +10,7 @@
 #include <string.h>
 #include "message.h"
 #include "logging.h"
+
 #define PIPE(fd) socketpair(AF_UNIX, SOCK_STREAM, PF_UNIX, fd)
 
 // TODO: WRITE IN C++
@@ -17,7 +18,7 @@
 
 void server(int fd_array[][2], 
             int starting_bid, int min_increment, int num_bidders,
-            cm cm_array[], sm sm_array[]);
+            cm cm_array[], sm sm_array[], pid_t pids[]);
 int main()
 {
     // INPUT 
@@ -63,9 +64,9 @@ int main()
     for (int i = 0; i < num_bidders; i++)
     {
         //std::cout << bidder_name[i] << " " <<num_args[i] << " ";
-        for (int j = 0 ; j < num_args[i] + 2; j++)
+        for (int j = 0 ; j < num_args[i] + 1; j++)
         {
-            std::cout << "arg: " << args[i][j] << " \n";
+            std::cout << "arg: " << i << " " << args[i][j] << " \n";
         }
         std::cout << "\n";
     }
@@ -101,6 +102,7 @@ int main()
         //else if (pids[i] == 0)// child
         if (pid == 0)
         {
+            pids[i] = getpid();
             //int stdout_copy = dup(1);
             std::cout << "child " << i << " " << getpid() << " parentid: " << getppid() <<std::endl;
             close(fd_array[i][1]); // will use fd[0] to read and write
@@ -126,21 +128,19 @@ int main()
             dup2(fd_array[i][1], 0); // redirect stdin to read end
             dup2(fd_array[i][1], 1); // redirect stdout to write end (same as the read end)
             //close(fd_array[i][1]);
-
-            //dup2(stdout_copy, 1);
-            //close(stdout_copy);
-            //std::cout << "waiting for child " << i << std::endl;
-            // TODO: NOT CORRECT, SERVER ALREADY HAS A LOOP, SHOULD BE OUTSIDE THIS LOOP
-            
-            //wait(&child_status);
-            //std::cout << "child " << i << " finished with status " << child_status << std::endl;
         }
-        server(fd_array, starting_bid, min_increment, num_bidders, cm_array, sm_array);
-        //bool bidders_not_finished = 1;
-        //while(bidders_not_finished)
-        //{
+        server(fd_array, starting_bid, min_increment, num_bidders, cm_array, sm_array, pids);
+        for (int i = 0; i < num_bidders; i++)
+        {
+            int child_status;
+            wait(&child_status);
 
-        //}
+            ii input_msg;
+            input_msg.type = CLIENT_FINISHED;
+            input_msg.pid = pids[i]; 
+            input_msg.info.status = child_status; // status
+            print_client_finished(i+1, child_status, 0);
+        }
     }
     
     for (int i = 0; i < num_bidders; i++)
@@ -167,7 +167,7 @@ int main()
 
 // TODO: SEND RESPONSE MESSAGES
 // SERVER CODE TO HANDLE MESSAGES
-void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidders, cm cm_array[], sm sm_array[])
+void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidders, cm cm_array[], sm sm_array[], pid_t pids[])
 {
     
     fd_set readset;
@@ -188,8 +188,7 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         long tv_sec; //second
         long tv_usec; // microseconds
     };*/
-    struct timeval* timeout_value = new timeval;
-    timeout_value = NULL; //
+    struct timeval timeout_value = {0, 0};
 
     int r; // return value of read call
     // initialize bidder pipes as open
@@ -221,8 +220,16 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         }
 
         // block until there is data to read
-        if (select(max_fd, &readset, NULL, NULL, timeout_value) < 0)
-            perror("select");
+        if (timeout_value.tv_usec == 0)
+        {
+            if (select(max_fd, &readset, NULL, NULL, NULL) < 0)
+            perror("select1");
+        } 
+        else
+        {   
+            if (select(max_fd, &readset, NULL, NULL, &timeout_value) < 0)
+                perror("select");
+        }
 
         // escaped select, there is data to read
         for (int i = 0; i < num_bidders; i++)
@@ -249,9 +256,21 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         sm_array[i].params.start_info.current_bid = highest_bid;
                         sm_array[i].params.start_info.minimum_increment = min_increment;
 
+                        // print client message
+                        ii input_msg;
+                        input_msg.type = CLIENT_CONNECT;
+                        input_msg.pid = pids[i]; 
+                        input_msg.info.delay = cm_array[i].params.delay; // delay
+                        print_input(&input_msg, i+1);
+
                         write(fd_array[i][1], &sm_array[i], sizeof(sm));
 
-
+                        // print server message
+                        oi output_msg;
+                        output_msg.type = SERVER_CONNECTION_ESTABLISHED;
+                        output_msg.pid = getpid();
+                        output_msg.info.start_info = {i+1, starting_bid, highest_bid, min_increment};
+                        print_output(&output_msg, i+1);
                     }
                     if (cm_array[i].message_id == CLIENT_BID)
                     {
@@ -276,8 +295,26 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         }
                         sm_array[i].params.result_info.current_bid = highest_bid;
 
+                        // print client message
+                        ii input_msg;
+                        input_msg.type = CLIENT_BID;
+                        input_msg.pid = pids[i]; 
+                        input_msg.info.bid = bids[i]; // bid
+                        print_input(&input_msg, i+1);
+
+                        write(fd_array[i][1], &sm_array[i], sizeof(sm));
+
+                        // print server message
+                        oi output_msg;
+                        output_msg.type = BID_ACCEPTED;
+                        output_msg.pid = getpid();
+                        output_msg.info.result_info = sm_array[i].params.result_info;
+                        print_output(&output_msg, i+1);
+
                         // send message
                         write(fd_array[i][1], &sm_array[i], sizeof(sm));
+
+
                     }
                     // final message
                     if (cm_array[i].message_id == CLIENT_FINISHED)
@@ -285,7 +322,6 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         bidder_status[i] = cm_array[i].params.status;
                         // TODO: CHECK STATUS
                         bidder_is_open[i] = false;
-
                     }
 
                 }
@@ -300,8 +336,8 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                 max_delay = bidder_delays[i];
             }
         }
-        timeout_value->tv_sec = 0;
-        timeout_value->tv_usec = max_delay * 1000;
+        timeout_value.tv_sec = 0;
+        timeout_value.tv_usec = max_delay * 1000;
 
         open = false;
         for (int i = 0; i < num_bidders; i++)
@@ -315,17 +351,25 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
 
     }
 
-    int child_status;
+    //int child_status;
     // out of loop, bidders are finished
     for (int i = 0; i < num_bidders; i++)
     {
         sm_array[i].message_id = SERVER_AUCTION_FINISHED;
         sm_array[i].params.winner_info = win_info;
         write(fd_array[i][1], &sm_array[i], sizeof(sm));
-        wait(&child_status);
+        
+        //wait(&child_status);
     }
+    oi output_msg;
+    output_msg.type = SERVER_AUCTION_FINISHED;
+    output_msg.pid = getpid();
+    output_msg.info.winner_info = win_info;
+    print_server_finished(win_info.winner_id, win_info.winning_bid);
 
-    delete timeout_value;
+
+
+    //delete timeout_value;
     delete bidder_is_open; 
     delete bidder_delays;
     delete bids;
