@@ -13,6 +13,7 @@
 #define PIPE(fd) socketpair(AF_UNIX, SOCK_STREAM, PF_UNIX, fd)
 
 // TODO: WRITE IN C++
+// TODO: NO NEED TO KEEP ALL SERVER MESSAGES, DELETE SM_ARRAY, MAYBE ALSO CM_ARRAY
 
 void server(int fd_array[][2], 
             int starting_bid, int min_increment, int num_bidders,
@@ -128,10 +129,13 @@ int main()
 
             //dup2(stdout_copy, 1);
             //close(stdout_copy);
-            std::cout << "waiting for child " << i << std::endl;
-            wait(&child_status);
+            //std::cout << "waiting for child " << i << std::endl;
+            // TODO: NOT CORRECT, SERVER ALREADY HAS A LOOP, SHOULD BE OUTSIDE THIS LOOP
+            
+            //wait(&child_status);
             //std::cout << "child " << i << " finished with status " << child_status << std::endl;
         }
+        server(fd_array, starting_bid, min_increment, num_bidders, cm_array, sm_array);
         //bool bidders_not_finished = 1;
         //while(bidders_not_finished)
         //{
@@ -139,15 +143,191 @@ int main()
         //}
     }
     
+    for (int i = 0; i < num_bidders; i++)
+    {
+        delete bidder_name[i];
+        delete[] args[i];
+    }
     return 0;
 
 }
 
-void server(int fd_array[][2], 
-            int starting_bid, int min_increment, int num_bidders,
-            cm cm_array[], sm sm_array[])
-{
-    fd_set readset;
-    
 
+
+
+
+
+
+
+
+
+
+
+
+
+// TODO: SEND RESPONSE MESSAGES
+// SERVER CODE TO HANDLE MESSAGES
+void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidders, cm cm_array[], sm sm_array[])
+{
+    
+    fd_set readset;
+    bool open = true; // if there is at least one pipe open
+    bool* bidder_is_open = new bool[num_bidders]; 
+    int* bidder_delays = new int[num_bidders];
+    int* bids = new int[num_bidders];
+    int* bidder_status = new int[num_bidders];
+    int max_fd = 0; // number of the file descriptor with the biggest number
+    // TODO: CORRECTLY UPDATE highest_bid
+    int highest_bid = 0;
+
+    wi win_info;
+
+    /*
+    struct timeval 
+    {
+        long tv_sec; //second
+        long tv_usec; // microseconds
+    };*/
+    struct timeval* timeout_value = new timeval;
+    timeout_value = NULL; //
+
+    int r; // return value of read call
+    // initialize bidder pipes as open
+    for (int i = 0; i < num_bidders; i++)
+    {
+        bidder_is_open[i] = true;
+    }
+
+    for (int i = 0; i < num_bidders; i++)
+    {
+        if (fd_array[i][1] > max_fd)
+        {
+            max_fd = fd_array[i][1];
+        }
+    }
+
+    max_fd += 1;
+
+    while(open)
+    {
+        FD_ZERO(&readset);
+        for (int i = 0; i < num_bidders; i++)
+        {
+            if (bidder_is_open[i]) 
+            {
+                // add fd to readset if open
+                FD_SET(fd_array[i][1], &readset);
+            }
+        }
+
+        // block until there is data to read
+        if (select(max_fd, &readset, NULL, NULL, timeout_value) < 0)
+            perror("select");
+
+        // escaped select, there is data to read
+        for (int i = 0; i < num_bidders; i++)
+        {
+            if (FD_ISSET(fd_array[i][1], &readset))
+            {
+                r = read(fd_array[i][1], &(cm_array[i]), sizeof(cm));
+                if (r == 0) // EOF
+                {
+                    bidder_is_open[i] = false;
+                }
+                else
+                {
+                    // do something accordingly
+                    // first message
+                    if (cm_array[i].message_id == CLIENT_CONNECT)
+                    {
+                        bidder_delays[i] = cm_array[i].params.delay;
+                        // TODO: SEND MESSAGE BACK FROM SERVER
+                        sm_array[i].message_id = SERVER_CONNECTION_ESTABLISHED;
+                        // unique client id starts from 1 ??????
+                        sm_array[i].params.start_info.client_id = i + 1;
+                        sm_array[i].params.start_info.starting_bid = starting_bid;
+                        sm_array[i].params.start_info.current_bid = highest_bid;
+                        sm_array[i].params.start_info.minimum_increment = min_increment;
+
+                        write(fd_array[i][1], &sm_array[i], sizeof(sm));
+
+
+                    }
+                    if (cm_array[i].message_id == CLIENT_BID)
+                    {
+                        bids[i] = cm_array[i].params.bid;
+                        // TODO: CHECK BID, SEND APPROPRIATE MESSAGE, CHANGE MAX_BID IF NECESSARY
+                        sm_array[i].message_id = SERVER_BID_RESULT;
+
+                        // check bid
+                        if (bids[i] < starting_bid)
+                            sm_array[i].params.result_info.result = BID_LOWER_THAN_STARTING_BID;
+                        else if (bids[i] < highest_bid)
+                            sm_array[i].params.result_info.result = BID_LOWER_THAN_CURRENT;
+                        else if (highest_bid - bids[i] < min_increment)
+                            sm_array[i].params.result_info.result = BID_INCREMENT_LOWER_THAN_MINIMUM;
+                        else
+                        {
+                            sm_array[i].params.result_info.result = BID_ACCEPTED;
+                            // update highest bid
+                            highest_bid = bids[i];
+                            win_info.winner_id = i + 1;
+                            win_info.winning_bid = highest_bid;
+                        }
+                        sm_array[i].params.result_info.current_bid = highest_bid;
+
+                        // send message
+                        write(fd_array[i][1], &sm_array[i], sizeof(sm));
+                    }
+                    // final message
+                    if (cm_array[i].message_id == CLIENT_FINISHED)
+                    {
+                        bidder_status[i] = cm_array[i].params.status;
+                        // TODO: CHECK STATUS
+                        bidder_is_open[i] = false;
+
+                    }
+
+                }
+            }
+        }
+
+        int max_delay = 0;
+        for (int i = 0; i < num_bidders; i++)
+        {
+            if (bidder_delays[i] > max_delay)
+            {
+                max_delay = bidder_delays[i];
+            }
+        }
+        timeout_value->tv_sec = 0;
+        timeout_value->tv_usec = max_delay * 1000;
+
+        open = false;
+        for (int i = 0; i < num_bidders; i++)
+        {
+            if (bidder_is_open[i])
+            {
+                open = true;
+                break;
+            }
+        }
+
+    }
+
+    int child_status;
+    // out of loop, bidders are finished
+    for (int i = 0; i < num_bidders; i++)
+    {
+        sm_array[i].message_id = SERVER_AUCTION_FINISHED;
+        sm_array[i].params.winner_info = win_info;
+        write(fd_array[i][1], &sm_array[i], sizeof(sm));
+        wait(&child_status);
+    }
+
+    delete timeout_value;
+    delete bidder_is_open; 
+    delete bidder_delays;
+    delete bids;
+    delete bidder_status;
 }
