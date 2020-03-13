@@ -230,11 +230,13 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         // block until there is data to read
         if (timeout_value.tv_usec == 0)
         {
+            printf("timeout_value.tv_usec == 0\n");
             if (select(max_fd, &readset, NULL, NULL, NULL) < 0)
             perror("select1");
         } 
         else
         {   
+            printf("timeout_value.tv_usec not zero\n");
             if (select(max_fd, &readset, NULL, NULL, &timeout_value) < 0)
                 perror("select");
         }
@@ -246,8 +248,10 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         {
             if (FD_ISSET(fd_array[i][1], &readset))
             {
-                printf("FD_ISSET");
+                printf("FD_ISSET\n");
                 r = read(fd_array[i][1], &(cm_array[i]), sizeof(cm));
+
+                printf("read from client %d: %d\n", i, cm_array[i].message_id);
                 //if (r == 0) // EOF
                 //{
                 //    bidder_is_open[i] = false;
@@ -257,7 +261,8 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                     // do something accordingly
                     // first message
                     if (cm_array[i].message_id == CLIENT_CONNECT)
-                    {                        
+                    {      
+
                         bidder_delays[i] = cm_array[i].params.delay;
                         // TODO: SEND MESSAGE BACK FROM SERVER
                         sm_array[i].message_id = SERVER_CONNECTION_ESTABLISHED;
@@ -283,22 +288,35 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         output_msg.info.start_info = {i+1, starting_bid, highest_bid, min_increment};
                         print_output(&output_msg, i+1);
                     }
-                    if (cm_array[i].message_id == CLIENT_BID)
+                    else if (cm_array[i].message_id == CLIENT_BID)
                     {
-                        printf("CLIENT_BID");
+                        printf("CLIENT_BID\n");
                         bids[i] = cm_array[i].params.bid;
+                        printf("bids[i] %d\n", bids[i]);
                         // TODO: CHECK BID, SEND APPROPRIATE MESSAGE, CHANGE MAX_BID IF NECESSARY
-                        sm_array[i].message_id = SERVER_BID_RESULT;
+                        sm sm_temp;
+                        sm_temp.message_id = SERVER_BID_RESULT;
+                        //sm_array[i].message_id = SERVER_BID_RESULT;
 
                         // check bid
                         if (bids[i] < starting_bid)
+                        {
+                            printf("bids[i] < starting_bid\n");
                             sm_array[i].params.result_info.result = BID_LOWER_THAN_STARTING_BID;
+                        }
                         else if (bids[i] < highest_bid)
+                        {
+                            printf("bids[i] < highest_bid\n");
                             sm_array[i].params.result_info.result = BID_LOWER_THAN_CURRENT;
+                        }
                         else if (highest_bid - bids[i] < min_increment)
+                        {
+                            printf("highest_bid - bids[i] < min_increment\n");
                             sm_array[i].params.result_info.result = BID_INCREMENT_LOWER_THAN_MINIMUM;
+                        }
                         else
                         {
+                            printf("bid else\n");
                             sm_array[i].params.result_info.result = BID_ACCEPTED;
                             // update highest bid
                             highest_bid = bids[i];
@@ -322,16 +340,11 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         output_msg.pid = getpid();
                         output_msg.info.result_info = sm_array[i].params.result_info;
                         print_output(&output_msg, i+1);
-
-                        // send message
-                        write(fd_array[i][1], &sm_array[i], sizeof(sm));
-
-
                     }
                     // final message
-                    if (cm_array[i].message_id == CLIENT_FINISHED)
+                    else if (cm_array[i].message_id == CLIENT_FINISHED)
                     {
-                        printf("CLIENT_FINISHED");
+                        printf("CLIENT_FINISHED\n");
                         bidder_status[i] = cm_array[i].params.status;
                         // TODO: CHECK STATUS
                         bidder_is_open[i] = false;
@@ -364,28 +377,23 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
 
     }
 
-    int child_status;
-    // out of loop, bidders are finished
-    for (int i = 0; i < num_bidders; i++)
-    {
-        sm_array[i].message_id = SERVER_AUCTION_FINISHED;
-        sm_array[i].params.winner_info = win_info;
-        write(fd_array[i][1], &sm_array[i], sizeof(sm));
-        //int child_status;
-        wait(&child_status);
-        
-        //wait(&child_status);
-    }
-
-
     oi output_msg;
     output_msg.type = SERVER_AUCTION_FINISHED;
     output_msg.pid = getpid();
     output_msg.info.winner_info = win_info;
     print_server_finished(win_info.winner_id, win_info.winning_bid);
-
+    int child_status;
+    // out of loop, bidders are finished
     for (int i = 0; i < num_bidders; i++)
     {
+        sm sm_temp;
+        sm_temp.message_id = SERVER_AUCTION_FINISHED;
+        sm_temp.params.winner_info = win_info;
+        //sm_array[i].message_id = SERVER_AUCTION_FINISHED;
+        //sm_array[i].params.winner_info = win_info;
+        write(fd_array[i][1], &sm_temp, sizeof(sm));
+        //int child_status;
+        wait(&child_status);
         ii input_msg;
         input_msg.type = CLIENT_FINISHED;
         input_msg.pid = pids[i]; 
@@ -393,7 +401,6 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         print_client_finished(i+1, child_status, 0);
     }
 
-    //delete timeout_value;
     delete bidder_is_open; 
     delete bidder_delays;
     delete bids;
