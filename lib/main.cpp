@@ -64,7 +64,7 @@ int main()
     int stdout_copy = dup(1);
 
     int child_status;
-    std::cout << "parent " << getpid() << std::endl; 
+    //std::cout << "parent " << getpid() << std::endl; 
     for (int i = 0; i < num_bidders; i++)
     {
         if (PIPE(fd_array[i]) < 0)
@@ -199,7 +199,7 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         // TODO: SEND MESSAGE BACK FROM SERVER
                         sv_message.message_id = SERVER_CONNECTION_ESTABLISHED;
                         // unique client id starts from 1 ??????
-                        sv_message.params.start_info.client_id = i + 1;
+                        sv_message.params.start_info.client_id = i;
                         sv_message.params.start_info.starting_bid = starting_bid;
                         sv_message.params.start_info.current_bid = highest_bid;
                         sv_message.params.start_info.minimum_increment = min_increment;
@@ -209,16 +209,16 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         input_msg.type = CLIENT_CONNECT;
                         input_msg.pid = pids[i]; 
                         input_msg.info.delay = cl_message.params.delay; // delay
-                        print_input(&input_msg, i+1);
+                        print_input(&input_msg, i);
 
                         write(fd_array[i][1], &sv_message, sizeof(sm));
 
                         // print server message
                         oi output_msg;
                         output_msg.type = SERVER_CONNECTION_ESTABLISHED;
-                        output_msg.pid = getpid();
-                        output_msg.info.start_info = {i+1, starting_bid, highest_bid, min_increment};
-                        print_output(&output_msg, i+1);
+                        output_msg.pid = pids[i]; 
+                        output_msg.info.start_info = {i, starting_bid, highest_bid, min_increment};
+                        print_output(&output_msg, i);
                     }
                     else if (cl_message.message_id == CLIENT_BID)
                     {
@@ -252,7 +252,7 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                             sv_message.params.result_info.result = BID_ACCEPTED;
                             // update highest bid
                             highest_bid = cl_bid;
-                            win_info.winner_id = i + 1;
+                            win_info.winner_id = i;
                             win_info.winning_bid = highest_bid;
                         }
                         sv_message.params.result_info.current_bid = highest_bid;
@@ -262,16 +262,16 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                         input_msg.type = CLIENT_BID;
                         input_msg.pid = pids[i]; 
                         input_msg.info.bid = cl_bid; // bid
-                        print_input(&input_msg, i+1);
+                        print_input(&input_msg, i);
 
                         write(fd_array[i][1], &sv_message, sizeof(sm));
 
                         // print server message
                         oi output_msg;
                         output_msg.type = SERVER_BID_RESULT;
-                        output_msg.pid = getpid();
+                        output_msg.pid = pids[i]; 
                         output_msg.info.result_info = sv_message.params.result_info;
-                        print_output(&output_msg, i+1);
+                        print_output(&output_msg, i);
                     }
                     // final message
                     else if (cl_message.message_id == CLIENT_FINISHED)
@@ -309,13 +309,19 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
 
     }
 
+     // out of loop, bidders are finished
+    print_server_finished(win_info.winner_id, win_info.winning_bid);
+
     oi output_msg;
     output_msg.type = SERVER_AUCTION_FINISHED;
-    output_msg.pid = getpid();
     output_msg.info.winner_info = win_info;
-    print_server_finished(win_info.winner_id, win_info.winning_bid);
+    for (int i = 0; i < num_bidders; i++)
+    {
+        output_msg.pid = pids[i];
+        print_output(&output_msg, i);
+    }
+
     int child_status;
-    // out of loop, bidders are finished
     for (int i = 0; i < num_bidders; i++)
     {
         //sm sm_temp;
@@ -328,7 +334,7 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         input_msg.type = CLIENT_FINISHED;
         input_msg.pid = pids[i]; 
         input_msg.info.status = child_status; // status
-        print_client_finished(i+1, child_status, bidder_status[i]);
+        print_client_finished(i, child_status, bidder_status[i]);
     }
 
     delete bidder_is_open; 
