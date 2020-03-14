@@ -29,19 +29,21 @@ int main()
     char* bidder_name[num_bidders];
     int num_args[num_bidders];
     //std::string* args[num_bidders];
-    char** args[num_bidders];
+    char*** args = new char**[num_bidders];
 
     for (int i = 0; i < num_bidders; i++)
     {
         // TODO: FIX THIS UGLY MESS!!!
         std::string bidder_name_temp;
         std::cin >> bidder_name_temp >> num_args[i];
-        bidder_name[i] = new char[bidder_name_temp.length() + 8*sizeof(char)];
-        strcpy(bidder_name[i], "../bin/");
-        strcat(bidder_name[i], bidder_name_temp.c_str());
+        bidder_name[i] = new char[bidder_name_temp.length()+1];// + 8*sizeof(char)];
+        //strcpy(bidder_name[i], "../bin/");
+        //strcat(bidder_name[i], bidder_name_temp.c_str());
+        strcpy(bidder_name[i], bidder_name_temp.c_str());
         args[i] = new char*[num_args[i] + 2];
-        args[i][0] = new char[bidder_name_temp.length() + 8*sizeof(char)];
-        args[i][0] = bidder_name[i];
+        args[i][0] = new char[bidder_name_temp.length()+1];// + 8*sizeof(char)];
+        //args[i][0] = bidder_name[i];
+        strcpy(args[i][0], bidder_name[i]);
         for (int j = 1; j < num_args[i] + 2; j++)
         {
             if (j == (num_args[i] + 1))
@@ -56,15 +58,10 @@ int main()
         }
     }
 
-    int fd[2];
     int fd_array[num_bidders][2];
     pid_t pids[num_bidders];
     pid_t pid;
 
-    int stdout_copy = dup(1);
-
-    int child_status;
-    //std::cout << "parent " << getpid() << std::endl; 
     for (int i = 0; i < num_bidders; i++)
     {
         if (PIPE(fd_array[i]) < 0)
@@ -79,13 +76,16 @@ int main()
         }
         if (pid == 0)
         {
-            pids[i] = getpid();
             close(fd_array[i][1]); // will use fd[0] to read and write
             dup2(fd_array[i][0], 0); // redirect stdin to read end
             dup2(fd_array[i][0], 1); // redirect stdout to write end (same as the read end)
             close(fd_array[i][0]);
             execvp(bidder_name[i], args[i]);
 
+        }
+        if (pid > 0)
+        {
+            pids[i] = pid;
         }
 
     }
@@ -103,12 +103,26 @@ int main()
 
         server(fd_array, starting_bid, min_increment, num_bidders, pids);
     }
+
+    for (int i = 0; i < num_bidders; i++)
+    {
+        close(fd_array[i][1]);
+    }
     
     for (int i = 0; i < num_bidders; i++)
     {
-        delete bidder_name[i];
+        delete[] bidder_name[i];
+    }
+
+    for (int i = 0; i < num_bidders; i++)
+    {
+        for (int j = 0; j < num_args[i]; j++)
+        {
+            delete[] args[i][j];
+        }
         delete[] args[i];
     }
+    delete[] args;
     return 0;
 
 }
@@ -148,7 +162,6 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
 
     while(open)
     {
-        //printf("open\n");
         FD_ZERO(&readset);
         for (int i = 0; i < num_bidders; i++)
         {
@@ -162,28 +175,22 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         // block until there is data to read
         if (timeout_value.tv_usec == 0)
         {
-            //printf("timeout_value.tv_usec == 0\n");
             if (select(max_fd, &readset, NULL, NULL, NULL) < 0)
             perror("select1");
         } 
         else
         {   
-            //printf("timeout_value.tv_usec not zero\n");
             if (select(max_fd, &readset, NULL, NULL, &timeout_value) < 0)
                 perror("select");
         }
-
-        //printf("selectden cixdim\n");
 
         // escaped select, there is data to read
         for (int i = 0; i < num_bidders; i++)
         {
             if (FD_ISSET(fd_array[i][1], &readset))
             {
-                //printf("FD_ISSET\n");
                 r = read(fd_array[i][1], &cl_message, sizeof(cm));
 
-                //printf("read from client %d: %d\n", i, cm_array[i].message_id);
                 if (r == 0) // EOF
                 {
                     bidder_is_open[i] = false;
@@ -222,33 +229,24 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                     }
                     else if (cl_message.message_id == CLIENT_BID)
                     {
-                        //printf("CLIENT_BID\n");
                         cl_bid = cl_message.params.bid;
-                        //printf(" cl_bid %d\n",  cl_bid);
-                        //printf("highest_bid: %d'\n", highest_bid);
-                        // TODO: CHECK BID, SEND APPROPRIATE MESSAGE, CHANGE MAX_BID IF NECESSARY
-                        //sm sm_temp;
                         sv_message.message_id = SERVER_BID_RESULT;
 
                         // check bid
                         if ( cl_bid < starting_bid)
                         {
-                            //printf(" cl_bid < starting_bid\n");
                             sv_message.params.result_info.result = BID_LOWER_THAN_STARTING_BID;
                         }
                         else if ( cl_bid < highest_bid)
                         {
-                            //printf(" cl_bid < highest_bid\n");
                             sv_message.params.result_info.result = BID_LOWER_THAN_CURRENT;
                         }
                         else if (cl_bid - highest_bid < min_increment)
                         {
-                            //printf("highest_bid -  cl_bid < min_increment\n");
                             sv_message.params.result_info.result = BID_INCREMENT_LOWER_THAN_MINIMUM;
                         }
                         else
                         {
-                            //printf("bid else\n");
                             sv_message.params.result_info.result = BID_ACCEPTED;
                             // update highest bid
                             highest_bid = cl_bid;
@@ -276,7 +274,6 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
                     // final message
                     else if (cl_message.message_id == CLIENT_FINISHED)
                     {
-                        //printf("CLIENT_FINISHED\n");
                         bidder_status[i] = cl_message.params.status;
                         // TODO: CHECK STATUS
                         bidder_is_open[i] = false;
@@ -334,7 +331,8 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         input_msg.type = CLIENT_FINISHED;
         input_msg.pid = pids[i]; 
         input_msg.info.status = child_status; // status
-        print_client_finished(i, child_status, bidder_status[i]);
+        int status_match = (child_status == bidder_status[i]);
+        print_client_finished(i, child_status, status_match);
     }
 
     delete bidder_is_open; 
