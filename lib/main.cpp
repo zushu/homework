@@ -26,15 +26,16 @@ int main()
     std::cin >> starting_bid >> min_increment >> num_bidders;
 
     //std::string bidder_name[num_bidders];
-    char* bidder_name[num_bidders];
-    int num_args[num_bidders];
+    char** bidder_name = new char*[num_bidders];
+    int* num_args = new int[num_bidders];
     //std::string* args[num_bidders];
     char*** args = new char**[num_bidders];
+    std::string arg_temp;
+    std::string bidder_name_temp;
 
     for (int i = 0; i < num_bidders; i++)
     {
         // TODO: FIX THIS UGLY MESS!!!
-        std::string bidder_name_temp;
         std::cin >> bidder_name_temp >> num_args[i];
         bidder_name[i] = new char[bidder_name_temp.length()+1];// + 8*sizeof(char)];
         //strcpy(bidder_name[i], "../bin/");
@@ -49,15 +50,24 @@ int main()
             if (j == (num_args[i] + 1))
             {
                 args[i][num_args[i] + 1] = NULL;
-                continue;
+                break;
+                //continue;
             }
-            std::string arg_temp;
             std::cin >> arg_temp;
-            args[i][j] = new char[arg_temp.length()];
+            args[i][j] = new char[arg_temp.length()+1];
             strcpy(args[i][j], arg_temp.c_str());
         }
     }
 
+
+/*    for (int i = 0; i < num_bidders; i++)
+    {
+        for (int j = 0; j < num_args[i] + 2; j++)
+        {
+            printf("args[%d][%d]: %s\n", i, j, args[i][j]);
+        }
+    }
+*/
     int fd_array[num_bidders][2];
     pid_t pids[num_bidders];
     pid_t pid;
@@ -113,6 +123,7 @@ int main()
     {
         delete[] bidder_name[i];
     }
+    delete[] bidder_name;
 
     for (int i = 0; i < num_bidders; i++)
     {
@@ -123,6 +134,7 @@ int main()
         delete[] args[i];
     }
     delete[] args;
+    delete[] num_args;
     return 0;
 
 }
@@ -147,6 +159,7 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
     // initialize bidder pipes as open
     for (int i = 0; i < num_bidders; i++)
     {
+        bidder_delays[i] = 0; // just for initialization
         bidder_is_open[i] = true;
     }
 
@@ -335,7 +348,7 @@ void server(int fd_array[][2], int starting_bid, int min_increment, int num_bidd
         print_client_finished(i, child_status, status_match);
     }
 
-    delete bidder_is_open; 
-    delete bidder_delays;
-    delete bidder_status;
+    delete[] bidder_is_open; 
+    delete[] bidder_delays;
+    delete[] bidder_status;
 }
