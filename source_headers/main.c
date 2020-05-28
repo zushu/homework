@@ -13,6 +13,9 @@
 //short timer1_counter = 0;
 short timer1_500ms_counter = 0; // up to 10
 short timer1_5s_counter = 0; // up to 10
+short portb_val = 0;
+char is_correct = 0;
+short current_ad_val = 0;
 
 void init_ports();
 void init_external();
@@ -20,10 +23,12 @@ void init_timer0();
 void init_timer1();
 void timer1_setup();
 void init_ad();
-int ad_value();
+short ad_value();
 void display_value(int value);
+//void display_value();
 void check_guess();
-void end_game();
+void reset();
+//void end_game();
 
 void __interrupt() isr();
 
@@ -53,6 +58,16 @@ void main(void) {
     
     return;
 }
+
+void reset()
+{
+    PORTC = 0;
+    PORTD = 0;
+    PORTE = 0;
+    PORTH = 0;
+    PORTJ = 0;
+    is_correct = 0;
+}
 // initialize external interrupts
 void init_external()
 {
@@ -70,18 +85,26 @@ void init_ports()
     PORTC = 0;
     PORTD = 0;
     PORTE = 0;
+    //PORTH = 0;
+    //PORTJ = 0;
     TRISC = 0;
     TRISD = 0;
     TRISE = 0;
+    TRISJ = 0;
+    TRISHbits.RH3 = 0;
     
     LATB = 0;
     LATC = 0;
     LATD = 0;
     LATE = 0;
+    LATH = 0;
+    LATJ = 0;
     //TRISB = 0xEF; // set RB4 as input, 0b11101111
     TRISB = 0b00010000;
     
     INTCON2 = 0; // INTEDG0 = 0: interrupt on falling edge
+    INTCONbits.RBIF = 0;
+    INTCONbits.RBIE = 1;
 }
 
 void init_timer0()
@@ -157,36 +180,68 @@ void timer1_setup()
         timer1_500ms_counter = 0;
         timer1_5s_counter++;
     }  
+    
+    if (timer1_500ms_counter == 0 && is_correct)
+    {
+        timer1_5s_counter = 10;
+    }
     if (timer1_5s_counter == 10)
     {
+        //if (is_correct == 0)
+        //{
+        game_over();
+        //}
         // TODO: 7-segment blinking 
         // show the special number
+        PORTC = 0;
+        PORTD = 0;
+        PORTE = 0;
         LATC = 0;
         LATD = 0;
         LATE = 0;
-        latcde_update_complete();
+        //latcde_update_complete();
         display_value(special_number());
+        //display_value();
+        latjh_update_complete();
     }
     if (timer1_5s_counter == 11)
     {
         // dim out
-        display_value(10);
+        //display_value(15);
+        PORTHbits.RH3 = 1;
+        LATHbits.LATH3 = 1;
+        PORTJ = 0; // for testing(8) TODO: not correct
+        LATJ  = 0;
+        //display_value();
+        latjh_update_complete();
         
     }
     if (timer1_5s_counter == 12)
     {
         // show the special number
         display_value(special_number());
+        //display_value();
+        latjh_update_complete();
     }
     if (timer1_5s_counter == 13)
     {
         // dim out
-        display_value(10);
-    }
-    if (timer1_5s_counter == 14)
-    {
+        //display_value(15);
+        PORTHbits.RH3 = 1;
+        LATHbits.LATH3 = 1;
+        PORTJ = 0; // for testing(8) TODO: not correct
+        LATJ  = 0;
+        //display_value();
+        latjh_update_complete();
         timer1_5s_counter = 0;
+        restart();
+        reset();
     }
+    /*if (timer1_5s_counter == 14)
+    {
+        //game_over();
+        timer1_5s_counter = 0;
+    }*/
     
 }
 
@@ -220,7 +275,7 @@ void init_ad()
     ADCON0bits.ADON = 1;
 }
 
-int ad_value()
+short ad_value()
 {
     if (ADRES >= 0 && ADRES <= 102)
     {
@@ -265,63 +320,105 @@ int ad_value()
 }
 
 void display_value(int value)
+//void display_value()
 {
-    PORTH = 0;
-    PORTHbits.RH0 = 1;
+    current_ad_val = value;
+    //LATH  = 0b00001000;
+    //PORTH = 0b00001000; // rh3
+    PORTHbits.RH3 = 1;
+    LATHbits.LATH3 = 1;
     
-    switch(value)
+    if (current_ad_val == 0)
     {
-        case 0:
-            PORTJ = 0b00111111;
-            break;        
-        case 1:
-            PORTJ = 0b00000110;
-            break;
-        case 2:
-            PORTJ = 0b01011011;
-            break;
-        case 3:
-            PORTJ = 0b01001111;
-            break;
-        case 4:
-            PORTJ = 0b01100110;
-            break;
-        case 5:
-            PORTJ = 0b01101101;
-            break;
-        case 6:
-            PORTJ = 0b01111101;
-            break;
-        case 7:
-            PORTJ = 0b00000111;
-            break;
-        case 8:
-            PORTJ = 0b01111111;
-            break;
-        case 9:
-            PORTJ = 0b01101111;
-            break;
-        default:
-            PORTJ = 0; // (8) TODO: not correct
-                      
+        PORTJ = 0b00111111;
+        LATJ  = 0b00111111;
+        //break;   
     }
-    
-    latjh_update_complete();
+    else if (current_ad_val == 1)
+    {
+            PORTJ = 0b00000110;
+            LATJ  = 0b00000110;
+    }
+            //break;
+    else if (current_ad_val == 2)
+    {
+            PORTJ = 0b01011011;
+            LATJ  = 0b01011011;
+    }
+            //break;
+    else if (current_ad_val == 3)
+    {
+            PORTJ = 0b01001111;
+            LATJ  = 0b01001111;
+    }
+            //break;
+    else if (current_ad_val == 4)
+    {
+            PORTJ = 0b01100110;
+            LATJ  = 0b01100110;
+    }
+            
+            //break;
+    else if (current_ad_val == 5)
+    {
+            PORTJ = 0b01101101;
+            LATJ  = 0b01101101;
+    }
+     //       break;
+    else if (current_ad_val == 6)
+    {
+            PORTJ = 0b01111101;
+            LATJ  = 0b01111101;
+    }
+     //       break;
+    else if (current_ad_val == 7)
+    {
+            PORTJ = 0b00000111;
+            LATJ  = 0b00000111;
+    }
+            //break;
+    else if (current_ad_val == 8)
+    {
+            PORTJ = 0b01111111;
+            LATJ  = 0b01111111;
+    }
+            
+            //break;
+            
+    else if (current_ad_val == 9)
+    {
+            PORTJ = 0b01101111;
+            LATJ  = 0b01101111;
+    }
+            //break;
+    else
+    {
+            PORTJ = 0x00; // for testing(8) TODO: not correct
+            LATJ  = 0x00;
+    }
+                        
+    //latjh_update_complete();
 }
 
 void check_guess()
 {
-    if (adc_value < special_number())
+    if (ad_value() < special_number())
     {
         // up arrow
+        PORTC = 0b00000010;
+        PORTD = 0b00001111;
+        PORTE = 0b00000010;
         LATC = 0b00000010;
         LATD = 0b00001111;
         LATE = 0b00000010;
         latcde_update_complete();
     }
-    else if (adc_value > special_number())
+    else if (ad_value() > special_number())
     {
         // down_arrow
+        PORTC = 0b00000100;
+        PORTD = 0b00001111;
+        PORTE = 0b00000100;
         LATC = 0b00000100;
         LATD = 0b00001111;
         LATE = 0b00000100;
@@ -331,7 +428,12 @@ void check_guess()
     {
         // end game
         //end_game();
-        timer1_5s_counter = 9; // TODO: SHITTY SOLUTION, FIX
+        correct_guess();
+        //current_ad_val = special_number();
+        //display_value(ad_value()); 
+        //timer1_500ms_counter = 0; // restart 500ms counter
+        is_correct = 1;
+        //timer1_5s_counter = 10; // TODO: SHITTY SOLUTION, FIX
         
     }
 }
@@ -340,9 +442,15 @@ void __interrupt() isr()
 {
     if (INTCONbits.RBIF == 1)
     {       
+        portb_val = PORTB;
         // do something, then
-        rb4_handled();
         INTCONbits.RBIF = 0; // reset interrupt
+        portb_val = PORTB;
+        rb4_handled();
+        check_guess();
+        //latcde_update_complete();
+        
+        //INTCONbits.RBIF = 0; // reset interrupt
         
     }
     if (INTCONbits.TMR0IF == 1) // timer0 overflows
@@ -363,9 +471,12 @@ void __interrupt() isr()
     {
         PIR1bits.ADIF = 0;
         // do something else
-        adc_value = ad_value();
+        adc_value = ADRES;
         adc_complete();
-        display_value(adc_value);       
+        display_value(ad_value());
+        //current_ad_val = ad_value();
+        //display_value();
+        latjh_update_complete();
     }
 }
 
