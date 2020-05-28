@@ -10,13 +10,15 @@
 #include <xc.h>
 #include "breakpoints.h"
 
-//short timer1_counter = 0;
+
 short timer1_500ms_counter = 0; // up to 10
 short timer1_5s_counter = 0; // up to 10
-short portb_val = 0;
+short portb_val = 0; // // to circumvent the mismatch condition in interrupt
 char is_correct = 0;
-short current_ad_val = 0;
+//short current_ad_val = 0;
+char counter_update_flag = 0;
 
+// helper function declarations
 void init_ports();
 void init_external();
 void init_timer0();
@@ -25,28 +27,14 @@ void timer1_setup();
 void init_ad();
 short ad_value();
 void display_value(int value);
-//void display_value();
 void check_guess();
 void reset();
-//void end_game();
 
 void __interrupt() isr();
 
 
-void main(void) {
-    /*init_complete();
-    adc_value =5;
-    adc_complete();
-    rb4_handled();
-    latjh_update_complete();
-    latcde_update_complete();
-    correct_guess();
-    hs_passed();
-    game_over();
-    restart();
-    special_number();*/
-    //ADIE = 1;  // A/D interrupts will be used
-    //PEIE = 1;  // all peripheral interrupts are enabled
+void main(void) 
+{
     init_ports();
     init_external();
     init_timer0();
@@ -59,6 +47,7 @@ void main(void) {
     return;
 }
 
+// reset IO ports and the game state
 void reset()
 {
     PORTC = 0;
@@ -78,7 +67,7 @@ void init_external()
       
 }
 
-// set RB4 as push-button input
+// initialize IO ports
 void init_ports()
 {
     PORTB = 0;
@@ -99,7 +88,6 @@ void init_ports()
     LATE = 0;
     LATH = 0;
     LATJ = 0;
-    //TRISB = 0xEF; // set RB4 as input, 0b11101111
     TRISB = 0b00010000;
     
     INTCON2 = 0; // INTEDG0 = 0: interrupt on falling edge
@@ -137,62 +125,39 @@ void init_timer1()
     T1CONbits.TMR1CS = 0; // internal clock
     T1CONbits.TMR1ON = 1; // enable timer
     PIE1bits.TMR1IE = 1; // enable timer1 interrupt
-    // should start at 0d24080 or 0x5E10
-    //TMR1H = 0x5E;
-    //TMR1L = 0x10;
-    // TODO: should be reset to 0 in the subsequent interrupts, 
-    //should be called 96 times in total to make up to 5 seconds
-    // should start at 0d3036 or 0xbdc
+    // should start at 0d3036 or 0x0bdc
     TMR1H = 0x0b;
     TMR1L = 0xdc;
     
 }
 
-// to be called in isr when timer1 overflows
-/*void timer1_setup()
-{
-    timer1_counter++;
-    //PIR1bits.TMR1IF = 0;
-    // 5 second
-    if (timer1_counter == 96)
-    {
-        TMR1H = 0x5E;
-        TMR1L = 0x10;  
-        timer1_counter = 0;
-    }
-    else
-    {
-        TMR1H = 0x00;
-        TMR1L = 0x00;
-    }
-}*/
-
-// to be called at interrupt
+// to be called at timer1 interrupt
 void timer1_setup()
 {   
     TMR1H = 0x0b;
     TMR1L = 0xdc;
-    timer1_500ms_counter++;
+    timer1_500ms_counter++; // 500ms is complete when it is 10
     if (timer1_500ms_counter == 10)
     {
         // do something
         hs_passed();
         timer1_500ms_counter = 0;
         timer1_5s_counter++;
+        // overwrite timer1_5s_counter to 10 at correct guess
+        // counter_update_flag ensures it is done only once
+        // if timer1_5s_counter >= 10, do nothing
+        if (is_correct && counter_update_flag && timer1_5s_counter < 10) 
+        {
+            timer1_5s_counter = 10;
+            counter_update_flag = 0;
+        }
     }  
-    
-    if (timer1_500ms_counter == 0 && is_correct)
-    {
-        timer1_5s_counter = 10;
-    }
+    // first half-second after the game is over
     if (timer1_5s_counter == 10)
     {
-        //if (is_correct == 0)
-        //{
+        // game over is called regardless of the guess result
         game_over();
-        //}
-        // TODO: 7-segment blinking 
-        // show the special number
+        // delete arrow
         PORTC = 0;
         PORTD = 0;
         PORTE = 0;
@@ -200,51 +165,44 @@ void timer1_setup()
         LATD = 0;
         LATE = 0;
         //latcde_update_complete();
+        // display desired number
         display_value(special_number());
-        //display_value();
         latjh_update_complete();
     }
+    // second half-second
     if (timer1_5s_counter == 11)
     {
         // dim out
-        //display_value(15);
         PORTHbits.RH3 = 1;
         LATHbits.LATH3 = 1;
-        PORTJ = 0; // for testing(8) TODO: not correct
+        PORTJ = 0;
         LATJ  = 0;
-        //display_value();
         latjh_update_complete();
         
     }
+    // third half-second
     if (timer1_5s_counter == 12)
     {
         // show the special number
         display_value(special_number());
-        //display_value();
         latjh_update_complete();
     }
+    // fourth half-second
     if (timer1_5s_counter == 13)
     {
         // dim out
-        //display_value(15);
         PORTHbits.RH3 = 1;
         LATHbits.LATH3 = 1;
-        PORTJ = 0; // for testing(8) TODO: not correct
+        PORTJ = 0; 
         LATJ  = 0;
-        //display_value();
-        latjh_update_complete();
-        timer1_5s_counter = 0;
-        restart();
-        reset();
-    }
-    /*if (timer1_5s_counter == 14)
-    {
-        //game_over();
-        timer1_5s_counter = 0;
-    }*/
-    
+        latjh_update_complete(); 
+        timer1_5s_counter = 0; // restart timer1
+        restart(); // label function
+        reset(); // resets IO and 7-segment display ports
+    }   
 }
 
+// ad conversion initialization settings
 void init_ad()
 {
     INTCONbits.PEIE = 1; // enable peripheral interrupts
@@ -267,14 +225,15 @@ void init_ad()
     ADCON2bits.ADFM = 1; // right justified
     ADCON2bits.ACQT2 = 0; // TODO: check
     ADCON2bits.ACQT1 = 0;
-    ADCON2bits.ACQT0 = 1; // 2*T_AD
+    ADCON2bits.ACQT0 = 1; // 2*T_AD // not sure
     ADCON2bits.ADCS2 = 1;
     ADCON2bits.ADCS1 = 0;
-    ADCON2bits.ADCS0 = 0; //F_OSC / 4
+    ADCON2bits.ADCS0 = 0; //F_OSC / 4 // not sure
     
     ADCON0bits.ADON = 1;
 }
 
+// fit the value read at adc conversion to [0,9] interval
 short ad_value()
 {
     if (ADRES >= 0 && ADRES <= 102)
@@ -319,87 +278,73 @@ short ad_value()
     }
 }
 
+// display given value in the 7-segment display
 void display_value(int value)
-//void display_value()
 {
-    current_ad_val = value;
-    //LATH  = 0b00001000;
-    //PORTH = 0b00001000; // rh3
     PORTHbits.RH3 = 1;
     LATHbits.LATH3 = 1;
     
-    if (current_ad_val == 0)
+    // used to be in switch-case :( 
+    if (value == 0)
     {
         PORTJ = 0b00111111;
-        LATJ  = 0b00111111;
-        //break;   
+        LATJ  = 0b00111111;   
     }
-    else if (current_ad_val == 1)
+    else if (value == 1)
     {
             PORTJ = 0b00000110;
             LATJ  = 0b00000110;
     }
-            //break;
-    else if (current_ad_val == 2)
+    else if (value == 2)
     {
             PORTJ = 0b01011011;
             LATJ  = 0b01011011;
     }
-            //break;
-    else if (current_ad_val == 3)
+    else if (value == 3)
     {
             PORTJ = 0b01001111;
             LATJ  = 0b01001111;
     }
-            //break;
-    else if (current_ad_val == 4)
+    else if (value == 4)
     {
             PORTJ = 0b01100110;
             LATJ  = 0b01100110;
     }
             
-            //break;
-    else if (current_ad_val == 5)
+    else if (value == 5)
     {
             PORTJ = 0b01101101;
             LATJ  = 0b01101101;
     }
-     //       break;
-    else if (current_ad_val == 6)
+    else if (value == 6)
     {
             PORTJ = 0b01111101;
             LATJ  = 0b01111101;
     }
-     //       break;
-    else if (current_ad_val == 7)
+    else if (value == 7)
     {
             PORTJ = 0b00000111;
             LATJ  = 0b00000111;
     }
-            //break;
-    else if (current_ad_val == 8)
+    else if (value == 8)
     {
             PORTJ = 0b01111111;
             LATJ  = 0b01111111;
     }
-            
-            //break;
-            
-    else if (current_ad_val == 9)
+    else if (value == 9)
     {
             PORTJ = 0b01101111;
             LATJ  = 0b01101111;
     }
-            //break;
     else
     {
-            PORTJ = 0x00; // for testing(8) TODO: not correct
+            PORTJ = 0x00; // turn off
             LATJ  = 0x00;
-    }
-                        
-    //latjh_update_complete();
+    }                      
 }
 
+// compare the submitted value with the special number
+// show hint with arrows
 void check_guess()
 {
     if (ad_value() < special_number())
@@ -426,39 +371,28 @@ void check_guess()
     }
     else // equal
     {
-        // end game
-        //end_game();
         correct_guess();
-        //current_ad_val = special_number();
-        //display_value(ad_value()); 
-        //timer1_500ms_counter = 0; // restart 500ms counter
-        is_correct = 1;
-        //timer1_5s_counter = 10; // TODO: SHITTY SOLUTION, FIX
+        is_correct = 1; // correct guess flag is set
+        counter_update_flag = 1; // timer1_5s_counter value will be changed to 10 regardless of the current value
         
     }
 }
 
 void __interrupt() isr()
 {
-    if (INTCONbits.RBIF == 1)
+    if (INTCONbits.RBIF == 1) // rb4 pressed
     {       
         portb_val = PORTB;
-        // do something, then
         INTCONbits.RBIF = 0; // reset interrupt
-        portb_val = PORTB;
+        portb_val = PORTB; // to circumvent the mismatch condition
         rb4_handled();
-        check_guess();
-        //latcde_update_complete();
-        
-        //INTCONbits.RBIF = 0; // reset interrupt
-        
+        check_guess();      
     }
     if (INTCONbits.TMR0IF == 1) // timer0 overflows
     {
         INTCONbits.TMR0IF = 0;
         TMR0H = 0x0B;
         TMR0L = 0xDC;
-        // do something else
         ADCON0bits.GO = 1; // start ad conversion
     }
     if (PIR1bits.TMR1IF == 1) // timer1 overflows
@@ -470,12 +404,9 @@ void __interrupt() isr()
     if (PIR1bits.ADIF == 1) // ad conversion over
     {
         PIR1bits.ADIF = 0;
-        // do something else
         adc_value = ADRES;
         adc_complete();
         display_value(ad_value());
-        //current_ad_val = ad_value();
-        //display_value();
         latjh_update_complete();
     }
 }
