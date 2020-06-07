@@ -247,7 +247,7 @@ int main(int arg_count, char **arg_vector) {
     printf("Error initializing FS\n");
     exit(1);
   }
-  fs_stats(current_sb);
+/*  fs_stats(current_sb);
   char *line;
   char **argv;
   int argc;
@@ -262,7 +262,7 @@ int main(int arg_count, char **arg_vector) {
     }
     free(line);
     free(argv);
-  }
+  }*/
 
   return 0;
 }
