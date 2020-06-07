@@ -18,9 +18,11 @@ char fs_name[] = "ext2";
 
 /* Implement functions in s_op, i_op, f_op here */
 struct super_block* my_get_superblock(struct file_system_type *fs);
+int my_statfs(struct super_block *sb, struct kstatfs *ksfs);
 
 struct file_system_type *initialize_ext2(const char *image_path) {
   /* fill super_operations s_op */
+  s_op.statfs = my_statfs;
   /* fill inode_operations i_op */
   /* fill file_operations f_op */
   /* for example:
@@ -152,10 +154,10 @@ struct super_block* my_get_superblock(struct file_system_type *fs)
 
 }
 
-/*int my_statfs(struct super_block *sb, struct kstatfs *ksfs)
+int my_statfs(struct super_block *sb, struct kstatfs *ksfs)
 {
   //  TODO: INCOMPLETE
   ksfs->name = sb->s_type->name;
   ksfs->f_magic = sb->s_magic;
   return 0;
-}*/
+}
