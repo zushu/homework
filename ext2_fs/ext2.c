@@ -157,7 +157,24 @@ struct super_block* my_get_superblock(struct file_system_type *fs)
 int my_statfs(struct super_block *sb, struct kstatfs *ksfs)
 {
   //  TODO: INCOMPLETE
-  ksfs->name = sb->s_type->name;
+  int name_len = strlen(sb->s_type->name);
+  ksfs->f_namelen = name_len;
+  ksfs->name = malloc(sizeof(char)*name_len);
+  for (int i = 0; i < name_len; i++)
+  {
+    ksfs->name[i] = sb->s_type->name[i];
+  }
+  ksfs->f_bsize = sb->s_blocksize;
+  ksfs->f_blocks = sb->s_blocks_count;
+  ksfs->f_bfree = sb->s_free_blocks_count;
+  ksfs->f_inodes = sb->s_inodes_count;
+  ksfs->f_finodes = sb->s_free_inodes_count;
+  ksfs->f_inode_size = sb->s_inode_size;
+  ksfs->f_minor_rev_level = sb->s_minor_rev_level;
+  ksfs->f_rev_level = sb->s_rev_level;
+
+  printf("ksfs name: %s", ksfs->name);
   ksfs->f_magic = sb->s_magic;
+
   return 0;
 }
