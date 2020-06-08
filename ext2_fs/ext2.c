@@ -19,10 +19,12 @@ char fs_name[] = "ext2";
 /* Implement functions in s_op, i_op, f_op here */
 struct super_block* my_get_superblock(struct file_system_type *fs);
 int my_statfs(struct super_block *sb, struct kstatfs *ksfs);
+void my_read_inode(struct inode* i_node);
 
 struct file_system_type *initialize_ext2(const char *image_path) {
   /* fill super_operations s_op */
   s_op.statfs = my_statfs;
+  s_op.read_inode = my_read_inode;
   /* fill inode_operations i_op */
   /* fill file_operations f_op */
   /* for example:
@@ -177,4 +179,44 @@ int my_statfs(struct super_block *sb, struct kstatfs *ksfs)
   ksfs->f_magic = sb->s_magic;
 
   return 0;
+}
+
+
+void my_read_inode(struct inode* i_node)
+{
+  // the following field will be used
+  // i_node->i_ino
+  struct ext2_group_desc* ext2_gd = malloc(sizeof(struct ext2_group_desc));
+  // READ GROUP DESCRIPTORS
+  lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize, SEEK_SET);
+  read(current_fs->file_descriptor, ext2_gd, sizeof(struct ext2_group_desc));
+  // READ INODE TABLE -> go to inode of root (2nd inode in the table)
+  //int root_inode_number = 2;
+  lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (ext2_gd->bg_inode_table - 1) + (i_node->i_ino - 1)*sizeof(struct ext2_inode), SEEK_SET);
+
+  // READ INODE FROM DISK
+  struct ext2_inode* inode_ext2 = malloc(sizeof(struct ext2_inode));
+  read(current_fs->file_descriptor, inode_ext2, sizeof(struct ext2_inode));
+  i_node->i_mode = inode_ext2->i_mode;
+  i_node->i_nlink = inode_ext2->i_links_count;
+  i_node->i_uid = inode_ext2->i_uid;
+  i_node->i_gid = inode_ext2->i_gid;
+  i_node->i_size = inode_ext2->i_size;
+  i_node->i_atime = inode_ext2->i_atime;
+  i_node->i_mtime = inode_ext2->i_mtime;
+  i_node->i_ctime = inode_ext2->i_ctime;
+  i_node->i_blocks = inode_ext2->i_blocks;
+  int num_blocks = 	i_node->i_blocks / (current_sb->s_blocksize/512);
+  for(int i = 0; i < num_blocks; i++)
+  {
+    i_node->i_block[i] = inode_ext2->i_block[i];
+  }
+  i_node->i_op = &i_op;
+  i_node->f_op = &f_op;
+  i_node->i_sb = current_sb;
+  // i_state skipped
+  i_node->i_flags = inode_ext2->i_flags;
+
+  free(ext2_gd);
+  free(inode_ext2);
 }
