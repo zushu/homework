@@ -101,6 +101,7 @@ struct super_block* my_get_superblock(struct file_system_type *fs)
   root_inode->i_uid = root_inode_ext2->i_uid;
   root_inode->i_gid = root_inode_ext2->i_gid;
   root_inode->i_size = root_inode_ext2->i_size;
+printf("root_inode->i_size: %d\n", root_inode->i_size);
   root_inode->i_atime = root_inode_ext2->i_atime;
   root_inode->i_mtime = root_inode_ext2->i_mtime;
   root_inode->i_ctime = root_inode_ext2->i_ctime;
@@ -220,3 +221,37 @@ void my_read_inode(struct inode* i_node)
   free(ext2_gd);
   free(inode_ext2);
 }
+
+/******************************
+ * INODE OPERATIONS FUNCTIONS *
+ ******************************/
+
+/*struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
+{
+  // only d_entry->d_name field is set
+  //unsigned char* block = malloc(current_sb->s_blocksize);
+
+  //struct ext2_dir_entry* dentry_ext2;
+
+  // first 12 blocks of inode
+  for (int i = 0; i < 12; i++)
+  {
+      unsigned int size = 0; // to keep track of the bytes read
+      // read each d_entry in each block of inode : inode->i_block[i]
+      while(size < current_sb->s_blocksize)
+      {
+        unsigned char block[current_sb->s_blocksize];
+        struct ext2_dir_entry* dentry_ext2;
+        char* dir_entry_name;
+        // read the first block of root inode
+        lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (i_node->i_block[i] - 1) + size, SEEK_SET); // TODO: CHECK 
+        read(current_fs->file_descriptor, block , current_sb->s_blocksize);
+        dentry_ext2 = (struct ext2_dir_entry*) block;
+         
+        // follow from http://cs.smith.edu/~nhowe/262/oldlabs/ext2.html#direntry
+        //dir_entry_name
+      }
+  }
+
+ 
+}*/
