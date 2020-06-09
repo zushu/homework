@@ -18,6 +18,7 @@ char fs_name[] = "ext2";
 
 // helper
 void seek_inode(int inode_number);
+struct ext2_dir_entry* find_ext2_dentry_with_name(struct inode * i_node, char* name);
 /* Implement functions in s_op, i_op, f_op here */
 // s_op functions
 struct super_block* my_get_superblock(struct file_system_type *fs);
@@ -190,18 +191,8 @@ int my_statfs(struct super_block *sb, struct kstatfs *ksfs)
 
 void my_read_inode(struct inode* i_node)
 {
-  // the following field will be used
-  // i_node->i_ino
   seek_inode(i_node->i_ino);
-  /*
-  struct ext2_group_desc* ext2_gd = malloc(sizeof(struct ext2_group_desc));
-  // READ GROUP DESCRIPTORS
-  lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize, SEEK_SET);
-  read(current_fs->file_descriptor, ext2_gd, sizeof(struct ext2_group_desc));
-  // READ INODE TABLE -> go to inode of root (2nd inode in the table)
-  lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (ext2_gd->bg_inode_table - 1) + (i_node->i_ino - 1)*sizeof(struct ext2_inode), SEEK_SET);
-*/
-  // READ INODE FROM DISK
+    // READ INODE FROM DISK
   struct ext2_inode* inode_ext2 = malloc(sizeof(struct ext2_inode));
   read(current_fs->file_descriptor, inode_ext2, sizeof(struct ext2_inode));
   i_node->i_mode = inode_ext2->i_mode;
@@ -226,7 +217,6 @@ void my_read_inode(struct inode* i_node)
 
   printf("i_node->i_blocks: %ld\n", i_node->i_blocks);
   printf("i_node->i_size: %lld\n", i_node->i_size);
-  //free(ext2_gd);
   free(inode_ext2);
 }
 
@@ -236,12 +226,22 @@ void my_read_inode(struct inode* i_node)
 
 struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
 {
-  // only d_entry->d_name field is set 
+  struct ext2_dir_entry* dentry_ext2 = find_ext2_dentry_with_name(i_node, d_entry->d_name);
+  if (dentry_ext2)
+  {
+    printf("found\n");
+    printf("dentry_ext2->name: %s\n", dentry_ext2->name);
+  }
+  return d_entry;
+}
+
+struct ext2_dir_entry* find_ext2_dentry_with_name(struct inode * i_node, char* name)
+{
   short flag_is_found = 0;
   // first 12 blocks of inode
   for (int i = 0; i < 12; i++)
   {
-      unsigned int size = 0; // to keep track of the bytes read
+    unsigned int size = 0; // to keep track of the bytes read
       unsigned char block[current_sb->s_blocksize];
       // read the i-th block of inode
       lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (i_node->i_block[i] - 1) + size, SEEK_SET); // TODO: CHECK 
@@ -250,42 +250,25 @@ struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
       struct ext2_dir_entry* dentry_ext2 = (struct ext2_dir_entry*) block;
       // read each d_entry in each block of inode : inode->i_block[i]
       while (size < i_node->i_size)
-      //while(size < current_sb->s_blocksize)
-      {
-        //char file_name[EXT2_NAME_LEN+1];       
+      {       
         char* dir_entry_name = malloc((dentry_ext2->name_len+1)*sizeof(char));
         memcpy(dir_entry_name, dentry_ext2->name, dentry_ext2->name_len);
         // create null terminated string
         dir_entry_name[dentry_ext2->name_len] = '\0';
         
         // if the name read from disk is the same as the name we are looking for
-        if (strcmp(d_entry->d_name, dir_entry_name) == 0)
+        if (strcmp(name, dir_entry_name) == 0)
         {
-          printf("found\n");
-          //printf("")
-          seek_inode(dentry_ext2->inode);
-          struct ext2_inode* inode_ext2 = malloc(sizeof(struct ext2_inode));
-          read(current_fs->file_descriptor, inode_ext2, sizeof(struct ext2_inode));
-          // d_entry->d_flags = fill with  inode-> i_flags of inode of the d_entry
-          // d_parent should be created, its inode is the inode given as function argument
-          // d_inode should be created
-          // go to inode by using the inode number in dentry_ext2 and create new inode for d_inode
-          //d_entry->d_inode = i_node;
-          // TODO d_entry->d_parent fill
-          d_entry->d_sb = current_sb;
           flag_is_found = 1;
-          break;
+          return dentry_ext2;
+          //break;
         }
         dentry_ext2 = (void*) dentry_ext2 + dentry_ext2->rec_len;      // move to the next ext2 entry
         size += dentry_ext2->rec_len;
       }
-      if (flag_is_found)
-        {
-          break;
-        }
   }
+  return NULL;
 }
-
 // helper
 void seek_inode(int inode_number)
 {
