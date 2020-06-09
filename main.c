@@ -242,14 +242,15 @@ void test()
 {
   // tune2fs -l image.img | grep inode
   //int inode_num = 11;
-  int root_inode_num = 2;
+  int root_inode_num = 11;
   struct inode* new_inode = malloc(sizeof(struct inode));
   new_inode->i_ino = root_inode_num;
   current_sb->s_op->read_inode(new_inode);
   struct dentry* new_dentry = malloc(sizeof(struct dentry));
   new_dentry->d_name = malloc(11*sizeof(char));
-  new_dentry->d_name = "lost+found";
+  new_dentry->d_name = ".";
   new_inode->i_op->lookup(new_inode, new_dentry);
+  printf("parent name: %s\n", new_dentry->d_parent->d_name);
   free(new_inode);
   free(new_dentry);
 }

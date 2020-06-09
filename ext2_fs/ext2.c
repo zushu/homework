@@ -226,13 +226,59 @@ void my_read_inode(struct inode* i_node)
 
 struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
 {
+  printf("lookup\n");
+  char parent_name[] = "..";
   struct ext2_dir_entry* dentry_ext2 = find_ext2_dentry_with_name(i_node, d_entry->d_name);
   if (dentry_ext2)
   {
     printf("found\n");
     printf("dentry_ext2->name: %s\n", dentry_ext2->name);
+    // root dentry
+    if (dentry_ext2->inode == EXT2_ROOT_INO)
+    {
+        printf("in root\n");
+        d_entry->d_parent = current_sb->s_root;
+        struct inode* inode_of_dentry = malloc(sizeof(struct inode));
+        inode_of_dentry->i_ino = dentry_ext2->inode;
+        current_sb->s_op->read_inode(inode_of_dentry);
+
+        d_entry->d_inode = inode_of_dentry;
+        d_entry->d_flags = inode_of_dentry->i_flags;
+        d_entry->d_sb = current_sb;
+        return d_entry;
+    }
+    
+    // get inode of dentry_ext2
+    struct inode* inode_of_dentry = malloc(sizeof(struct inode));
+    inode_of_dentry->i_ino = dentry_ext2->inode;
+    current_sb->s_op->read_inode(inode_of_dentry);
+
+
+    // find parent of dentry_ext2
+    struct dentry* parent_dentry = malloc(sizeof(struct dentry));
+    struct ext2_dir_entry* parent_dentry_ext2 = find_ext2_dentry_with_name(inode_of_dentry, parent_name);
+    // set name field
+    parent_dentry->d_name = malloc(sizeof(char)*(parent_dentry_ext2->name_len + 1));
+    parent_dentry->d_name = parent_dentry_ext2->name;
+    parent_dentry->d_name[parent_dentry_ext2->name_len] = '\0';
+    
+
+    // get inode of parent_dentry_ext2
+    struct inode* inode_of_parent_dentry = malloc(sizeof(struct inode));
+    inode_of_parent_dentry->i_ino = parent_dentry_ext2->inode;
+    current_sb->s_op->read_inode(inode_of_parent_dentry);
+
+    parent_dentry->d_flags = inode_of_parent_dentry->i_flags;
+    parent_dentry->d_inode = inode_of_parent_dentry;
+    parent_dentry->d_sb = current_sb;
+
+    d_entry->d_parent = parent_dentry;
+    d_entry->d_inode = inode_of_dentry;
+    d_entry->d_flags = inode_of_dentry->i_flags;
+    d_entry->d_sb = current_sb;  
+    return my_lookup(inode_of_parent_dentry, d_entry->d_parent);
   }
-  return d_entry;
+  return NULL;
 }
 
 struct ext2_dir_entry* find_ext2_dentry_with_name(struct inode * i_node, char* name)
