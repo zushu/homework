@@ -150,6 +150,7 @@ printf("root_inode->i_size: %lld\n", root_inode->i_size);
   {
     result_sb->s_root->d_name[i] = root_dentry_ext2->name[i];
   }
+  result_sb->s_root->d_name = "/";
   result_sb->s_root->d_sb = result_sb;
 
 
@@ -215,6 +216,7 @@ void my_read_inode(struct inode* i_node)
   // i_state skipped
   i_node->i_flags = inode_ext2->i_flags;
 
+  printf("i_node->i_ino: %ld\n", i_node->i_ino);
   printf("i_node->i_blocks: %ld\n", i_node->i_blocks);
   printf("i_node->i_size: %lld\n", i_node->i_size);
   free(inode_ext2);
@@ -226,6 +228,7 @@ void my_read_inode(struct inode* i_node)
 
 struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
 {
+  // TODO: use recursion in a different function, call in my_lookup
   printf("lookup\n");
   char parent_name[] = "..";
   struct ext2_dir_entry* dentry_ext2 = find_ext2_dentry_with_name(i_node, d_entry->d_name);
@@ -234,7 +237,7 @@ struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
     printf("found\n");
     printf("dentry_ext2->name: %s\n", dentry_ext2->name);
     // root dentry
-    if (dentry_ext2->inode == EXT2_ROOT_INO)
+    if (i_node->i_ino == EXT2_ROOT_INO)
     {
         printf("in root\n");
         d_entry->d_parent = current_sb->s_root;
@@ -263,6 +266,9 @@ struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
     parent_dentry->d_name[parent_dentry_ext2->name_len] = '\0';
     
 
+   
+    printf("parent_dentry name: %s\n", parent_dentry->d_name);
+
     // get inode of parent_dentry_ext2
     struct inode* inode_of_parent_dentry = malloc(sizeof(struct inode));
     inode_of_parent_dentry->i_ino = parent_dentry_ext2->inode;
@@ -278,6 +284,8 @@ struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
     d_entry->d_sb = current_sb;  
     return my_lookup(inode_of_parent_dentry, d_entry->d_parent);
   }
+  //return d_entry;
+  printf("will return null\n");
   return NULL;
 }
 
