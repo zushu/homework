@@ -16,16 +16,22 @@ struct file_operations f_op;
 
 char fs_name[] = "ext2";
 
+// helper
+void seek_inode(int inode_number);
 /* Implement functions in s_op, i_op, f_op here */
+// s_op functions
 struct super_block* my_get_superblock(struct file_system_type *fs);
 int my_statfs(struct super_block *sb, struct kstatfs *ksfs);
 void my_read_inode(struct inode* i_node);
+// i_op functions
+struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry);
 
 struct file_system_type *initialize_ext2(const char *image_path) {
   /* fill super_operations s_op */
   s_op.statfs = my_statfs;
   s_op.read_inode = my_read_inode;
   /* fill inode_operations i_op */
+  i_op.lookup = my_lookup;
   /* fill file_operations f_op */
   /* for example:
       s_op = (struct super_operations){
@@ -101,7 +107,7 @@ struct super_block* my_get_superblock(struct file_system_type *fs)
   root_inode->i_uid = root_inode_ext2->i_uid;
   root_inode->i_gid = root_inode_ext2->i_gid;
   root_inode->i_size = root_inode_ext2->i_size;
-printf("root_inode->i_size: %d\n", root_inode->i_size);
+printf("root_inode->i_size: %lld\n", root_inode->i_size);
   root_inode->i_atime = root_inode_ext2->i_atime;
   root_inode->i_mtime = root_inode_ext2->i_mtime;
   root_inode->i_ctime = root_inode_ext2->i_ctime;
@@ -118,7 +124,7 @@ printf("root_inode->i_size: %d\n", root_inode->i_size);
   root_inode->i_flags = root_inode_ext2->i_flags;
 
   // TODO:  get root dentry
-  printf("block size: %d \n", result_sb->s_blocksize);
+  printf("block size: %ld \n", result_sb->s_blocksize);
   unsigned char* block = malloc(result_sb->s_blocksize);
 
   struct ext2_dir_entry* root_dentry_ext2;
@@ -137,7 +143,7 @@ printf("root_inode->i_size: %d\n", root_inode->i_size);
   result_sb->s_root = malloc(sizeof(struct dentry));
   result_sb->s_root->d_flags = root_inode->i_flags; // TODO CHECK
   result_sb->s_root->d_inode = root_inode;
-  result_sb->s_root->d_parent = NULL; // root has no parent
+  result_sb->s_root->d_parent = result_sb->s_root; // root's parent should point to itself
   result_sb->s_root->d_name = malloc(sizeof(char)*root_dentry_ext2->name_len);
   for (int i = 0; i < root_dentry_ext2->name_len; i++)
   {
@@ -182,19 +188,19 @@ int my_statfs(struct super_block *sb, struct kstatfs *ksfs)
   return 0;
 }
 
-
 void my_read_inode(struct inode* i_node)
 {
   // the following field will be used
   // i_node->i_ino
+  seek_inode(i_node->i_ino);
+  /*
   struct ext2_group_desc* ext2_gd = malloc(sizeof(struct ext2_group_desc));
   // READ GROUP DESCRIPTORS
   lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize, SEEK_SET);
   read(current_fs->file_descriptor, ext2_gd, sizeof(struct ext2_group_desc));
   // READ INODE TABLE -> go to inode of root (2nd inode in the table)
-  //int root_inode_number = 2;
   lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (ext2_gd->bg_inode_table - 1) + (i_node->i_ino - 1)*sizeof(struct ext2_inode), SEEK_SET);
-
+*/
   // READ INODE FROM DISK
   struct ext2_inode* inode_ext2 = malloc(sizeof(struct ext2_inode));
   read(current_fs->file_descriptor, inode_ext2, sizeof(struct ext2_inode));
@@ -207,8 +213,8 @@ void my_read_inode(struct inode* i_node)
   i_node->i_mtime = inode_ext2->i_mtime;
   i_node->i_ctime = inode_ext2->i_ctime;
   i_node->i_blocks = inode_ext2->i_blocks;
-  int num_blocks = 	i_node->i_blocks / (current_sb->s_blocksize/512);
-  for(int i = 0; i < num_blocks; i++)
+  unsigned int num_blocks = 	i_node->i_blocks / (current_sb->s_blocksize/512);
+  for(unsigned int i = 0; i < num_blocks; i++)
   {
     i_node->i_block[i] = inode_ext2->i_block[i];
   }
@@ -218,7 +224,9 @@ void my_read_inode(struct inode* i_node)
   // i_state skipped
   i_node->i_flags = inode_ext2->i_flags;
 
-  free(ext2_gd);
+  printf("i_node->i_blocks: %ld\n", i_node->i_blocks);
+  printf("i_node->i_size: %lld\n", i_node->i_size);
+  //free(ext2_gd);
   free(inode_ext2);
 }
 
@@ -226,32 +234,66 @@ void my_read_inode(struct inode* i_node)
  * INODE OPERATIONS FUNCTIONS *
  ******************************/
 
-/*struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
+struct dentry* my_lookup(struct inode * i_node, struct dentry * d_entry)
 {
-  // only d_entry->d_name field is set
-  //unsigned char* block = malloc(current_sb->s_blocksize);
-
-  //struct ext2_dir_entry* dentry_ext2;
-
+  // only d_entry->d_name field is set 
+  short flag_is_found = 0;
   // first 12 blocks of inode
   for (int i = 0; i < 12; i++)
   {
       unsigned int size = 0; // to keep track of the bytes read
+      unsigned char block[current_sb->s_blocksize];
+      // read the i-th block of inode
+      lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (i_node->i_block[i] - 1) + size, SEEK_SET); // TODO: CHECK 
+      read(current_fs->file_descriptor, block , current_sb->s_blocksize);
+      // dentry_ext2 points to the beginning of the block
+      struct ext2_dir_entry* dentry_ext2 = (struct ext2_dir_entry*) block;
       // read each d_entry in each block of inode : inode->i_block[i]
-      while(size < current_sb->s_blocksize)
+      while (size < i_node->i_size)
+      //while(size < current_sb->s_blocksize)
       {
-        unsigned char block[current_sb->s_blocksize];
-        struct ext2_dir_entry* dentry_ext2;
-        char* dir_entry_name;
-        // read the first block of root inode
-        lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (i_node->i_block[i] - 1) + size, SEEK_SET); // TODO: CHECK 
-        read(current_fs->file_descriptor, block , current_sb->s_blocksize);
-        dentry_ext2 = (struct ext2_dir_entry*) block;
-         
-        // follow from http://cs.smith.edu/~nhowe/262/oldlabs/ext2.html#direntry
-        //dir_entry_name
+        //char file_name[EXT2_NAME_LEN+1];       
+        char* dir_entry_name = malloc((dentry_ext2->name_len+1)*sizeof(char));
+        memcpy(dir_entry_name, dentry_ext2->name, dentry_ext2->name_len);
+        // create null terminated string
+        dir_entry_name[dentry_ext2->name_len] = '\0';
+        
+        // if the name read from disk is the same as the name we are looking for
+        if (strcmp(d_entry->d_name, dir_entry_name) == 0)
+        {
+          printf("found\n");
+          //printf("")
+          seek_inode(dentry_ext2->inode);
+          struct ext2_inode* inode_ext2 = malloc(sizeof(struct ext2_inode));
+          read(current_fs->file_descriptor, inode_ext2, sizeof(struct ext2_inode));
+          // d_entry->d_flags = fill with  inode-> i_flags of inode of the d_entry
+          // d_parent should be created, its inode is the inode given as function argument
+          // d_inode should be created
+          // go to inode by using the inode number in dentry_ext2 and create new inode for d_inode
+          //d_entry->d_inode = i_node;
+          // TODO d_entry->d_parent fill
+          d_entry->d_sb = current_sb;
+          flag_is_found = 1;
+          break;
+        }
+        dentry_ext2 = (void*) dentry_ext2 + dentry_ext2->rec_len;      // move to the next ext2 entry
+        size += dentry_ext2->rec_len;
       }
+      if (flag_is_found)
+        {
+          break;
+        }
   }
+}
 
- 
-}*/
+// helper
+void seek_inode(int inode_number)
+{
+  struct ext2_group_desc* ext2_gd = malloc(sizeof(struct ext2_group_desc));
+  // READ GROUP DESCRIPTORS
+  lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize, SEEK_SET);
+  read(current_fs->file_descriptor, ext2_gd, sizeof(struct ext2_group_desc));
+  // SEEK INODE
+  lseek(current_fs->file_descriptor, BASE_OFFSET + current_sb->s_blocksize * (ext2_gd->bg_inode_table - 1) + (inode_number - 1)*sizeof(struct ext2_inode), SEEK_SET);
+  free(ext2_gd);
+}

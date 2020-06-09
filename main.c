@@ -238,6 +238,22 @@ int fs_stats(struct super_block *sb) {
   return 0;
 }
 
+void test()
+{
+  // tune2fs -l image.img | grep inode
+  //int inode_num = 11;
+  int root_inode_num = 2;
+  struct inode* new_inode = malloc(sizeof(struct inode));
+  new_inode->i_ino = root_inode_num;
+  current_sb->s_op->read_inode(new_inode);
+  struct dentry* new_dentry = malloc(sizeof(struct dentry));
+  new_dentry->d_name = malloc(11*sizeof(char));
+  new_dentry->d_name = "lost+found";
+  new_inode->i_op->lookup(new_inode, new_dentry);
+  free(new_inode);
+  free(new_dentry);
+}
+
 int main(int arg_count, char **arg_vector) {
   if (arg_count != 2) {
     help_func(NULL, 0);
@@ -248,6 +264,7 @@ int main(int arg_count, char **arg_vector) {
     exit(1);
   }
   fs_stats(current_sb);
+  test();
 /*  char *line;
   char **argv;
   int argc;
