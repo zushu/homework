@@ -1,0 +1,4 @@
+.nfs*
+*.swp
+mnt*
+!.gitignore
