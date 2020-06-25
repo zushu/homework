@@ -1,4 +1,4 @@
 #ignore
-.vscode
+.vscode/
 # do not ignore
 !.gitignore
