@@ -1,0 +1,3 @@
+- hw1: ray tracing
+- hw2: rasterization
+- hw3: texture mapping with OpenGL

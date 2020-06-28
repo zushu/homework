@@ -1,0 +1,2 @@
+- hw1: simple calculator with PIC assembly language
+- hw3: guessing game with AD conversion, interrupts and timers using PIC C language

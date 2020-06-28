@@ -1,0 +1,3 @@
+- hw1: a-star, iterative-deepening a-star algorithms
+- hw3: theorem prover for first order predicate logic
+- hw4: value iteration and q-learning algorithms
