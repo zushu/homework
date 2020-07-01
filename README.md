@@ -1,3 +1,3 @@
 # homeworks
 
-some homeworks from metu ceng.
+some homework from metu ceng.
