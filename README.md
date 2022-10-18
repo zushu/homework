@@ -1,3 +1,3 @@
 # homework
 
-some homework from metu ceng.
+some homework from METU computer engineering.
